@@ -39,4 +39,4 @@ dart tool/preflight.dart windows
 
 ## 本机实际结果
 
-2026-10-23实际执行三目标诊断均退出2：Mac缺完整Xcode；Android缺JDK/完整SDK/NDK/CMake；Windows目标缺Windows主机。SDK版本显示本地预发布元数据，工具额外警告不可当作官方正式发行证明。完整JSON证据随验证目录提供，不含服务器凭据。
+2026-10-23历史三目标诊断退出2；2026-10-24用户安装完整Xcode27.1后Mac检查已退出0，并完成发布应用构建与本机隔离原生验收。Android仍缺JDK/完整SDK/NDK/CMake；Windows仍缺Windows主机。SDK版本显示本地预发布元数据，工具额外警告不可当作官方正式发行证明。完整JSON证据随验证目录提供，不含服务器凭据。

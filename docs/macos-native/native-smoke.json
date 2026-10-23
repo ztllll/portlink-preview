@@ -1,0 +1,23 @@
+{
+  "executableExitCode": 0,
+  "nativeSmoke": {
+    "success": true,
+    "checks": [
+      "sandbox application support + OS file lock",
+      "native macOS login Keychain write/read",
+      "native tray creation/menu and visible Flutter window",
+      "isolated persistent configuration + credential save",
+      "real SSH password authentication + pinned fixture host + target probe",
+      "real native-process tunneled payload roundtrips",
+      "native close event exactly once; NSWindowWillClose unchanged; tunnel remains ready",
+      "close-to-tray + window restore",
+      "disconnect releases isolated local listener",
+      "new controller reloads default and Keychain password + auto-connect without host prompt",
+      "native Keychain fixture key deleted"
+    ],
+    "localPort": "isolated ephemeral; production remains 3080",
+    "server": "isolated local SSH fixture; not user server"
+  },
+  "rawStdout": "PORTLINK_NATIVE_SMOKE_STEP keychain\nPORTLINK_NATIVE_SMOKE_STEP desktop\nPORTLINK_NATIVE_SMOKE_STEP ssh\nPORTLINK_NATIVE_SMOKE_STEP window-close\nPORTLINK_NATIVE_SMOKE_STEP native close call returned\nPORTLINK_NATIVE_SMOKE_STEP window hidden\nPORTLINK_NATIVE_SMOKE_STEP show window call returned\nPORTLINK_NATIVE_SMOKE_STEP before disconnect\nPORTLINK_NATIVE_SMOKE_STEP disconnect complete\nPORTLINK_NATIVE_SMOKE_STEP autoconnect\nPORTLINK_NATIVE_SMOKE_STEP before shell cleanup\nPORTLINK_NATIVE_SMOKE_STEP shell cleanup complete\nPORTLINK_NATIVE_SMOKE {\"success\":true,\"checks\":[\"sandbox application support + OS file lock\",\"native macOS login Keychain write/read\",\"native tray creation/menu and visible Flutter window\",\"isolated persistent configuration + credential save\",\"real SSH password authentication + pinned fixture host + target probe\",\"real native-process tunneled payload roundtrips\",\"native close event exactly once; NSWindowWillClose unchanged; tunnel remains ready\",\"close-to-tray + window restore\",\"disconnect releases isolated local listener\",\"new controller reloads default and Keychain password + auto-connect without host prompt\",\"native Keychain fixture key deleted\"],\"localPort\":\"isolated ephemeral; production remains 3080\",\"server\":\"isolated local SSH fixture; not user server\"}\n",
+  "rawStderr": "[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_metal_impeller.mm(53)] Using the Impeller rendering backend (MetalSDF).\nembedder.cc (3079): 'FlutterPlatformMessageCreateResponseHandle' returned 'kInvalidArguments'. Engine handle was invalid.\n2026-10-24 00:52:27.070 PortLink[86606:1992352] Failed to create a FlutterPlatformMessageResponseHandle (2)\n"
+}

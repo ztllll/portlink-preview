@@ -2,7 +2,7 @@
 
 一个极简的 SSH 本地转发工具：保存多个服务器，选一台连接，将远端服务器自身 `127.0.0.1:3080` 映射到当前设备的 `127.0.0.1:3080`。
 
-> 开发预览版 0.1.0。源码已实现，测试与平台构建的实际结果见[验证记录](<docs/VERIFICATION.md>)；未验证的平台不等于已正式支持。
+> 预览版0.1.0：Mac发布应用已构建并通过本机隔离原生验收，最低macOS13，支持Apple Silicon（同时含Intel架构但未实机验）。当前ad-hoc签名、未公证；详见[Mac安装说明](<docs/MAC_PREVIEW.md>)和[验证记录](<docs/VERIFICATION.md>)。Windows/Android仍为未原生验收的源码结构。
 
 ## 使用
 
@@ -78,7 +78,7 @@ test/                  模型/存储/网络/控制器/UI/真实SSH测试
 
 ## 发行
 
-- Mac公开分发需Developer ID签名和公证。本地未签名预览不能当作正式发行包。沙盒Release已声明出站网络与本地监听权限。
+- Mac已有ad-hoc签名本机预览ZIP，公开分发仍需Developer ID签名和公证；不能把codesign结构验证当Gatekeeper认可。沙盒Release仅保留所需网络权限。
 - Windows需在Windows主机测试构建，正式发行建议签名；未签名可能有SmartScreen警告。
 - Android debug APK仅用于自测；正式密钥和商店流程未配置。
 - [构建工作流](<.github/workflows/verify.yml>)仅提供CI定义，未上传远端、未实际运行，不能当作CI已通过。

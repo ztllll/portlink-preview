@@ -1,17 +1,17 @@
 # 开发验证记录
 
-日期：2026-10-23（本机 Apple Silicon，macOS 27.0.1 / arm64）。
+更新：2026-10-24（本机 Apple Silicon，macOS 27.0.1 / arm64，完整Xcode27.1已安装并初始化）。
 
 ## 当前交付性质
 
-**可编译测试的源码预览，不是已完成签名/安装/实机验收的正式应用。当前没有可安装的 `.app` / `.exe` / `.apk` 产物。**
+**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Windows EXE、Android APK尚未构建。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
 
 ## 已实际执行
 
 | 检查 | 结果与范围 |
 | --- | --- |
 | 正式依赖解析 | 成功，pubspec.lock已固定 dartssh2 4.1.0、flutter_secure_storage 11.2.0、tray_manager 0.8.0 等 |
-| Dart格式 | 44份Dart文件（含测试工具），最终check 0 changed、退出0 |
+| Dart格式 | 45份Dart文件（含原生验收入口），最终check 0 changed、退出0 |
 | 全项目静态分析 | 最终 `dart analyze`：No issues found，退出0 |
 | 完整Flutter回归 | **152 passed / 1 skipped，退出0**。42 core/data、41 controller、39 UI、19平台/退出/单实例协议、10构建诊断、1真实SSH集成；跳过的是需显式开启的截图测试 |
 | 真实SSH集成 | 隔离Python环境asyncssh 2.24.1；随机临时服务器密钥；真实密码认证、完整SHA256指纹核对与保存、4并发×128KiB双向数据、半关闭、重连时不重复确认、错密失败、停止释放监听均通过 |
@@ -25,9 +25,11 @@
 | 单实例 | macOS上真实子Dart进程验证锁冲突、同isolate重复拒绝、进程终止后锁释放；未占用TCP端口。Windows文件锁待Windows实测 |
 | 退出保存事务 | 退出等待已接受的配置提交、密码回滚和删除清理，连接/指纹等待取消不死锁；启动部分失败也释放服务和锁 |
 | Android Dart协议 | 8项MethodChannel mock测试通过：并发初始化/启动、等待FGS确认、停止完成才ack、失败回false、通知拒绝传播、dispose后不可重启；不能替代Kotlin/真机验收 |
-| 构建诊断 | 三目标实际运行均退出2并准确报告本机缺少前置；10项注入测试覆盖完整Xcode、SPM/CocoaPods、JDK/SDK/NDK/CMake、SDK版本和端口占用；不会安装组件或终止占用者 |
-| Mac钥匙串配置 | 通过真实插件MethodChannel mock验证write/read/delete携带usesDataProtectionKeychain=false且无共享group；移除受限Keychain Sharing权限。仍待签名App系统Keychain真实读写 |
-| Mac产品配置 | PBX产品引用、scheme和三个RunnerTests宿主统一PortLink；plutil及scheme XML校验通过，未当作Xcode编译成功 |
+| 构建诊断 | 历史三目标退出2；安装Xcode后Mac检查已退出0，Android/Windows此前缺前置状态未变；10项注入测试覆盖完整Xcode、SPM/CocoaPods、JDK/SDK/NDK/CMake、SDK版本和端口占用；不会安装组件或终止占用者 |
+| Mac钥匙串配置 | 通过真实插件MethodChannel mock验证write/read/delete携带usesDataProtectionKeychain=false且无共享group；移除受限Keychain Sharing权限。现已在真实ad-hoc签名沙盒烟测中完成专用凭据写入/读回/删除；用户正式凭据及升级兼容仍待验 |
+| Mac产品配置 | Xcode27.1完整Release构建退出0，正常入口PortLink.app约49.1MB；主程序和4个framework均含arm64/x86_64，严格签名结构校验通过；实际native库最低13，工程声明已同步13，Release不再注入get-task-allow |
+| Mac真实原生烟测 | 独立沙盒Release入口，真实Keychain/托盘原生bounds/窗口显示与真实close事件恰一次且NSWindowWillClose未增加、隐藏恢复/SSH往返/监听释放/默认配置重载自连/专属凭据清理均通过，终态success:true；不是mock，不是用户真实服务器 |
+| Mac正常入口启动 | 正常入口进程存活，标准应用退出后processExitCode0；AppleScript回复-128及退出时Engine handle invalid警告已保留，不宣称远程脚本退出全部无警告 |
 | Windows原生依赖 | 对jni1.1.0未定义TARGET_NAME的条件性Windows路径增加受限作用域兼容值；只读源码/结构检查，仍待Windows配置链接验证 |
 | 原生托盘依赖 | cnativeapi构建钩子在本机命令行工具下产出arm64动态库并用于Flutter测试；不等于菜单栏真实交互通过 |
 
@@ -40,20 +42,15 @@
 - 默认3080被占用时的失败、不重试、不抢占已有程序已测试。
 - **尚未在本机完成“正式应用占用3080并连接用户真实服务器”的正向实测**。需要用户先停止已有3080转发。
 
-## 原生构建未完成的具体原因
+## 原生构建与平台状态
 
-### macOS
+### macOS（2026-10-24已解除工具链阻碍）
 
-本机 `xcode-select -p` 是 `/Library/Developer/CommandLineTools`，没有完整 Xcode。实际执行：
+用户安装完整Xcode27.1，xcode-select已指向/Applications/Xcode.app/Contents/Developer，版本和首次初始化检查均退出0。发布正常入口lib/main.dart完整构建退出0，PortLink.app约49.1MB；ZIP约19MB，ditto保留bundle结构，重新展开后codesign --verify --deep --strict与所有嵌入Mach-O的arm64检查通过。
 
-```text
-xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
-  -configuration Release -showBuildSettings
-xcode-select: error: tool xcodebuild requires Xcode ... is a command line tools instance
-exit code: 1
-```
+最初App声明12但cnativeapi/objective_c真实minos13，现已把工程最低版本同步13；Release显式禁止注入base entitlements，最终实际权限无get-task-allow。托盘应用最后窗口关闭策略设false，原生烟测验证关窗后的存活/恢复和连接清理。
 
-已尝试Flutter Mac release构建，但它先下载Mac框架；确认缺完整Xcode后停止无意义的大下载。**没有Mac构建成功记录，也没有安装包、签名、公证、系统Keychain真实读写或菜单栏实机验收**。本轮没有下载/安装Xcode，也未修改系统developer directory。
+当前签名Signature=adhoc、TeamIdentifier=not set，没有Developer ID或公证；spctl实际拒绝，该限制没有通过删除quarantine或关闭系统安全来绕过。原生烟测专属数据与失败尝试的测试项已精准清理，未读取/修改用户真实凭据。验收证据位于[macOS原生记录](<macos-native/native-smoke.json>)及[包结构记录](<macos-native/bundle-verification.json>)。
 
 ### Windows
 
@@ -71,7 +68,7 @@ Flutter源从官方GitHub stable分支 `abaf9c523780a608bd46686fd5e53740a07077f8
 
 ## 发布前必须补齐
 
-1. 完整Xcode环境编译运行Mac版，实测安全凭据保存/重启自动连接/菜单栏/睡眠恢复，再签名公证。
+1. Mac已完成本机发布构建与隔离原生烟测；仍需用户真实服务器、正式3080、跨进程重启/升级凭据兼容和睡眠切网验收，公开分发前Developer ID签名及公证。
 2. Windows主机编译并测试托盘、凭据与文件替换。
 3. Android具备JDK/SDK后构建debug APK，按真机清单验证通知、切浏览器、停止与进程终止。
 4. 使用目标服务器测试实际3080协议与认证；本版只保证SSH password登录，不保证需OTP/MFA/键盘交互的服务器。
