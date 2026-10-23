@@ -9,6 +9,8 @@ import 'data/profile_repository.dart';
 import 'data/secret_store.dart';
 import 'platform/android_session.dart';
 import 'platform/desktop_integration.dart';
+import 'platform/application_cleanup.dart';
+import 'platform/single_instance_guard.dart';
 import 'ui/portlink_app.dart';
 
 Future<void> main() async {
@@ -23,12 +25,32 @@ Future<void> main() async {
       ),
     );
   };
+  AppController? controller;
+  AndroidSession? android;
+  SingleInstanceGuard? instance;
+  DesktopIntegration? desktop;
+  final cleanup = ApplicationCleanup([
+    () async {
+      await controller?.shutdown();
+    },
+    () async {
+      await android?.dispose();
+    },
+    () async {
+      await instance?.release();
+    },
+  ]);
   try {
     final directory = await getApplicationSupportDirectory();
     await directory.create(recursive: true);
-    final android = AndroidSession();
+    if (DesktopIntegration.isDesktop) {
+      instance = await SingleInstanceGuard.acquire(
+        path.join(directory.path, 'instance.lock'),
+      );
+    }
+    android = AndroidSession();
     await android.initialize();
-    final controller = AppController(
+    controller = AppController(
       repository: JsonProfileRepository(
         path.join(directory.path, 'profiles.json'),
       ),
@@ -43,21 +65,28 @@ Future<void> main() async {
     );
     android.setStopHandler(controller.disconnect);
     runApp(PortLinkApp(controller: controller));
-    DesktopIntegration? desktop;
     if (DesktopIntegration.isDesktop) {
-      desktop = DesktopIntegration(controller);
+      desktop = DesktopIntegration(controller, onShutdown: cleanup.run);
       await desktop.initialize();
     }
     // Render first so first-use trust confirmation is visible during autoconnect.
     await controller.initialize();
     await desktop?.finishStartup();
-  } catch (_) {
-    runApp(const _StartupFailure());
+  } catch (error) {
+    try {
+      await desktop?.prepareForExit();
+    } catch (_) {}
+    try {
+      await cleanup.run();
+    } catch (_) {}
+    controller?.dispose();
+    runApp(_StartupFailure(alreadyRunning: error is InstanceAlreadyRunning));
   }
 }
 
 class _StartupFailure extends StatelessWidget {
-  const _StartupFailure();
+  const _StartupFailure({this.alreadyRunning = false});
+  final bool alreadyRunning;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: '端口连 PortLink',
@@ -70,10 +99,15 @@ class _StartupFailure extends StatelessWidget {
             children: [
               const Icon(Icons.error_outline, size: 42),
               const SizedBox(height: 20),
-              Text('无法初始化应用', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                alreadyRunning ? '端口连已在运行' : '无法初始化应用',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 12),
-              const Text(
-                '请检查应用数据目录与系统权限后重新启动。\n不会使用明文方式保存密码。',
+              Text(
+                alreadyRunning
+                    ? '请从菜单栏或系统托盘打开原窗口。\n本窗口不会读取或修改服务器配置。'
+                    : '请检查应用数据目录与系统权限后重新启动。\n不会使用明文方式保存密码。',
                 textAlign: TextAlign.center,
               ),
             ],

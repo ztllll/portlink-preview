@@ -2,8 +2,10 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:tray_manager/legacy.dart' as tray;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
@@ -13,32 +15,56 @@ import '../core/tunnel_status.dart';
 
 /// Desktop shell only. SSH ownership remains in AppController.
 class DesktopIntegration with WindowListener, tray.TrayListener {
-  DesktopIntegration(this.controller);
+  DesktopIntegration(
+    this.controller, {
+    tray.TrayManager? trayManager,
+    WindowManager? windows,
+    Future<void> Function()? onShutdown,
+  }) : _tray = trayManager ?? tray.trayManager,
+       _window = windows ?? windowManager,
+       _onShutdown = onShutdown ?? controller.shutdown;
   final AppController controller;
+  final tray.TrayManager _tray;
+  final WindowManager _window;
+  final Future<void> Function() _onShutdown;
+  AppLifecycleListener? _lifecycle;
+  Future<void>? _shutdown;
+  Future<void>? _quitOperation;
+  Future<void>? _updateOperation;
   bool _enabled = false, _quitting = false, _updating = false, _dirty = false;
   String? _lastIcon;
   String? warning;
+  Object? _lastTrust;
+  String? _lastError;
+  TunnelPhase? _lastPhase;
 
   static bool get isDesktop =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
   Future<void> initialize() async {
     if (!isDesktop) return;
-    await windowManager.ensureInitialized();
-    await windowManager.setTitle('端口连 PortLink');
-    await windowManager.setMinimumSize(const Size(430, 540));
-    await windowManager.setSize(const Size(960, 680));
-    await windowManager.center();
-    windowManager.addListener(this);
-    tray.trayManager.addListener(this);
+    await _window.ensureInitialized();
+    await _window.setTitle('端口连 PortLink');
+    await _window.setMinimumSize(const Size(430, 540));
+    await _window.setSize(const Size(960, 680));
+    await _window.center();
+    _window.addListener(this);
+    _tray.addListener(this);
+    await _window.setPreventClose(true);
+    _lifecycle = AppLifecycleListener(
+      onExitRequested: () async {
+        await prepareForExit();
+        return AppExitResponse.exit;
+      },
+    );
     try {
-      await tray.trayManager.setIcon(
+      await _tray.setIcon(
         Platform.isWindows
             ? 'assets/tray/windows_idle.ico'
             : 'assets/tray/idle.png',
         isTemplate: Platform.isMacOS,
       );
-      await windowManager.setPreventClose(true);
+      await _window.setPreventClose(true);
       _enabled = true;
       controller.addListener(_changed);
       await _update();
@@ -46,10 +72,11 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       _enabled = false;
       controller.removeListener(_changed);
       warning = '状态栏图标初始化失败，窗口将保持可见；关闭窗口会停止转发。';
-      await windowManager.setPreventClose(false);
+      controller.reportPlatformWarning(warning!);
+      await _window.setPreventClose(true);
     }
-    await windowManager.show();
-    await windowManager.focus();
+    await _window.show();
+    await _window.focus();
   }
 
   Future<void> finishStartup() async {
@@ -59,20 +86,33 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
         controller.tunnelStatus.phase == TunnelPhase.ready &&
         controller.errorMessage == null &&
         controller.pendingTrust == null) {
-      await windowManager.hide();
+      await _window.hide();
     }
   }
 
   void _changed() {
-    if (controller.pendingTrust != null ||
-        controller.errorMessage != null ||
-        controller.tunnelStatus.phase == TunnelPhase.failed) {
+    final trust = controller.pendingTrust;
+    final error = controller.errorMessage;
+    final phase = controller.tunnelStatus.phase;
+    if ((trust != null && !identical(trust, _lastTrust)) ||
+        (error != null && error != _lastError) ||
+        (phase == TunnelPhase.failed && phase != _lastPhase)) {
       unawaited(showWindow());
     }
+    _lastTrust = trust;
+    _lastError = error;
+    _lastPhase = phase;
     unawaited(_update());
   }
 
-  Future<void> _update() async {
+  Future<void> _update() {
+    _dirty = true;
+    return _updateOperation ??= _updateNow().whenComplete(() {
+      _updateOperation = null;
+    });
+  }
+
+  Future<void> _updateNow() async {
     if (!_enabled || _quitting) return;
     if (_updating) {
       _dirty = true;
@@ -90,7 +130,7 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
           _ => 'pending',
         };
         if (_lastIcon != icon) {
-          await tray.trayManager.setIcon(
+          await _tray.setIcon(
             Platform.isWindows
                 ? 'assets/tray/windows_$icon.ico'
                 : 'assets/tray/$icon.png',
@@ -109,8 +149,8 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
         };
         final profile = controller.activeProfile;
         final caption = profile == null ? label : '$label · ${profile.name}';
-        await tray.trayManager.setToolTip('端口连 · $caption');
-        await tray.trayManager.setContextMenu(
+        await _tray.setToolTip('端口连 · $caption');
+        await _tray.setContextMenu(
           tray.Menu(
             items: [
               tray.MenuItem(key: 'status', label: caption, disabled: true),
@@ -119,7 +159,9 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
               tray.MenuItem(
                 key: 'http',
                 label: '打开 HTTP 页面',
-                disabled: !status.isConnected,
+                disabled:
+                    !controller.initialized ||
+                    status.phase != TunnelPhase.ready,
               ),
               tray.MenuItem.separator(),
               if (status.isActive)
@@ -155,8 +197,9 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     } catch (_) {
       _enabled = false;
       controller.removeListener(_changed);
-      warning = '无法更新状态栏，请打开窗口查看连接状态。';
-      await windowManager.setPreventClose(false);
+      warning = '状态栏无法更新，窗口将保持可见；关闭窗口会停止转发。';
+      controller.reportPlatformWarning(warning!);
+      await _window.setPreventClose(true);
       await showWindow();
     } finally {
       _updating = false;
@@ -165,15 +208,14 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
 
   Future<void> showWindow() async {
     if (_quitting || !isDesktop) return;
-    await windowManager.show();
-    await windowManager.focus();
+    await _window.show();
+    await _window.focus();
   }
 
   @override
-  void onTrayIconMouseDown() => unawaited(tray.trayManager.popUpContextMenu());
+  void onTrayIconMouseDown() => unawaited(_tray.popUpContextMenu());
   @override
-  void onTrayIconRightMouseDown() =>
-      unawaited(tray.trayManager.popUpContextMenu());
+  void onTrayIconRightMouseDown() => unawaited(_tray.popUpContextMenu());
   @override
   void onTrayMenuItemClick(tray.MenuItem menuItem) =>
       unawaited(_activate(menuItem.key));
@@ -184,6 +226,10 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       } else if (key == 'copy') {
         await Clipboard.setData(const ClipboardData(text: '127.0.0.1:3080'));
       } else if (key == 'http') {
+        if (!controller.initialized ||
+            controller.tunnelStatus.phase != TunnelPhase.ready) {
+          return;
+        }
         await launchUrl(
           Uri.parse('http://127.0.0.1:3080'),
           mode: LaunchMode.externalApplication,
@@ -206,23 +252,43 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
   @override
   void onWindowClose() {
     if (_enabled && !_quitting) {
-      unawaited(windowManager.hide());
+      unawaited(_window.hide());
     } else {
       unawaited(quit());
     }
   }
 
-  Future<void> quit() async {
-    if (_quitting) return;
+  Future<void> prepareForExit() => _shutdown ??= _prepareForExit();
+
+  Future<void> _prepareForExit() async {
     _quitting = true;
     controller.removeListener(_changed);
+    _tray.removeListener(this);
+    _window.removeListener(this);
     try {
-      await controller.shutdown();
+      await _onShutdown();
     } finally {
+      await _updateOperation;
       try {
-        await tray.trayManager.destroy();
+        await _tray.destroy();
       } catch (_) {}
-      await windowManager.destroy();
+      _lifecycle?.dispose();
+      _lifecycle = null;
+      // If startup later displays a failure screen, its close button must work.
+      // Cleanup has completed, so the native close no longer needs intercepting.
+      try {
+        await _window.setPreventClose(false);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> quit() => _quitOperation ??= _quit();
+
+  Future<void> _quit() async {
+    try {
+      await prepareForExit();
+    } finally {
+      await _window.destroy();
     }
   }
 }

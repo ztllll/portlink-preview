@@ -53,6 +53,10 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 - 保留插件的自动注册（不要重复手工 register），Manifest 配置 Android embedding v2。
 - 禁用 Android 自动备份，以免设备恢复后 secure-storage 密文与 Keystore 不匹配。无需为了浏览器访问 localhost 全局设置 `usesCleartextTraffic=true`：浏览器是另一个应用，PortLink 的 SSH socket 不是 Android HTTP 栈。
 
+## 运行中通知撤销
+
+启动确认、再次开始已有会话和Activity恢复前台时重新检查通知权限/通道。用户开始的FGS还会在主线程可调度时每5秒检查；通知被禁用后请求停止真实隧道并走同一ack/销毁兜底。此检查不申请wakelock、不唤醒设备，Doze/系统调度可能推迟检查，不能承诺精确5秒内停止。原生改动仍需真机验证。Dart通道已有8项可执行mock回归，覆盖FGS确认与停止失败不误ack。
+
 ## 验证状态与必须实机检查的项目
 
 已使用准备好的 Dart SDK 对 AndroidSession 模块执行独立 `dart analyze`，结果为 `No issues found!`；全部 8 份 Android XML 解析及主清单权限/Service/HTTP query 结构断言通过，并已核对本地 Flutter embedding API。**当前实现未完成 Android 原生编译/真机验证**：原生脚手架现已接入，但此环境的 `/usr/bin/java` 只是启动器，执行 `java -version` 提示找不到 Java Runtime；也没有可用的 Android SDK 编译配置。存在 adb 不等于具备编译工具链。本轮未运行 Gradle/APK 构建，也未验证某个品牌手机的后台行为。不得把“有通知/代码有 FGS”记为隧道已经实测。无 Xcode 不影响本 Android 方案，但不会据此声称其他平台打包成功。

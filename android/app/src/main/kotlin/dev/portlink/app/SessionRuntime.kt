@@ -94,7 +94,12 @@ object SessionRuntime : Application.ActivityLifecycleCallbacks {
             return
         }
         if (active && service != null) {
-            result.success(null)
+            if (!notificationsEnabled()) {
+                requestStop("notificationsDisabled")
+                result.error("notifications_disabled", "通知已被禁用，本次转发正在停止", null)
+            } else {
+                result.success(null)
+            }
             return
         }
         startResults.add(result)
@@ -147,6 +152,10 @@ object SessionRuntime : Application.ActivityLifecycleCallbacks {
         return true
     }
 
+    fun checkNotificationVisibility() {
+        if (active && !stopping && !notificationsEnabled()) requestStop("notificationsDisabled")
+    }
+
     fun onRequestPermissionsResult(requestCode: Int): Boolean {
         if (requestCode != NOTIFICATION_PERMISSION_REQUEST) return false
         permissionPending = false
@@ -163,6 +172,11 @@ object SessionRuntime : Application.ActivityLifecycleCallbacks {
     }
 
     fun onServiceForeground(value: TunnelSessionService) {
+        if (!notificationsEnabled()) {
+            failStart("notifications_disabled", "通知不可见，未开始连接")
+            value.stopFromRuntime()
+            return
+        }
         if (active && service === value && !stopping) return
         if (!starting || startResults.isEmpty() || stopping || engine == null) {
             value.stopFromRuntime()
@@ -281,6 +295,7 @@ object SessionRuntime : Application.ActivityLifecycleCallbacks {
         if (value !is FlutterActivity) return
         activity = WeakReference(value)
         resumed = true
+        checkNotificationVisibility()
         tryStartWhenVisible()
     }
 

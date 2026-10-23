@@ -377,6 +377,13 @@ class _PortLinkHomeState extends State<_PortLinkHome> {
                                 ],
                               ),
                             ),
+                          if (_controller.platformWarning != null) ...[
+                            _InlineNotice(
+                              message: _controller.platformWarning!,
+                              isError: false,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                           if (error != null) ...[
                             _InlineNotice(
                               message: error,

@@ -40,6 +40,23 @@ Future<void> openMenu(WidgetTester tester, String name) async {
 }
 
 void main() {
+  testWidgets('platform warning stays visible independently from SSH errors', (
+    tester,
+  ) async {
+    final controller = FakeAppController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(PortLinkApp(controller: controller));
+    controller.reportPlatformWarning('托盘不可用，关闭窗口会停止转发');
+    controller.errorMessage = 'SSH failure';
+    controller.update();
+    await tester.pump();
+    expect(find.text('托盘不可用，关闭窗口会停止转发'), findsOneWidget);
+    controller.clearError();
+    await tester.pump();
+    expect(find.text('托盘不可用，关闭窗口会停止转发'), findsOneWidget);
+    expect(find.text('SSH failure'), findsNothing);
+  });
+
   testWidgets('UI does not initialize or automatically connect', (
     tester,
   ) async {

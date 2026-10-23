@@ -21,6 +21,14 @@ class FakeAppController extends ChangeNotifier implements AppController {
   @override
   String? errorMessage;
   @override
+  String? platformWarning;
+  @override
+  void reportPlatformWarning(String message) {
+    platformWarning = message;
+    update();
+  }
+
+  @override
   HostTrustRequest? pendingTrust;
 
   int initializeCalls = 0;

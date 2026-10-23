@@ -38,13 +38,14 @@ class AppController extends ChangeNotifier {
   final String Function() _newId;
   late final StreamSubscription<TunnelStatus> _subscription;
   List<ServerProfile> _profiles = const [];
-  String? _defaultProfileId, _errorMessage;
+  String? _defaultProfileId, _errorMessage, _platformWarning;
   late TunnelStatus _status;
   bool _initialized = false, _busy = false, _closed = false, _disposed = false;
   int _epoch = 0;
   HostTrustRequest? _pendingTrust;
   Completer<bool>? _trustAnswer;
   Future<void>? _initializing, _shuttingDown;
+  Completer<void>? _durableMutation;
 
   bool get initialized => _initialized;
   bool get busy => _busy;
@@ -52,6 +53,13 @@ class AppController extends ChangeNotifier {
   String? get defaultProfileId => _defaultProfileId;
   TunnelStatus get tunnelStatus => _status;
   String? get errorMessage => _errorMessage;
+  String? get platformWarning => _platformWarning;
+  void reportPlatformWarning(String message) {
+    if (_closed) return;
+    _platformWarning = message;
+    _notify();
+  }
+
   HostTrustRequest? get pendingTrust => _pendingTrust;
   ServerProfile? get activeProfile => _find(_status.profileId);
 
@@ -119,13 +127,18 @@ class AppController extends ChangeNotifier {
     _notify();
   }
 
-  Future<void> _mutate(Future<void> Function() operation) async {
+  Future<void> _mutate(
+    Future<void> Function() operation, {
+    bool durable = false,
+  }) async {
     if (_busy || _closed) return;
     if (!_initialized) {
       _errorMessage = '配置尚未成功加载，不能修改。';
       _notify();
       return;
     }
+    final drain = durable ? Completer<void>() : null;
+    if (drain != null) _durableMutation = drain;
     _busy = true;
     _errorMessage = null;
     _notify();
@@ -137,6 +150,8 @@ class AppController extends ChangeNotifier {
       _errorMessage = '操作失败。请检查配置目录和系统安全凭据存储，密码不会回退为明文保存。';
     } finally {
       _busy = false;
+      if (identical(_durableMutation, drain)) _durableMutation = null;
+      drain?.complete();
       _notify();
     }
   }
@@ -209,7 +224,7 @@ class AppController extends ChangeNotifier {
     if (_status.profileId == profile.id && _status.isActive) {
       await _connect(profile);
     }
-  });
+  }, durable: true);
 
   Future<void> setDefault(String id) => _mutate(() async {
     if (_find(id) == null) throw const _UserError('服务器配置不存在。');
@@ -218,7 +233,7 @@ class AppController extends ChangeNotifier {
     );
     if (_closed) return;
     _defaultProfileId = id;
-  });
+  }, durable: true);
 
   Future<void> deleteProfile(String id) => _mutate(() async {
     if (_find(id) == null) return;
@@ -240,7 +255,7 @@ class AppController extends ChangeNotifier {
     } catch (_) {
       throw const _UserError('配置已删除，但系统凭据清理失败；安全存储中可能保留该项密码。');
     }
-  });
+  }, durable: true);
 
   Future<void> connectProfile(String id) => _mutate(() async {
     final profile = _find(id);
@@ -249,6 +264,7 @@ class AppController extends ChangeNotifier {
   });
 
   Future<void> _connect(ServerProfile profile) async {
+    if (_closed) return;
     final epoch = ++_epoch;
     _cancelTrust();
     await _engine.disconnect();
@@ -359,11 +375,18 @@ class AppController extends ChangeNotifier {
     _closed = true;
     ++_epoch;
     _cancelTrust();
+    final pendingWrite = _durableMutation?.future;
     await _subscription.cancel();
     try {
       await _engine.dispose();
     } finally {
-      await _stopSession();
+      try {
+        await _stopSession();
+      } finally {
+        // Do not terminate between a keychain write and metadata commit/rollback.
+        // Connect-only operations are cancelled above and never block this drain.
+        await pendingWrite;
+      }
     }
   }
 

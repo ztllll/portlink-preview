@@ -11,9 +11,9 @@
 | 检查 | 结果与范围 |
 | --- | --- |
 | 正式依赖解析 | 成功，pubspec.lock已固定 dartssh2 4.1.0、flutter_secure_storage 11.2.0、tray_manager 0.8.0 等 |
-| Dart格式 | 33份Dart文件，最终check 0 changed、退出0 |
+| Dart格式 | 40份Dart文件（含测试工具），最终check 0 changed、退出0 |
 | 全项目静态分析 | 最终 `dart analyze`：No issues found，退出0 |
-| 完整Flutter回归 | **120 passed / 1 skipped，退出0**。41 core/data、40 controller、38 UI、1真实SSH集成；跳过的是需显式开启的截图测试 |
+| 完整Flutter回归 | **141 passed / 1 skipped，退出0**。41 core/data、41 controller、39 UI、19平台/退出/单实例协议、1真实SSH集成；跳过的是需显式开启的截图测试 |
 | 真实SSH集成 | 隔离Python环境asyncssh 2.24.1；随机临时服务器密钥；真实密码认证、完整SHA256指纹核对与保存、4并发×128KiB双向数据、半关闭、重连时不重复确认、错密失败、停止释放监听均通过 |
 | 核心网络测试 | 真实loopback监听、8并发×256KiB半关闭、端口占用、目标不可达后恢复、探活超时与重连、取消/快速切换/迟到session清理、主机算法变化阻断通过 |
 | 配置/控制器测试 | 原子写及验证备份、并发持久化、损坏时fail closed、密码事务回滚、空密码保留、默认选择不切换当前连接、取消指纹/Android启动、shutdown等通过 |
@@ -21,6 +21,10 @@
 | 预览截图 | 单独开启capture测试：1 passed，退出0；真实Flutter RepaintBoundary渲染。desktop 2560×1800、mobile 780×2880。**模拟配置界面，不代表真实服务器连接或原生安装截图；当前模型不能视觉读图，未声称视觉审阅** |
 | Mac配置 | Release/Debug entitlements与Info.plist经plutil校验通过，含出站与监听权限；仅格式/配置检查，不等于系统授权实测 |
 | Android配置 | 8份XML解析与主清单结构断言通过；AndroidSession独立Dart分析No issues found；embedding接口已读本地官方源码核对 |
+| 桌面退出协议 | 通过注入托盘/窗口替身验证窗口隐藏、故障关闭前清理、Flutter原生退出请求等待、重复退出幂等、菜单更新结束再销毁、相同错误不反复抢焦点、过期HTTP菜单不启动；不是原生App安装测试 |
+| 单实例 | macOS上真实子Dart进程验证锁冲突、同isolate重复拒绝、进程终止后锁释放；未占用TCP端口。Windows文件锁待Windows实测 |
+| 退出保存事务 | 退出等待已接受的配置提交、密码回滚和删除清理，连接/指纹等待取消不死锁；启动部分失败也释放服务和锁 |
+| Android Dart协议 | 8项MethodChannel mock测试通过：并发初始化/启动、等待FGS确认、停止完成才ack、失败回false、通知拒绝传播、dispose后不可重启；不能替代Kotlin/真机验收 |
 | 原生托盘依赖 | cnativeapi构建钩子在本机命令行工具下产出arm64动态库并用于Flutter测试；不等于菜单栏真实交互通过 |
 
 ## 监听端口隔离与本机已有程序

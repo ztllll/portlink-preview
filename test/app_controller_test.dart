@@ -585,14 +585,48 @@ void main() {
       repository.saveGate = gate;
       final operation = controller.setDefault('two');
       await eventually(() => repository.saves.isNotEmpty);
-      await controller.shutdown();
+      var stopped = false;
+      final closing = controller.shutdown().then((_) {
+        stopped = true;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(
+        stopped,
+        isFalse,
+        reason: 'Exit must drain the accepted metadata transaction',
+      );
       gate.complete();
       await operation;
+      await closing;
       expect(
         repository.snapshot.defaultProfileId,
         'two',
       ); // already accepted disk transaction finishes
       expect(controller.defaultProfileId, 'one');
+    },
+  );
+
+  test(
+    'shutdown waits for credential rollback before allowing process exit',
+    () async {
+      await seed();
+      final gate = Completer<void>();
+      repository.saveGate = gate;
+      repository.saveFailure = StateError('disk failure');
+      final saving = save(id: 'one', password: 'replacement');
+      await eventually(() => repository.saves.isNotEmpty);
+      expect(secrets.values['one'], 'replacement');
+      var stopped = false;
+      final closing = controller.shutdown().then((_) {
+        stopped = true;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(stopped, isFalse);
+      gate.complete();
+      await saving;
+      await closing;
+      expect(secrets.values['one'], 'old-one-secret');
+      expect(engine.disposals, 1);
     },
   );
 
@@ -604,9 +638,19 @@ void main() {
       repository.saveGate = gate;
       final operation = controller.deleteProfile('two');
       await eventually(() => repository.saves.isNotEmpty);
-      await controller.shutdown();
+      var stopped = false;
+      final closing = controller.shutdown().then((_) {
+        stopped = true;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(
+        stopped,
+        isFalse,
+        reason: 'Exit must drain the accepted metadata transaction',
+      );
       gate.complete();
       await operation;
+      await closing;
       expect(repository.snapshot.profiles.map((p) => p.id), ['one']);
       expect(controller.profiles.map((p) => p.id), ['one', 'two']);
       expect(secrets.deletes, ['two']);

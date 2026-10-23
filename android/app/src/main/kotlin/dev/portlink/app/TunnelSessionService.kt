@@ -10,6 +10,8 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
 import io.flutter.embedding.engine.FlutterEngine
 
 /** A non-sticky, user-started session; not a scheduler or a second SSH engine. */
@@ -18,6 +20,16 @@ class TunnelSessionService : Service() {
     // attach its serviceControlSurface: that would detach its Activity plugins.
     private var retainedEngine: FlutterEngine? = null
     private var ending = false
+    private val handler = Handler(Looper.getMainLooper())
+    // Best effort while this user-started service is scheduled, not a wake lock.
+    // Revoking the visible Stop notification must not silently leave SSH active.
+    private val notificationCheck = object : Runnable {
+        override fun run() {
+            if (ending || retainedEngine == null) return
+            SessionRuntime.checkNotificationVisibility()
+            if (!ending) handler.postDelayed(this, 5_000L)
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -54,6 +66,8 @@ class TunnelSessionService : Service() {
                 startForeground(NOTIFICATION_ID, notification)
             }
             SessionRuntime.onServiceForeground(this)
+            handler.removeCallbacks(notificationCheck)
+            if (!ending) handler.postDelayed(notificationCheck, 5_000L)
         } catch (_: RuntimeException) {
             SessionRuntime.onServiceStartFailed()
             stopFromRuntime()
@@ -93,6 +107,7 @@ class TunnelSessionService : Service() {
 
     fun stopFromRuntime() {
         ending = true
+        handler.removeCallbacks(notificationCheck)
         retainedEngine = null
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE)
         else {
@@ -108,6 +123,7 @@ class TunnelSessionService : Service() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacks(notificationCheck)
         retainedEngine = null
         SessionRuntime.onServiceDestroyed(this)
         super.onDestroy()
