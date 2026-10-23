@@ -1,0 +1,24 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/flutter/ephemeral/
+**/.symlinks/
+android/local.properties
+android/.gradle/
+android/key.properties
+*.jks
+*.keystore
+macos/Pods/
+macos/Flutter/ephemeral/
+*.xcuserstate
+xcuserdata/
+.idea/
+*.iml
+.DS_Store
+__pycache__/
+*.pyc

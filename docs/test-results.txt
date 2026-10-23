@@ -1,0 +1,135 @@
+00:00 +0: loading <project>/test/ui/server_profile_dialog_test.dart
+00:00 +0: <project>/test/ui/server_profile_dialog_test.dart: new profile requires fields and password
+00:01 +1: <project>/test/ui/server_profile_dialog_test.dart: edit never shows saved password and blank retains it
+00:01 +2: <project>/test/ui/server_profile_dialog_test.dart: save failure stays in dialog with safe inline feedback
+00:02 +3: <project>/test/ui/server_profile_dialog_test.dart: add form fits a narrow viewport without intrinsic layout errors
+00:02 +4: <project>/test/ui/server_profile_dialog_test.dart: direct dialog cannot save before initialization
+00:02 +5: <project>/test/ui/server_profile_dialog_test.dart: save callback rechecks controller busy state
+00:02 +6: <project>/test/ui/server_profile_dialog_test.dart: invalid endpoint does not invoke controller
+00:02 +7: loading <project>/test/ui/portlink_app_test.dart
+00:03 +7: <project>/test/ui/portlink_app_test.dart: UI does not initialize or automatically connect
+00:04 +8: <project>/test/ui/portlink_app_test.dart: failed initialization is persistent and every mutation stays disabled
+00:04 +9: <project>/test/ui/portlink_app_test.dart: stale callbacks cannot bypass busy mutation guard
+00:04 +10: <project>/test/ui/portlink_app_test.dart: delete confirmation rechecks loading and busy before mutation
+00:04 +11: <project>/test/ui/portlink_app_test.dart: app unmount does not dispose the caller-owned controller
+00:04 +12: <project>/test/ui/portlink_app_test.dart: busy connecting can always be cancelled
+00:05 +13: <project>/test/ui/portlink_app_test.dart: changing default does not switch current connection
+00:05 +14: <project>/test/ui/portlink_app_test.dart: delete requires explicit confirmation
+00:05 +15: <project>/test/ui/portlink_app_test.dart: trust prompt blocks outside dismissal and never auto-accepts
+00:05 +16: <project>/test/ui/portlink_app_test.dart: trust modal also covers an already open edit dialog
+00:05 +17: <project>/test/ui/portlink_app_test.dart: errors are inline and raw exception secrets are not shown
+00:06 +18: <project>/test/ui/portlink_app_test.dart: copy local address uses plain loopback endpoint
+00:06 +19: <project>/test/ui/portlink_app_test.dart: appearance can follow system or change explicitly
+00:06 +20: <project>/test/ui/portlink_app_test.dart: empty configuration is responsive on mobile
+00:06 +21: <project>/test/ui/portlink_app_test.dart: root fits width 320.0
+00:06 +22: <project>/test/ui/portlink_app_test.dart: root fits width 390.0
+00:07 +23: <project>/test/ui/portlink_app_test.dart: root fits width 720.0
+00:07 +24: <project>/test/ui/portlink_app_test.dart: root fits width 900.0
+00:07 +25: <project>/test/ui/portlink_app_test.dart: root fits width 1280.0
+00:07 +26: loading <project>/test/ui/server_list_test.dart
+00:07 +26: <project>/test/ui/server_list_test.dart: default action identifies profile without connecting
+00:08 +27: <project>/test/ui/server_list_test.dart: busy disables mutations but keeps active cancellation
+00:08 +28: <project>/test/ui/server_list_test.dart: server cards fit narrow mobile width
+00:08 +29: loading <project>/test/ui/host_trust_dialog_test.dart
+00:09 +29: <project>/test/ui/host_trust_dialog_test.dart: trust requires explicit verification and affirmative click
+00:09 +30: <project>/test/ui/host_trust_dialog_test.dart: reject is available without accepting fingerprint
+00:10 +31: <project>/test/ui/host_trust_dialog_test.dart: long fingerprint fits mobile viewport
+00:10 +32: loading <project>/test/ui/preview_capture_test.dart
+00:10 +32: <project>/test/ui/preview_capture_test.dart: capture simulated configuration previews from real Flutter rendering
+00:10 +32 ~1: loading <project>/test/ui/connection_panel_test.dart
+00:11 +32 ~1: <project>/test/ui/connection_panel_test.dart: busy connecting remains cancellable
+00:11 +33 ~1: <project>/test/ui/connection_panel_test.dart: HTTP action is explicit and unavailable before ready
+00:11 +34 ~1: <project>/test/ui/connection_panel_test.dart: target unavailable keeps stop but not HTTP action
+00:12 +35 ~1: <project>/test/ui/connection_panel_test.dart: connection panel fits width 320.0
+00:12 +36 ~1: <project>/test/ui/connection_panel_test.dart: connection panel fits width 390.0
+00:12 +37 ~1: <project>/test/ui/connection_panel_test.dart: connection panel fits width 760.0
+00:12 +38 ~1: loading <project>/test/core/dartssh_adapter_test.dart
+00:12 +38 ~1: <project>/test/core/dartssh_adapter_test.dart: production adapter bounds silent TCP peer handshake and closes socket
+00:12 +39 ~1: <project>/test/core/dartssh_adapter_test.dart: production adapter rejects refused TCP connection within connect deadline
+00:12 +40 ~1: loading <project>/test/core/models_test.dart
+00:13 +40 ~1: <project>/test/core/models_test.dart: profile validates IPv4 IPv6 and DNS without URL or control characters
+00:13 +41 ~1: <project>/test/core/models_test.dart: profile JSON strictly roundtrips without credentials
+00:13 +42 ~1: <project>/test/core/models_test.dart: phase activity and transport connectivity follow contract
+00:13 +43 ~1: loading <project>/test/core/tunnel_engine_test.dart
+00:14 +43 ~1: <project>/test/core/tunnel_engine_test.dart: ready requires auth, real exclusive loopback listener and SSH target probe
+00:14 +44 ~1: <project>/test/core/tunnel_engine_test.dart: eight concurrent streams preserve payloads and response after upload half-close
+00:14 +45 ~1: <project>/test/core/tunnel_engine_test.dart: binding conflict is fatal and never retried
+00:14 +46 ~1: <project>/test/core/tunnel_engine_test.dart: production constructor keeps fixed 3080 and fails safely if already occupied
+00:14 +47 ~1: <project>/test/core/tunnel_engine_test.dart: target failure keeps listener and periodically reprobes through SSH
+00:14 +48 ~1: <project>/test/core/tunnel_engine_test.dart: ping hang has timeout, closes old session and reconnects once
+00:14 +49 ~1: <project>/test/core/tunnel_engine_test.dart: transient initial failure returns before retries and backoff is bounded
+00:14 +50 ~1: <project>/test/core/tunnel_engine_test.dart: auth failure never retries or reveals server text or password
+00:14 +51 ~1: <project>/test/core/tunnel_engine_test.dart: unknown prompts once, repeated key skips prompt, changed key hard-stops
+00:14 +52 ~1: <project>/test/core/tunnel_engine_test.dart: transport cannot publish ready if it skipped host verification
+00:14 +53 ~1: <project>/test/core/tunnel_engine_test.dart: algorithm changes are fatal before first-use prompt
+00:14 +54 ~1: <project>/test/core/tunnel_engine_test.dart: rejecting trust does not save or retry
+00:15 +55 ~1: <project>/test/core/tunnel_engine_test.dart: disconnect pending trust returns promptly and stale acceptance cannot persist
+00:15 +56 ~1: <project>/test/core/tunnel_engine_test.dart: stale late connector is closed and cannot bind or overwrite newer status
+00:15 +57 ~1: <project>/test/core/tunnel_engine_test.dart: rapid double switch waits for the oldest teardown and only latest connects
+00:15 +58 ~1: <project>/test/core/tunnel_engine_test.dart: cancel retry timer prevents any later connection attempt
+00:15 +59 ~1: <project>/test/core/tunnel_engine_test.dart: late failed accepted channel is cleaned after disconnect
+00:15 +60 ~1: <project>/test/core/tunnel_engine_test.dart: connect timeout retires late host prompt and closes late session
+00:15 +61 ~1: <project>/test/core/tunnel_engine_test.dart: hung authentication expires and only transient timeout is retried
+00:15 +62 ~1: <project>/test/core/tunnel_engine_test.dart: hung authentication is bounded and disconnect clears its timer
+00:15 +63 ~1: <project>/test/core/tunnel_engine_test.dart: target probe timeout marks unavailable and destroys a late successful channel
+00:16 +64 ~1: <project>/test/core/tunnel_engine_test.dart: trust-store failure fails closed without a prompt or automatic retry
+00:16 +65 ~1: <project>/test/core/tunnel_engine_test.dart: session closing during initial probe never emits ready
+00:16 +66 ~1: <project>/test/core/tunnel_engine_test.dart: stale open from retired attempt cannot leak after auto-reconnect
+00:16 +67 ~1: <project>/test/core/tunnel_engine_test.dart: dispose is idempotent and prevents new connects
+00:16 +68 ~1: loading <project>/test/ssh_integration_test.dart
+00:17 +68 ~1: <project>/test/ssh_integration_test.dart: real SSH password, pinned host, forwarding, concurrent data and cleanup
+00:18 +69 ~1: loading <project>/test/app_controller_test.dart
+00:19 +69 ~1: <project>/test/app_controller_test.dart: initialize loads immutable profiles and auto-connects only default once
+00:19 +70 ~1: <project>/test/app_controller_test.dart: concurrent initialize calls share a single load and autoconnect
+00:19 +71 ~1: <project>/test/app_controller_test.dart: initialization error forbids every mutation and connection without leaking errors
+00:19 +72 ~1: <project>/test/app_controller_test.dart: new profile requires password before metadata or secret writes
+00:19 +73 ~1: <project>/test/app_controller_test.dart: invalid profile is rejected before touching secure storage
+00:19 +74 ~1: <project>/test/app_controller_test.dart: first saved profile becomes default without automatically connecting
+00:19 +75 ~1: <project>/test/app_controller_test.dart: failed metadata save rolls existing password back and leaves configuration unchanged
+00:19 +76 ~1: <project>/test/app_controller_test.dart: failed new-profile save removes newly written credential
+00:19 +77 ~1: <project>/test/app_controller_test.dart: failed credential rollback surfaces explicit repair warning without exposing secrets
+00:19 +78 ~1: <project>/test/app_controller_test.dart: secure-store write failure never commits metadata or updates UI state
+00:19 +79 ~1: <project>/test/app_controller_test.dart: editing blank password keeps credential and only restarts active profile after save succeeds
+00:19 +80 ~1: <project>/test/app_controller_test.dart: setting default persists choice but never switches a live connection
+00:19 +81 ~1: <project>/test/app_controller_test.dart: failed default save leaves the previous selection intact
+00:19 +82 ~1: <project>/test/app_controller_test.dart: delete active default disconnects before stopping Android session and chooses first remaining
+00:19 +83 ~1: <project>/test/app_controller_test.dart: delete inactive profile does not disconnect the current server
+00:19 +84 ~1: <project>/test/app_controller_test.dart: delete secret failure leaves metadata deleted with honest cleanup warning
+00:19 +85 ~1: <project>/test/app_controller_test.dart: delete metadata failure preserves credential and configuration
+00:19 +86 ~1: <project>/test/app_controller_test.dart: busy metadata transaction gates all other mutations and connect switches
+00:19 +87 ~1: <project>/test/app_controller_test.dart: host-key prompt can be explicitly accepted and is cleared exactly once
+00:19 +88 ~1: <project>/test/app_controller_test.dart: disconnect bypasses busy and rejects a hanging host-key prompt
+00:19 +89 ~1: <project>/test/app_controller_test.dart: fatal engine status dismisses outstanding trust and stops platform session
+00:19 +90 ~1: <project>/test/app_controller_test.dart: Android start failure prevents SSH connect and cleans session without leaking platform text
+00:19 +91 ~1: <project>/test/app_controller_test.dart: cancel during pending Android start cannot later open SSH
+00:19 +92 ~1: <project>/test/app_controller_test.dart: missing password never starts Android or opens SSH
+00:19 +93 ~1: <project>/test/app_controller_test.dart: transient reconnect keeps Android session while fatal status stops it
+00:19 +94 ~1: <project>/test/app_controller_test.dart: stale queued failure cannot stop a newer healthy connection
+00:19 +95 ~1: <project>/test/app_controller_test.dart: secure-store read failure never opens SSH or leaks backend exception
+00:19 +96 ~1: <project>/test/app_controller_test.dart: failed native stop is not acknowledged and delete does not commit metadata
+00:19 +97 ~1: <project>/test/app_controller_test.dart: target unavailable remains an active Android forwarding session
+00:19 +98 ~1: <project>/test/app_controller_test.dart: shutdown while loading cannot resurrect profiles or auto-connect default
+00:19 +99 ~1: <project>/test/app_controller_test.dart: shutdown during default save never updates closed controller state
+00:19 +100 ~1: <project>/test/app_controller_test.dart: shutdown during delete lets committed credential cleanup finish without UI resurrection
+00:19 +101 ~1: <project>/test/app_controller_test.dart: disconnect during secure-store read cancels before Android session starts
+00:19 +102 ~1: <project>/test/app_controller_test.dart: shutdown during delayed engine completion cannot republish ready
+00:19 +103 ~1: <project>/test/app_controller_test.dart: password whitespace is preserved rather than silently trimmed
+00:19 +104 ~1: <project>/test/app_controller_test.dart: saving an unknown edit ID never creates or overwrites credentials
+00:19 +105 ~1: <project>/test/app_controller_test.dart: deleting the final profile clears the default and stored password
+00:19 +106 ~1: <project>/test/app_controller_test.dart: explicit host trust rejection stops platform session without an uncaught error
+00:19 +107 ~1: <project>/test/app_controller_test.dart: failed new-profile rollback warns about remaining orphaned credential
+00:19 +108 ~1: <project>/test/app_controller_test.dart: shutdown is idempotent, rejects pending trust and blocks later mutation/connect
+00:19 +109 ~1: loading <project>/test/data/secret_store_test.dart
+00:20 +109 ~1: <project>/test/data/secret_store_test.dart: password roundtrip is namespaced per profile and delete is isolated
+00:20 +110 ~1: <project>/test/data/secret_store_test.dart: platform secure-storage failures propagate and never become silent fallback
+00:20 +111 ~1: <project>/test/data/secret_store_test.dart: invalid IDs cannot escape credential namespace
+00:20 +112 ~1: loading <project>/test/data/repositories_test.dart
+00:21 +112 ~1: <project>/test/data/repositories_test.dart: empty first run, immutable snapshot and validated round trip
+00:21 +113 ~1: <project>/test/data/repositories_test.dart: atomic backup recovers corrupt primary and preserves last good backup
+00:21 +114 ~1: <project>/test/data/repositories_test.dart: concurrent repository instances never expose partial documents
+00:21 +115 ~1: <project>/test/data/repositories_test.dart: schema limits duplicate IDs missing default and plaintext fields are rejected
+00:21 +116 ~1: <project>/test/data/repositories_test.dart: host pins normalize host case, isolate ports and block algorithm changes
+00:21 +117 ~1: <project>/test/data/repositories_test.dart: trust read-modify-write serialized across instances without losing pins
+00:21 +118 ~1: <project>/test/data/repositories_test.dart: pin formats and malformed trust documents fail closed
+00:21 +119 ~1: <project>/test/data/repositories_test.dart: trust corruption fails closed even with a valid stale backup
+00:21 +120 ~1: All tests passed!
