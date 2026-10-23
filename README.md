@@ -83,4 +83,4 @@ test/                  模型/存储/网络/控制器/UI/真实SSH测试
 - Android debug APK仅用于自测；正式密钥和商店流程未配置。
 - [构建工作流](<.github/workflows/verify.yml>)仅提供CI定义，未上传远端、未实际运行，不能当作CI已通过。
 
-见[构建前诊断](<docs/BUILD_PREFLIGHT.md>)、[安全边界](<docs/SECURITY.md>)与[验证记录](<docs/VERIFICATION.md>)。
+见[构建前诊断](<docs/BUILD_PREFLIGHT.md>)、[Windows构建打包](<docs/WINDOWS.md>)、[两端接续授权与构建](<docs/WINDOWS_ANDROID_NEXT.md>)、[安全边界](<docs/SECURITY.md>)与[验证记录](<docs/VERIFICATION.md>)。

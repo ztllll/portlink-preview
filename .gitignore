@@ -5,6 +5,7 @@
 .pub-cache/
 .venv-ssh-test/
 build/
+dist/
 .flutter-plugins
 .flutter-plugins-dependencies
 **/flutter/ephemeral/

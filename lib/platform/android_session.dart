@@ -20,6 +20,7 @@ class AndroidSession {
   Future<bool>? _handlingStop;
   bool _initialized = false;
   bool _disposed = false;
+  int _generation = 0;
 
   Future<void> initialize() async {
     if (!_isAndroid) return;
@@ -56,25 +57,41 @@ class AndroidSession {
   /// state. Call before opening SSH sockets; do not suppress platform errors.
   Future<void> start() async {
     if (!_isAndroid) return;
+    final generation = _generation;
     await initialize();
+    _checkStartGeneration(generation);
     if (_stopHandler == null) {
       throw StateError('开始 Android 会话前必须设置断开连接处理器');
     }
     final existing = _starting;
-    if (existing != null) return existing;
+    if (existing != null) {
+      await existing;
+      _checkStartGeneration(generation);
+      return;
+    }
     final operation = _channel.invokeMethod<void>('start');
     _starting = operation;
     try {
       await operation;
+      _checkStartGeneration(generation);
     } finally {
-      _starting = null;
+      if (identical(_starting, operation)) _starting = null;
+    }
+  }
+
+  void _checkStartGeneration(int generation) {
+    if (_disposed || generation != _generation) {
+      throw PlatformException(code: 'cancelled', message: '本次 Android 会话已取消');
     }
   }
 
   /// Releases the foreground service, not the SSH connection. The controller
   /// owns that connection and must close it first. Also cancels a pending start.
   Future<void> stop() async {
-    if (!_isAndroid || !_initialized) return;
+    if (!_isAndroid) return;
+    ++_generation;
+    _starting = null;
+    if (!_initialized) return;
     await _channel.invokeMethod<void>('stop');
   }
 
@@ -108,10 +125,12 @@ class AndroidSession {
   /// Call only after the controller has disposed/disconnected its SSH engine.
   Future<void> dispose() async {
     if (_disposed) return;
+    // Close admission synchronously. Native stop can await a platform response;
+    // no new start/handler may enter while that cleanup is still pending.
+    _disposed = true;
     try {
       await stop();
     } finally {
-      _disposed = true;
       _stopHandler = null;
       if (_isAndroid) _channel.setMethodCallHandler(null);
     }

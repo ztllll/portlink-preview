@@ -17,7 +17,7 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 ## 启停协议
 
 1. 控制器创建 `AndroidSession`，先 `setStopHandler(disconnect)`，再 `initialize()`。
-2. 在调用 SSH connect **之前** await `start()`。原生等待 Activity resumed；仅从可见 Activity 启动 FGS，绝不靠后台启动豁免。
+2. 在调用 SSH connect **之前** await `start()`。原生等待 Activity resumed；仅从可见 Activity 启动 FGS，绝不靠后台启动豁免。Dart start 使用代际取消：初始化尚未完成时调用 stop，不会随后发出新的原生 start；停止后晚到的 FGS ack 也不能把旧 start 变为成功。
 3. Android 13+ 请求通知权限；支持的最低 API24 起检查应用/会话通知 channel 是否禁用。虽 Android 允许无通知权限启动部分 FGS，本应用为了有清晰可见的停止入口，主动在拒绝时失败，**不开始隧道**。系统设置恢复权限后可重试。
 4. 原生调用 `startForegroundService`；Service 立即调用真正的 `startForeground` 成功后才 ack Dart `start()`。若权限、FGS 类型、系统限制或超时失败，Dart 收到错误而不能谎报已启动。初始化前台等待/Service 启动各有 10 秒限时，权限对话框限时 120 秒。
 5. 通知“停止转发”、Activity 真正 finishing、划掉任务或意外 Service 销毁，均向同一个 Dart isolate 发 `stopRequested`。控制器必须即使 busy/connecting 也能取消连接、重连 timer 与待确认主机请求。
@@ -55,11 +55,11 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 
 ## 运行中通知撤销
 
-启动确认、再次开始已有会话和Activity恢复前台时重新检查通知权限/通道。用户开始的FGS还会在主线程可调度时每5秒检查；通知被禁用后请求停止真实隧道并走同一ack/销毁兜底。此检查不申请wakelock、不唤醒设备，Doze/系统调度可能推迟检查，不能承诺精确5秒内停止。原生改动仍需真机验证。Dart通道已有8项可执行mock回归，覆盖FGS确认与停止失败不误ack。
+启动确认、再次开始已有会话和Activity恢复前台时重新检查通知权限/通道。用户开始的FGS还会在主线程可调度时每5秒检查；通知被禁用后请求停止真实隧道并走同一ack/销毁兜底。此检查不申请wakelock、不唤醒设备，Doze/系统调度可能推迟检查，不能承诺精确5秒内停止。原生改动仍需真机验证。Dart通道现有16项mock回归，覆盖FGS确认、停止失败不误ack、重复停止共用、回调内再次stop不死锁，以及初始化期间停止/晚到FGS确认的取消。Lead 已在唯一Flutter测试窗口执行全部16项，exit0、全部通过，其中第16项验证 dispose 等待原生 stop 时拒绝重入启动/注册 handler。dispose 在入口同步关闭准入，而非等平台 stop 返回才设 disposed。模块与测试的独立Dart analyzer也通过。这些mock不是Android系统或真机测试。
 
 ## 验证状态与必须实机检查的项目
 
-已使用准备好的 Dart SDK 对 AndroidSession 模块执行独立 `dart analyze`，结果为 `No issues found!`；全部 8 份 Android XML 解析及主清单权限/Service/HTTP query 结构断言通过，并已核对本地 Flutter embedding API。**当前实现未完成 Android 原生编译/真机验证**：原生脚手架现已接入，但此环境的 `/usr/bin/java` 只是启动器，执行 `java -version` 提示找不到 Java Runtime；也没有可用的 Android SDK 编译配置。存在 adb 不等于具备编译工具链。本轮未运行 Gradle/APK 构建，也未验证某个品牌手机的后台行为。不得把“有通知/代码有 FGS”记为隧道已经实测。无 Xcode 不影响本 Android 方案，但不会据此声称其他平台打包成功。
+已使用准备好的 Dart SDK 对 AndroidSession 模块执行独立 `dart analyze`，结果为 `No issues found!`；全部 8 份 Android XML 解析及主清单权限/Service/HTTP query 结构断言通过，并已核对本地 Flutter embedding API。**截至本轮审查尚未完成 Android 原生编译/真机验证**。上一轮默认 `/usr/bin/java` 只是启动器，SDK 路径也仅指向 platform-tools；续作已发现现有 Homebrew JDK17.0.18，可显式设置 `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home`。当前剩余环境条件是完整 SDK36、NDK28.2.13676358/CMake；组件许可需用户明确授权，未擅自接受。Lead 独占下载准备及 Flutter/Gradle 构建，此处会根据实际编译输出更新，不把现有JDK、下载或安装完成当成 APK 编译完成。尚未验证某个品牌手机的后台行为。不得把“有通知/代码有 FGS”记为隧道已经实测。无 Xcode 不影响本 Android 方案，但不会据此声称其他平台打包成功。
 
 发布 APK 前至少完成：
 

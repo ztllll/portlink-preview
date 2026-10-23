@@ -126,6 +126,152 @@ void main() {
     },
   );
   test(
+    'native stop without handler is never acknowledged as disconnected',
+    () async {
+      await session.initialize();
+      expect(await nativeStop(), isFalse);
+    },
+  );
+
+  test('duplicate native stops share one pending disconnect', () async {
+    final gate = Completer<void>();
+    var stops = 0;
+    session.setStopHandler(() async {
+      stops++;
+      await gate.future;
+    });
+    await session.start();
+    final one = nativeStop();
+    final two = nativeStop();
+    await Future<void>.delayed(Duration.zero);
+    expect(stops, 1);
+    gate.complete();
+    expect(await Future.wait([one, two]), [true, true]);
+  });
+
+  test(
+    'native disconnect may call session stop without a channel deadlock',
+    () async {
+      session.setStopHandler(session.stop);
+      await session.start();
+      expect(await nativeStop(), isTrue);
+      expect(calls, ['initialize', 'start', 'stop']);
+    },
+  );
+
+  test(
+    'failed initialization can retry and restore native stop callback',
+    () async {
+      var attempts = 0;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call.method);
+        if (call.method == 'initialize' && ++attempts == 1) {
+          throw PlatformException(code: 'engine_unavailable');
+        }
+        return null;
+      });
+      session.setStopHandler(() async {});
+      await expectLater(session.start(), throwsA(isA<PlatformException>()));
+      expect(await nativeStop(), isNull);
+      await session.start();
+      expect(await nativeStop(), isTrue);
+      expect(calls, ['initialize', 'initialize', 'start']);
+    },
+  );
+
+  test('stop while initializing prevents the delayed platform start', () async {
+    final gate = Completer<void>();
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      if (call.method == 'initialize') await gate.future;
+      return null;
+    });
+    session.setStopHandler(() async {});
+    final start = expectLater(
+      session.start(),
+      throwsA(
+        isA<PlatformException>().having((e) => e.code, 'code', 'cancelled'),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    await session.stop();
+    gate.complete();
+    await start;
+    expect(calls, ['initialize']);
+  });
+
+  test('late foreground ack cannot complete a cancelled Dart start', () async {
+    final gate = Completer<void>();
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      if (call.method == 'start') await gate.future;
+      return null;
+    });
+    session.setStopHandler(() async {});
+    final start = expectLater(
+      session.start(),
+      throwsA(
+        isA<PlatformException>().having((e) => e.code, 'code', 'cancelled'),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    await session.stop();
+    gate.complete();
+    await start;
+    expect(calls, ['initialize', 'start', 'stop']);
+  });
+
+  test(
+    'new start does not reuse the previous cancelled platform operation',
+    () async {
+      final firstGate = Completer<void>();
+      var starts = 0;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call.method);
+        if (call.method == 'start' && ++starts == 1) await firstGate.future;
+        return null;
+      });
+      session.setStopHandler(() async {});
+      final oldStart = expectLater(
+        session.start(),
+        throwsA(isA<PlatformException>()),
+      );
+      await Future<void>.delayed(Duration.zero);
+      await session.stop();
+      await session.start();
+      firstGate.complete();
+      await oldStart;
+      expect(starts, 2);
+    },
+  );
+
+  test(
+    'dispose rejects restart while native cleanup is still pending',
+    () async {
+      final gate = Completer<void>();
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call.method);
+        if (call.method == 'stop') await gate.future;
+        return null;
+      });
+      session.setStopHandler(() async {});
+      await session.start();
+      final disposal = session.dispose();
+      try {
+        await expectLater(session.start(), throwsStateError);
+        await expectLater(session.initialize(), throwsStateError);
+        expect(() => session.setStopHandler(() async {}), throwsStateError);
+        expect(await nativeStop(), isFalse);
+        expect(calls, ['initialize', 'start', 'stop']);
+      } finally {
+        gate.complete();
+        await disposal;
+      }
+      expect(await nativeStop(), isNull);
+    },
+  );
+
+  test(
     'disposed session cannot restart and unregisters its callback',
     () async {
       session.setStopHandler(() async {});
