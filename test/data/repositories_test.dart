@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:portlink/core/host_trust.dart';
 import 'package:portlink/core/server_profile.dart';
@@ -102,48 +103,43 @@ void main() {
       );
     },
   );
-  test(
-    'schema limits duplicate IDs missing default and plaintext fields are rejected',
-    () async {
-      final repo = JsonProfileRepository(path);
-      await expectLater(
-        repo.save(ProfileSnapshot(profiles: [profile('x'), profile('x')])),
-        throwsFormatException,
-      );
-      await expectLater(
-        repo.save(ProfileSnapshot(defaultProfileId: 'missing')),
-        throwsFormatException,
-      );
-      await expectLater(
-        repo.save(
-          ProfileSnapshot(
-            profiles: List.generate(101, (i) => profile('id-$i')),
-          ),
-        ),
-        throwsFormatException,
-      );
-      for (final data in [
-        {'schemaVersion': 2, 'profiles': []},
-        {
-          'schemaVersion': 1,
-          'profiles': [
-            {...profile('x').toJson(), 'password': 'never-store'},
-          ],
-        },
-        {
-          'schemaVersion': 1,
-          'profiles': [
-            {...profile('x').toJson(), 'sshPort': 22.5},
-          ],
-        },
-      ]) {
-        await File(path).writeAsString(jsonEncode(data));
-        await expectLater(repo.load(), throwsFormatException);
-      }
-      await File(path).writeAsString('x' * (1024 * 1024 + 1));
+  test('schema limits duplicate IDs missing default and plaintext fields are rejected', () async {
+    final repo = JsonProfileRepository(path);
+    await expectLater(
+      repo.save(ProfileSnapshot(profiles: [profile('x'), profile('x')])),
+      throwsFormatException,
+    );
+    await expectLater(
+      repo.save(ProfileSnapshot(defaultProfileId: 'missing')),
+      throwsFormatException,
+    );
+    await expectLater(
+      repo.save(
+        ProfileSnapshot(profiles: List.generate(101, (i) => profile('id-$i'))),
+      ),
+      throwsFormatException,
+    );
+    for (final data in [
+      {'schemaVersion': 2, 'profiles': []},
+      {
+        'schemaVersion': 1,
+        'profiles': [
+          {...profile('x').toJson(), 'password': 'never-store'},
+        ],
+      },
+      {
+        'schemaVersion': 1,
+        'profiles': [
+          {...profile('x').toJson(), 'sshPort': 22.5},
+        ],
+      },
+    ]) {
+      await File(path).writeAsString(jsonEncode(data));
       await expectLater(repo.load(), throwsFormatException);
-    },
-  );
+    }
+    await File(path).writeAsString('x' * (1024 * 1024 + 1));
+    await expectLater(repo.load(), throwsFormatException);
+  });
   test(
     'host pins normalize host case, isolate ports and block algorithm changes',
     () async {
@@ -185,16 +181,15 @@ void main() {
       await Future.wait(
         List.generate(
           20,
-          (i) => JsonHostTrustStore(
-            path,
-          ).trust('host-$i.example', 22, 'ssh-ed25519', pin('A')),
+          (i) =>
+              JsonHostTrustStore(path)
+                  .trust('host-$i.example', 22, 'ssh-ed25519', pin('A')),
         ),
       );
       for (var i = 0; i < 20; i++) {
         expect(
-          await JsonHostTrustStore(
-            path,
-          ).readFingerprint('host-$i.example', 22, 'ssh-ed25519'),
+          await JsonHostTrustStore(path)
+              .readFingerprint('host-$i.example', 22, 'ssh-ed25519'),
           pin('A'),
         );
       }

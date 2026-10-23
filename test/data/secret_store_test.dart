@@ -21,21 +21,15 @@ void main() {
       expect(await store.readPassword('two'), 'sensitive-two');
     },
   );
-  test(
-    'platform secure-storage failures propagate and never become silent fallback',
-    () async {
-      final store = SecureSecretStore(storage: UnavailableStorage());
-      await expectLater(store.readPassword('one'), throwsA(isA<StateError>()));
-      await expectLater(
-        store.writePassword('one', 'sensitive'),
-        throwsA(isA<StateError>()),
-      );
-      await expectLater(
-        store.deletePassword('one'),
-        throwsA(isA<StateError>()),
-      );
-    },
-  );
+  test('platform secure-storage failures propagate and never become silent fallback', () async {
+    final store = SecureSecretStore(storage: UnavailableStorage());
+    await expectLater(store.readPassword('one'), throwsA(isA<StateError>()));
+    await expectLater(
+      store.writePassword('one', 'sensitive'),
+      throwsA(isA<StateError>()),
+    );
+    await expectLater(store.deletePassword('one'), throwsA(isA<StateError>()));
+  });
   test('invalid IDs cannot escape credential namespace', () {
     final store = SecureSecretStore();
     expect(() => store.readPassword('../../other'), throwsArgumentError);

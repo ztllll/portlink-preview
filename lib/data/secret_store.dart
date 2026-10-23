@@ -10,7 +10,15 @@ abstract interface class SecretStore {
 /// to preferences, JSON, logs, error messages, or a plaintext fallback.
 final class SecureSecretStore implements SecretStore {
   SecureSecretStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            // Standalone Mac utility: use the system login Keychain without a
+            // cross-app Keychain Sharing entitlement/provisioning profile. This is
+            // still OS secure storage, never a plaintext fallback. Other platforms
+            // keep their default secure backends.
+            mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+          );
   final FlutterSecureStorage _storage;
 
   String _key(String id) {

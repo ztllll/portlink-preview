@@ -53,28 +53,22 @@ final class TunnelTiming {
 /// No password is exposed in status, JSON, exception text or logs.
 final class SshTunnelEngine implements TunnelEngine {
   SshTunnelEngine({
-    required HostTrustStore trustStore,
-    SshConnector connector = const DartSshConnector(),
-    TunnelTiming timing = const TunnelTiming(),
+    required this._trustStore,
+    this._connector = const DartSshConnector(),
+    this._timing = const TunnelTiming(),
     double Function()? jitter,
-  }) : _trustStore = trustStore,
-       _connector = connector,
-       _timing = timing,
-       _listenPort = localPort,
+  }) : _listenPort = localPort,
        _jitter = jitter ?? Random.secure().nextDouble;
 
   /// Test harness only: production construction always binds fixed port 3080.
   /// This changes only the local listener; the SSH target remains port 3080.
   SshTunnelEngine.forTesting({
-    required HostTrustStore trustStore,
+    required this._trustStore,
     required int listenPort,
-    SshConnector connector = const DartSshConnector(),
-    TunnelTiming timing = const TunnelTiming(),
+    this._connector = const DartSshConnector(),
+    this._timing = const TunnelTiming(),
     double Function()? jitter,
   }) : assert(listenPort > 0 && listenPort <= 65535),
-       _trustStore = trustStore,
-       _connector = connector,
-       _timing = timing,
        _listenPort = listenPort,
        _jitter = jitter ?? Random.secure().nextDouble;
 
@@ -536,8 +530,7 @@ final class SshTunnelEngine implements TunnelEngine {
   Future<void> _fail(_Run run, Object error) async {
     if (!_current(run) || run.recovering) return;
     run.recovering = true;
-    ++run
-        .attemptToken; // Retire host callbacks belonging to the failed SSH attempt.
+    ++run.attemptToken; // Retire host callbacks belonging to the failed SSH attempt.
     await _closeResources(run);
     if (!_current(run)) return;
     final retry =
@@ -594,10 +587,8 @@ final class SshTunnelEngine implements TunnelEngine {
     final closing = run.closing;
     if (closing != null) return closing;
     final resources = _closeResourcesNow(run);
-    final operation = Future.wait<void>([
-      _cleanupBarrier,
-      resources,
-    ]).then<void>((_) {});
+    final operation = Future.wait<void>([_cleanupBarrier, resources])
+        .then<void>((_) {});
     _cleanupBarrier = operation;
     run.closing = operation;
     operation.then((_) {

@@ -3,6 +3,7 @@
 .packages
 .pub/
 .pub-cache/
+.venv-ssh-test/
 build/
 .flutter-plugins
 .flutter-plugins-dependencies

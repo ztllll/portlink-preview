@@ -1,6 +1,6 @@
 # 接续构建清单
 
-本轮已完成跨平台源码、真实SSH/并发/配置/UI测试、桌面退出协调/单实例及Android通道协议测试。最终141 passed /1 skipped，静态No issues found。不要再次把这些验证写成原生安装包验收。
+本轮已完成跨平台源码、真实SSH/并发/配置/UI测试、桌面退出协调/单实例及Android通道协议测试。最终152 passed /1 skipped，静态No issues found。不要再次把这些验证写成原生安装包验收。
 
 ## 当前未改变的具体环境条件
 
@@ -11,7 +11,7 @@
 
 ## 下一轮应优先做
 
-1. 只检查工具链是否变化，不重复下载已存在的Flutter SDK或再次尝试不可能的Xcode构建。
+1. 运行只读 `dart tool/preflight.dart macos --json` 核查工具链变化，不重复下载已存在的Flutter SDK或再次尝试不可能的Xcode构建；本轮证据位于docs/preflight。
 2. 如完整Xcode已安装并完成首次启动，可用项目外层.tools/flutter/bin/flutter构建Mac；本地SDK引导使用FLUTTER_PREBUILT_ENGINE_VERSION=deb287481e3ce9468f3434937ced4240a70539ca。不要混淆本地git元数据与官方SDK提交。
 3. 无Xcode时可继续有限且有价值的原生可编译性静态核对、发行脚本校验，但不要无限增添首版以外功能掩盖无法产安装包。Xcode下载/账户授权/首次许可证是需要用户操作的现实前置。
 4. 若环境条件不改变，应保留“原生构建待完成”的状态并说明缺少什么，不以重复通过源码测试替代可安装产物和实机验收。

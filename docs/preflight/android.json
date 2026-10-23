@@ -1,0 +1,63 @@
+{
+  "target": "android",
+  "host": "macos",
+  "buildPrerequisitesReady": false,
+  "checks": [
+    {
+      "id": "flutter",
+      "level": "pass",
+      "message": "Flutter 3.47.1-0.0.pre-1 / Dart 3.13.5；最低Flutter3.47、Dart3.13。"
+    },
+    {
+      "id": "sdk-provenance",
+      "level": "warning",
+      "message": "本地或预发布SDK元数据，不能作为官方正式发行校验。"
+    },
+    {
+      "id": "project",
+      "level": "pass",
+      "message": "项目清单与锁文件必须同时存在。"
+    },
+    {
+      "id": "jdk",
+      "level": "blocked",
+      "message": "未找到可用JDK17+；仅java启动器不代表已安装运行时。"
+    },
+    {
+      "id": "android-sdk",
+      "level": "blocked",
+      "message": "缺少Android36平台或build-tools；platform-tools/adb不能替代完整编译SDK。"
+    },
+    {
+      "id": "android-ndk",
+      "level": "blocked",
+      "message": "缺少NDK28.2.13676358或clang/ar/ld，原生Dart资产需要完整编译工具链。"
+    },
+    {
+      "id": "android-manager",
+      "level": "warning",
+      "message": "未找到sdkmanager；如SDK采用版本号目录，请显式核验组件与许可证。"
+    },
+    {
+      "id": "android-cmake",
+      "level": "blocked",
+      "message": "缺少Android CMake3.22.1，请通过sdkmanager安装并核验。"
+    },
+    {
+      "id": "android-licenses",
+      "level": "warning",
+      "message": "SDK许可证需由用户或获授权CI接受；此工具不会自动接受条款。"
+    },
+    {
+      "id": "device",
+      "level": "warning",
+      "message": "原生编译后仍须真机验证通知、切浏览器和停止；此工具不连接设备。"
+    },
+    {
+      "id": "port-3080",
+      "level": "warning",
+      "message": "127.0.0.1:3080已占用；不发送流量或停止占用者，冲突不阻止编译但阻止正式转发。"
+    }
+  ],
+  "notice": "只读前置检查，不是原生构建或实机验收证明。"
+}

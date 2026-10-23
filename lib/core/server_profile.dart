@@ -30,9 +30,8 @@ final class ServerProfile {
       return '请输入主机名或 IP 地址，不含协议和路径';
     }
     if (InternetAddress.tryParse(host) == null &&
-        (!RegExp(
-              r'^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$',
-            ).hasMatch(host) ||
+        (!RegExp(r'^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$')
+                .hasMatch(host) ||
             host
                 .split('.')
                 .any(

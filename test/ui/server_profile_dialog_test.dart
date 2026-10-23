@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:portlink/core/server_profile.dart';
 import 'package:portlink/ui/portlink_app.dart';
 import 'package:portlink/ui/server_profile_dialog.dart';
+
 import 'fake_app_controller.dart';
 
 const profile = ServerProfile(

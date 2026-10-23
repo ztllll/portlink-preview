@@ -6,8 +6,10 @@ import 'package:dartssh2/dartssh2.dart';
 
 import 'server_profile.dart';
 
-typedef VerifySshHost =
-    Future<bool> Function(String keyType, String fingerprint);
+typedef VerifySshHost = Future<bool> Function(
+  String keyType,
+  String fingerprint,
+);
 
 /// Injectable transport seam. Production always uses DartSshConnector; tests can
 /// exercise real loopback listeners without weakening host verification.

@@ -14,15 +14,13 @@ import 'data/secret_store.dart';
 /// UI and platform integrations observe this controller; neither owns sockets.
 class AppController extends ChangeNotifier {
   AppController({
-    required ProfileRepository repository,
-    required SecretStore secrets,
+    required this._repository,
+    required this._secrets,
     required TunnelEngine engine,
     Future<void> Function()? startSession,
     Future<void> Function()? stopSession,
     String Function()? newId,
-  }) : _repository = repository,
-       _secrets = secrets,
-       _engine = engine,
+  }) : _engine = engine,
        _startSession = startSession ?? _noop,
        _stopSession = stopSession ?? _noop,
        _newId = newId ?? const Uuid().v4 {

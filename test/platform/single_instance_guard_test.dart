@@ -32,21 +32,18 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test(
-    'same isolate refuses duplicate, release is idempotent and stale file is safe',
-    () async {
-      final guard = await SingleInstanceGuard.acquire(lockPath);
-      await expectLater(
-        SingleInstanceGuard.acquire(lockPath),
-        throwsA(isA<InstanceAlreadyRunning>()),
-      );
-      await guard.release();
-      await guard.release();
-      expect(await File(lockPath).exists(), isTrue);
-      final replacement = await SingleInstanceGuard.acquire(lockPath);
-      await replacement.release();
-    },
-  );
+  test('same isolate refuses duplicate, release is idempotent and stale file is safe', () async {
+    final guard = await SingleInstanceGuard.acquire(lockPath);
+    await expectLater(
+      SingleInstanceGuard.acquire(lockPath),
+      throwsA(isA<InstanceAlreadyRunning>()),
+    );
+    await guard.release();
+    await guard.release();
+    expect(await File(lockPath).exists(), isTrue);
+    final replacement = await SingleInstanceGuard.acquire(lockPath);
+    await replacement.release();
+  });
 
   test('separate process cannot take an owned OS lock', () async {
     final guard = await SingleInstanceGuard.acquire(lockPath);

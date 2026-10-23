@@ -131,29 +131,24 @@ void main() {
     },
   );
 
-  test(
-    'initialization error forbids every mutation and connection without leaking errors',
-    () async {
-      repository.loadFailure = StateError(
-        'SECRET-IN-EXCEPTION /private/config',
-      );
-      await controller.initialize();
-      expect(controller.initialized, isFalse);
-      expect(controller.busy, isFalse);
-      expect(controller.errorMessage, contains('禁止修改'));
-      expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
-      await save();
-      await controller.deleteProfile('one');
-      await controller.setDefault('one');
-      await controller.connectProfile('one');
-      expect(repository.saves, isEmpty);
-      expect(secrets.writes, isEmpty);
-      expect(engine.connections, isEmpty);
-      controller.clearError();
-      await save();
-      expect(controller.errorMessage, contains('不能修改'));
-    },
-  );
+  test('initialization error forbids every mutation and connection without leaking errors', () async {
+    repository.loadFailure = StateError('SECRET-IN-EXCEPTION /private/config');
+    await controller.initialize();
+    expect(controller.initialized, isFalse);
+    expect(controller.busy, isFalse);
+    expect(controller.errorMessage, contains('禁止修改'));
+    expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
+    await save();
+    await controller.deleteProfile('one');
+    await controller.setDefault('one');
+    await controller.connectProfile('one');
+    expect(repository.saves, isEmpty);
+    expect(secrets.writes, isEmpty);
+    expect(engine.connections, isEmpty);
+    controller.clearError();
+    await save();
+    expect(controller.errorMessage, contains('不能修改'));
+  });
 
   test(
     'new profile requires password before metadata or secret writes',
@@ -194,25 +189,22 @@ void main() {
     },
   );
 
-  test(
-    'failed metadata save rolls existing password back and leaves configuration unchanged',
-    () async {
-      await seed(defaultId: 'one');
-      final old = controller.profiles;
-      final connects = engine.connections.length;
-      repository.saveFailure = StateError('SECRET-IN-EXCEPTION');
-      await save(id: 'one', makeDefault: true);
-      expect(controller.profiles, same(old));
-      expect(controller.defaultProfileId, 'one');
-      expect(secrets.values['one'], 'old-one-secret');
-      expect(secrets.writes.map((w) => w.id), ['one', 'one']);
-      expect(engine.connections.length, connects);
-      expect(controller.tunnelStatus.phase, TunnelPhase.ready);
-      expect(controller.errorMessage, isNotNull);
-      expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
-      expect(controller.errorMessage, isNot(contains('new-secret')));
-    },
-  );
+  test('failed metadata save rolls existing password back and leaves configuration unchanged', () async {
+    await seed(defaultId: 'one');
+    final old = controller.profiles;
+    final connects = engine.connections.length;
+    repository.saveFailure = StateError('SECRET-IN-EXCEPTION');
+    await save(id: 'one', makeDefault: true);
+    expect(controller.profiles, same(old));
+    expect(controller.defaultProfileId, 'one');
+    expect(secrets.values['one'], 'old-one-secret');
+    expect(secrets.writes.map((w) => w.id), ['one', 'one']);
+    expect(engine.connections.length, connects);
+    expect(controller.tunnelStatus.phase, TunnelPhase.ready);
+    expect(controller.errorMessage, isNotNull);
+    expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
+    expect(controller.errorMessage, isNot(contains('new-secret')));
+  });
 
   test('failed new-profile save removes newly written credential', () async {
     await controller.initialize();
@@ -224,19 +216,16 @@ void main() {
     expect(controller.defaultProfileId, isNull);
   });
 
-  test(
-    'failed credential rollback surfaces explicit repair warning without exposing secrets',
-    () async {
-      await seed();
-      repository.saveFailure = StateError('disk failed');
-      secrets.failWriteAt = 2;
-      await save(id: 'one');
-      expect(controller.profiles.first.name, one.name);
-      expect(controller.errorMessage, contains('旧凭据也未能恢复'));
-      expect(controller.errorMessage, isNot(contains('old-one-secret')));
-      expect(controller.errorMessage, isNot(contains('new-secret')));
-    },
-  );
+  test('failed credential rollback surfaces explicit repair warning without exposing secrets', () async {
+    await seed();
+    repository.saveFailure = StateError('disk failed');
+    secrets.failWriteAt = 2;
+    await save(id: 'one');
+    expect(controller.profiles.first.name, one.name);
+    expect(controller.errorMessage, contains('旧凭据也未能恢复'));
+    expect(controller.errorMessage, isNot(contains('old-one-secret')));
+    expect(controller.errorMessage, isNot(contains('new-secret')));
+  });
 
   test(
     'secure-store write failure never commits metadata or updates UI state',
@@ -251,32 +240,29 @@ void main() {
     },
   );
 
-  test(
-    'editing blank password keeps credential and only restarts active profile after save succeeds',
-    () async {
-      await seed(defaultId: 'one');
-      final passwordWrites = secrets.writes.length;
-      final gate = Completer<void>();
-      repository.saveGate = gate;
-      final operation = save(
-        id: 'one',
-        password: '',
-        name: '编辑名称',
-        makeDefault: true,
-      );
-      await eventually(() => repository.saves.isNotEmpty);
-      expect(controller.busy, isTrue);
-      expect(engine.connections.length, 1);
-      expect(controller.profiles.first.name, one.name);
-      gate.complete();
-      await operation;
-      expect(secrets.writes.length, passwordWrites);
-      expect(secrets.values['one'], 'old-one-secret');
-      expect(engine.connections.length, 2);
-      expect(engine.passwords.last, 'old-one-secret');
-      expect(controller.activeProfile?.name, '编辑名称');
-    },
-  );
+  test('editing blank password keeps credential and only restarts active profile after save succeeds', () async {
+    await seed(defaultId: 'one');
+    final passwordWrites = secrets.writes.length;
+    final gate = Completer<void>();
+    repository.saveGate = gate;
+    final operation = save(
+      id: 'one',
+      password: '',
+      name: '编辑名称',
+      makeDefault: true,
+    );
+    await eventually(() => repository.saves.isNotEmpty);
+    expect(controller.busy, isTrue);
+    expect(engine.connections.length, 1);
+    expect(controller.profiles.first.name, one.name);
+    gate.complete();
+    await operation;
+    expect(secrets.writes.length, passwordWrites);
+    expect(secrets.values['one'], 'old-one-secret');
+    expect(engine.connections.length, 2);
+    expect(engine.passwords.last, 'old-one-secret');
+    expect(controller.activeProfile?.name, '编辑名称');
+  });
 
   test(
     'setting default persists choice but never switches a live connection',
@@ -299,24 +285,21 @@ void main() {
     expect(repository.snapshot.defaultProfileId, 'one');
   });
 
-  test(
-    'delete active default disconnects before stopping Android session and chooses first remaining',
-    () async {
-      await seed(defaultId: 'one');
-      engine.events.clear();
-      await controller.deleteProfile('one');
-      expect(controller.profiles.map((p) => p.id), ['two']);
-      expect(controller.defaultProfileId, 'two');
-      expect(controller.activeProfile, isNull);
-      expect(controller.tunnelStatus.phase, TunnelPhase.idle);
-      expect(secrets.values.containsKey('one'), isFalse);
-      expect(engine.events.take(2), ['engine.disconnect', 'session.stop']);
-      expect(
-        engine.connections.length,
-        1,
-      ); // changing fallback default does not connect it
-    },
-  );
+  test('delete active default disconnects before stopping Android session and chooses first remaining', () async {
+    await seed(defaultId: 'one');
+    engine.events.clear();
+    await controller.deleteProfile('one');
+    expect(controller.profiles.map((p) => p.id), ['two']);
+    expect(controller.defaultProfileId, 'two');
+    expect(controller.activeProfile, isNull);
+    expect(controller.tunnelStatus.phase, TunnelPhase.idle);
+    expect(secrets.values.containsKey('one'), isFalse);
+    expect(engine.events.take(2), ['engine.disconnect', 'session.stop']);
+    expect(
+      engine.connections.length,
+      1,
+    ); // changing fallback default does not connect it
+  });
 
   test(
     'delete inactive profile does not disconnect the current server',
@@ -412,41 +395,35 @@ void main() {
     },
   );
 
-  test(
-    'fatal engine status dismisses outstanding trust and stops platform session',
-    () async {
-      await seed();
-      engine.requireTrust = true;
-      final connecting = controller.connectProfile('one');
-      await eventually(() => controller.pendingTrust != null);
-      engine.publish(
-        const TunnelStatus(
-          phase: TunnelPhase.failed,
-          profileId: 'one',
-          message: '安全失败',
-        ),
-      );
-      await connecting;
-      await eventually(() => !session.active);
-      expect(engine.trustResults, [false]);
-      expect(controller.pendingTrust, isNull);
-    },
-  );
+  test('fatal engine status dismisses outstanding trust and stops platform session', () async {
+    await seed();
+    engine.requireTrust = true;
+    final connecting = controller.connectProfile('one');
+    await eventually(() => controller.pendingTrust != null);
+    engine.publish(
+      const TunnelStatus(
+        phase: TunnelPhase.failed,
+        profileId: 'one',
+        message: '安全失败',
+      ),
+    );
+    await connecting;
+    await eventually(() => !session.active);
+    expect(engine.trustResults, [false]);
+    expect(controller.pendingTrust, isNull);
+  });
 
-  test(
-    'Android start failure prevents SSH connect and cleans session without leaking platform text',
-    () async {
-      await seed();
-      session.startFailure = StateError('SECRET-IN-EXCEPTION');
-      await controller.connectProfile('one');
-      expect(engine.connections, isEmpty);
-      expect(session.starts, 1);
-      expect(session.active, isFalse);
-      expect(controller.busy, isFalse);
-      expect(controller.errorMessage, isNotNull);
-      expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
-    },
-  );
+  test('Android start failure prevents SSH connect and cleans session without leaking platform text', () async {
+    await seed();
+    session.startFailure = StateError('SECRET-IN-EXCEPTION');
+    await controller.connectProfile('one');
+    expect(engine.connections, isEmpty);
+    expect(session.starts, 1);
+    expect(session.active, isFalse);
+    expect(controller.busy, isFalse);
+    expect(controller.errorMessage, isNotNull);
+    expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
+  });
 
   test('cancel during pending Android start cannot later open SSH', () async {
     await seed();
@@ -515,28 +492,25 @@ void main() {
     },
   );
 
-  test(
-    'failed native stop is not acknowledged and delete does not commit metadata',
-    () async {
-      await seed(defaultId: 'one');
-      session.stopFailure = StateError('SECRET-IN-EXCEPTION');
-      try {
-        await expectLater(controller.disconnect(), throwsA(isA<StateError>()));
-        expect(controller.errorMessage, contains('停止连接失败'));
-        expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
-        // An engine reporting the profile active makes delete exercise stop again.
-        engine.publish(
-          const TunnelStatus(phase: TunnelPhase.ready, profileId: 'one'),
-        );
-        await controller.deleteProfile('one');
-        expect(repository.saves, isEmpty);
-        expect(controller.profiles.map((p) => p.id), ['one', 'two']);
-        expect(secrets.deletes, isEmpty);
-      } finally {
-        session.stopFailure = null;
-      }
-    },
-  );
+  test('failed native stop is not acknowledged and delete does not commit metadata', () async {
+    await seed(defaultId: 'one');
+    session.stopFailure = StateError('SECRET-IN-EXCEPTION');
+    try {
+      await expectLater(controller.disconnect(), throwsA(isA<StateError>()));
+      expect(controller.errorMessage, contains('停止连接失败'));
+      expect(controller.errorMessage, isNot(contains('SECRET-IN-EXCEPTION')));
+      // An engine reporting the profile active makes delete exercise stop again.
+      engine.publish(
+        const TunnelStatus(phase: TunnelPhase.ready, profileId: 'one'),
+      );
+      await controller.deleteProfile('one');
+      expect(repository.saves, isEmpty);
+      expect(controller.profiles.map((p) => p.id), ['one', 'two']);
+      expect(secrets.deletes, isEmpty);
+    } finally {
+      session.stopFailure = null;
+    }
+  });
 
   test(
     'target unavailable remains an active Android forwarding session',
@@ -630,33 +604,30 @@ void main() {
     },
   );
 
-  test(
-    'shutdown during delete lets committed credential cleanup finish without UI resurrection',
-    () async {
-      await seed();
-      final gate = Completer<void>();
-      repository.saveGate = gate;
-      final operation = controller.deleteProfile('two');
-      await eventually(() => repository.saves.isNotEmpty);
-      var stopped = false;
-      final closing = controller.shutdown().then((_) {
-        stopped = true;
-      });
-      await Future<void>.delayed(const Duration(milliseconds: 5));
-      expect(
-        stopped,
-        isFalse,
-        reason: 'Exit must drain the accepted metadata transaction',
-      );
-      gate.complete();
-      await operation;
-      await closing;
-      expect(repository.snapshot.profiles.map((p) => p.id), ['one']);
-      expect(controller.profiles.map((p) => p.id), ['one', 'two']);
-      expect(secrets.deletes, ['two']);
-      expect(session.active, isFalse);
-    },
-  );
+  test('shutdown during delete lets committed credential cleanup finish without UI resurrection', () async {
+    await seed();
+    final gate = Completer<void>();
+    repository.saveGate = gate;
+    final operation = controller.deleteProfile('two');
+    await eventually(() => repository.saves.isNotEmpty);
+    var stopped = false;
+    final closing = controller.shutdown().then((_) {
+      stopped = true;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    expect(
+      stopped,
+      isFalse,
+      reason: 'Exit must drain the accepted metadata transaction',
+    );
+    gate.complete();
+    await operation;
+    await closing;
+    expect(repository.snapshot.profiles.map((p) => p.id), ['one']);
+    expect(controller.profiles.map((p) => p.id), ['one', 'two']);
+    expect(secrets.deletes, ['two']);
+    expect(session.active, isFalse);
+  });
 
   test(
     'disconnect during secure-store read cancels before Android session starts',
@@ -733,21 +704,18 @@ void main() {
     },
   );
 
-  test(
-    'explicit host trust rejection stops platform session without an uncaught error',
-    () async {
-      await seed();
-      engine.requireTrust = true;
-      final connecting = controller.connectProfile('one');
-      await eventually(() => controller.pendingTrust != null);
-      controller.answerHostTrust(false);
-      await connecting;
-      expect(engine.trustResults, [false]);
-      expect(controller.pendingTrust, isNull);
-      expect(controller.tunnelStatus.phase, TunnelPhase.failed);
-      expect(session.active, isFalse);
-    },
-  );
+  test('explicit host trust rejection stops platform session without an uncaught error', () async {
+    await seed();
+    engine.requireTrust = true;
+    final connecting = controller.connectProfile('one');
+    await eventually(() => controller.pendingTrust != null);
+    controller.answerHostTrust(false);
+    await connecting;
+    expect(engine.trustResults, [false]);
+    expect(controller.pendingTrust, isNull);
+    expect(controller.tunnelStatus.phase, TunnelPhase.failed);
+    expect(session.active, isFalse);
+  });
 
   test(
     'failed new-profile rollback warns about remaining orphaned credential',
@@ -763,28 +731,25 @@ void main() {
     },
   );
 
-  test(
-    'shutdown is idempotent, rejects pending trust and blocks later mutation/connect',
-    () async {
-      await seed();
-      engine.requireTrust = true;
-      final connecting = controller.connectProfile('one');
-      await eventually(() => controller.pendingTrust != null);
-      await controller.shutdown();
-      await controller.shutdown();
-      await connecting;
-      expect(engine.disposals, 1);
-      expect(engine.trustResults, [false]);
-      expect(controller.pendingTrust, isNull);
-      expect(session.active, isFalse);
-      final saves = repository.saves.length;
-      await save();
-      await controller.setDefault('two');
-      await controller.connectProfile('two');
-      expect(repository.saves.length, saves);
-      expect(engine.connections.length, 1);
-    },
-  );
+  test('shutdown is idempotent, rejects pending trust and blocks later mutation/connect', () async {
+    await seed();
+    engine.requireTrust = true;
+    final connecting = controller.connectProfile('one');
+    await eventually(() => controller.pendingTrust != null);
+    await controller.shutdown();
+    await controller.shutdown();
+    await connecting;
+    expect(engine.disposals, 1);
+    expect(engine.trustResults, [false]);
+    expect(controller.pendingTrust, isNull);
+    expect(session.active, isFalse);
+    final saves = repository.saves.length;
+    await save();
+    await controller.setDefault('two');
+    await controller.connectProfile('two');
+    expect(repository.saves.length, saves);
+    expect(engine.connections.length, 1);
+  });
 }
 
 final class MemoryProfiles implements ProfileRepository {

@@ -55,7 +55,12 @@ add_subdirectory("runner")
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
+# jni 1.1.0 uses TARGET_NAME for its Windows delay-load property when a
+# JDK is discoverable. Scope the compatibility name to generated plugin setup;
+# never point it at the PortLink runner target. Remove after upstream fixes it.
+set(TARGET_NAME "jni")
 include(flutter/generated_plugins.cmake)
+unset(TARGET_NAME)
 
 
 # === Installation ===

@@ -28,6 +28,9 @@ Android运行期间通过前台服务保持本次会话，切浏览器可继续�
 建议 Flutter 3.47.x / Dart 3.13.x，实际版本以锁定的依赖和[验证记录](<docs/VERIFICATION.md>)为准。不要使用旧托盘API教程直接升级依赖。
 
 ```bash
+# 只读诊断，不安装或构建；退出2表示缺少平台前置
+dart tool/preflight.dart macos
+
 flutter pub get
 flutter analyze
 flutter test --concurrency=1
@@ -80,4 +83,4 @@ test/                  模型/存储/网络/控制器/UI/真实SSH测试
 - Android debug APK仅用于自测；正式密钥和商店流程未配置。
 - [构建工作流](<.github/workflows/verify.yml>)仅提供CI定义，未上传远端、未实际运行，不能当作CI已通过。
 
-见[安全边界](<docs/SECURITY.md>)与[验证记录](<docs/VERIFICATION.md>)。
+见[构建前诊断](<docs/BUILD_PREFLIGHT.md>)、[安全边界](<docs/SECURITY.md>)与[验证记录](<docs/VERIFICATION.md>)。

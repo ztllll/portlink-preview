@@ -16,9 +16,9 @@ void main() {
       final lines = process.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter());
-      final info =
-          jsonDecode(await lines.first.timeout(const Duration(seconds: 15)))
-              as Map<String, dynamic>;
+      final info = jsonDecode(
+        await lines.first.timeout(const Duration(seconds: 15)),
+      ) as Map<String, dynamic>;
       final stderr = process.stderr.drain<void>();
       final directory = await Directory.systemTemp.createTemp(
         'portlink-ssh-integration-',

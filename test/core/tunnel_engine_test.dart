@@ -75,60 +75,53 @@ void main() {
     onTrustHost: prompt ?? (_) async => true,
   );
 
-  test(
-    'ready requires auth, real exclusive loopback listener and SSH target probe',
-    () async {
-      await connect();
-      expect(engine.status.phase, TunnelPhase.ready);
-      expect(connector.sessions.single.targets.single, ['127.0.0.1', 3080]);
-      await expectLater(
-        ServerSocket.bind(InternetAddress.loopbackIPv4, listenPort),
-        throwsA(isA<SocketException>()),
-      );
-      final socket = await Socket.connect('127.0.0.1', listenPort);
-      expect(socket.remotePort, listenPort);
-      socket.destroy();
-      await engine.disconnect();
-      final rebound = await ServerSocket.bind(
-        InternetAddress.loopbackIPv4,
-        listenPort,
-      );
-      await rebound.close();
-      expect(engine.status.phase, TunnelPhase.idle);
-    },
-  );
+  test('ready requires auth, real exclusive loopback listener and SSH target probe', () async {
+    await connect();
+    expect(engine.status.phase, TunnelPhase.ready);
+    expect(connector.sessions.single.targets.single, ['127.0.0.1', 3080]);
+    await expectLater(
+      ServerSocket.bind(InternetAddress.loopbackIPv4, listenPort),
+      throwsA(isA<SocketException>()),
+    );
+    final socket = await Socket.connect('127.0.0.1', listenPort);
+    expect(socket.remotePort, listenPort);
+    socket.destroy();
+    await engine.disconnect();
+    final rebound = await ServerSocket.bind(
+      InternetAddress.loopbackIPv4,
+      listenPort,
+    );
+    await rebound.close();
+    expect(engine.status.phase, TunnelPhase.idle);
+  });
 
-  test(
-    'eight concurrent streams preserve payloads and response after upload half-close',
-    () async {
-      await connect();
-      await Future.wait(
-        List.generate(8, (i) async {
-          final socket = await Socket.connect('127.0.0.1', listenPort);
-          final expected = Uint8List.fromList(
-            List.generate(256 * 1024, (j) => (j + i) % 256),
-          );
-          final received = socket.fold<BytesBuilder>(
-            BytesBuilder(),
-            (builder, data) => builder..add(data),
-          );
-          socket.add(expected);
-          await socket.flush();
-          await socket
-              .close(); // FIN upload; the remote response still must arrive.
-          final bytes = (await received.timeout(
-            const Duration(seconds: 5),
-          )).takeBytes();
-          expect(bytes, expected);
-          socket.destroy();
-        }),
-      );
-      expect(connector.sessions.single.targets.length, greaterThanOrEqualTo(9));
-      await until(
-        () => connector.sessions.single.channels.every((c) => c.destroyed),
-      );
-    },
-  );
+  test('eight concurrent streams preserve payloads and response after upload half-close', () async {
+    await connect();
+    await Future.wait(
+      List.generate(8, (i) async {
+        final socket = await Socket.connect('127.0.0.1', listenPort);
+        final expected = Uint8List.fromList(
+          List.generate(256 * 1024, (j) => (j + i) % 256),
+        );
+        final received = socket.fold<BytesBuilder>(
+          BytesBuilder(),
+          (builder, data) => builder..add(data),
+        );
+        socket.add(expected);
+        await socket.flush();
+        await socket
+            .close(); // FIN upload; the remote response still must arrive.
+        final bytes = (await received.timeout(const Duration(seconds: 5)))
+            .takeBytes();
+        expect(bytes, expected);
+        socket.destroy();
+      }),
+    );
+    expect(connector.sessions.single.targets.length, greaterThanOrEqualTo(9));
+    await until(
+      () => connector.sessions.single.channels.every((c) => c.destroyed),
+    );
+  });
 
   test('binding conflict is fatal and never retried', () async {
     final occupied = await ServerSocket.bind(
@@ -147,31 +140,28 @@ void main() {
     }
   });
 
-  test(
-    'production constructor keeps fixed 3080 and fails safely if already occupied',
-    () async {
-      await engine.dispose();
-      ServerSocket? owned;
-      try {
-        owned = await ServerSocket.bind(InternetAddress.loopbackIPv4, 3080);
-      } on SocketException {
-        // A pre-existing user process owns 3080. Do not connect to it or close it.
-      }
-      engine = SshTunnelEngine(
-        trustStore: trust,
-        connector: connector,
-        timing: timing,
-      );
-      try {
-        await connect();
-        expect(engine.status.phase, TunnelPhase.failed);
-        expect(engine.status.message, contains('3080'));
-        expect(connector.calls, 1);
-      } finally {
-        await owned?.close();
-      }
-    },
-  );
+  test('production constructor keeps fixed 3080 and fails safely if already occupied', () async {
+    await engine.dispose();
+    ServerSocket? owned;
+    try {
+      owned = await ServerSocket.bind(InternetAddress.loopbackIPv4, 3080);
+    } on SocketException {
+      // A pre-existing user process owns 3080. Do not connect to it or close it.
+    }
+    engine = SshTunnelEngine(
+      trustStore: trust,
+      connector: connector,
+      timing: timing,
+    );
+    try {
+      await connect();
+      expect(engine.status.phase, TunnelPhase.failed);
+      expect(engine.status.message, contains('3080'));
+      expect(connector.calls, 1);
+    } finally {
+      await owned?.close();
+    }
+  });
 
   test(
     'target failure keeps listener and periodically reprobes through SSH',
@@ -301,21 +291,18 @@ void main() {
     expect(connector.calls, 1);
   });
 
-  test(
-    'disconnect pending trust returns promptly and stale acceptance cannot persist',
-    () async {
-      final answer = Completer<bool>();
-      final connecting = connect(prompt: (_) => answer.future);
-      await until(() => engine.status.phase == TunnelPhase.verifyingHost);
-      await engine.disconnect().timeout(const Duration(seconds: 1));
-      await connecting.timeout(const Duration(seconds: 1));
-      answer.complete(true);
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      expect(engine.status.phase, TunnelPhase.idle);
-      expect(trust.writes, 0);
-      expect(connector.sessions.single.closed, isTrue);
-    },
-  );
+  test('disconnect pending trust returns promptly and stale acceptance cannot persist', () async {
+    final answer = Completer<bool>();
+    final connecting = connect(prompt: (_) => answer.future);
+    await until(() => engine.status.phase == TunnelPhase.verifyingHost);
+    await engine.disconnect().timeout(const Duration(seconds: 1));
+    await connecting.timeout(const Duration(seconds: 1));
+    answer.complete(true);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(engine.status.phase, TunnelPhase.idle);
+    expect(trust.writes, 0);
+    expect(connector.sessions.single.closed, isTrue);
+  });
 
   test(
     'stale late connector is closed and cannot bind or overwrite newer status',
@@ -345,41 +332,38 @@ void main() {
     },
   );
 
-  test(
-    'rapid double switch waits for the oldest teardown and only latest connects',
-    () async {
-      await connect();
-      final gate = Completer<void>();
-      connector.sessions.single.closeGate = gate;
-      final firstSwitch = engine.connect(
-        const ServerProfile(
-          id: 'two',
-          name: '二',
-          host: 'two.example',
-          username: 'bob',
-        ),
-        'two-password',
-        onTrustHost: (_) async => true,
-      );
-      final latestSwitch = engine.connect(
-        const ServerProfile(
-          id: 'three',
-          name: '三',
-          host: 'three.example',
-          username: 'bob',
-        ),
-        'three-password',
-        onTrustHost: (_) async => true,
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      expect(connector.calls, 1);
-      gate.complete();
-      await Future.wait([firstSwitch, latestSwitch]);
-      expect(connector.calls, 2);
-      expect(engine.status.profileId, 'three');
-      expect(engine.status.phase, TunnelPhase.ready);
-    },
-  );
+  test('rapid double switch waits for the oldest teardown and only latest connects', () async {
+    await connect();
+    final gate = Completer<void>();
+    connector.sessions.single.closeGate = gate;
+    final firstSwitch = engine.connect(
+      const ServerProfile(
+        id: 'two',
+        name: '二',
+        host: 'two.example',
+        username: 'bob',
+      ),
+      'two-password',
+      onTrustHost: (_) async => true,
+    );
+    final latestSwitch = engine.connect(
+      const ServerProfile(
+        id: 'three',
+        name: '三',
+        host: 'three.example',
+        username: 'bob',
+      ),
+      'three-password',
+      onTrustHost: (_) async => true,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(connector.calls, 1);
+    gate.complete();
+    await Future.wait([firstSwitch, latestSwitch]);
+    expect(connector.calls, 2);
+    expect(engine.status.profileId, 'three');
+    expect(engine.status.phase, TunnelPhase.ready);
+  });
 
   test('cancel retry timer prevents any later connection attempt', () async {
     connector.failure = const SocketException('network');
@@ -456,22 +440,19 @@ void main() {
     },
   );
 
-  test(
-    'target probe timeout marks unavailable and destroys a late successful channel',
-    () async {
-      final pending = Completer<ForwardConnection>();
-      connector.configure = (session) {
-        session.pendingChannel = pending;
-      };
-      await connect();
-      expect(engine.status.phase, TunnelPhase.targetUnavailable);
-      final orphan = EchoChannel();
-      pending.complete(orphan);
-      await until(() => orphan.destroyed);
-      connector.sessions.single.pendingChannel = null;
-      await until(() => engine.status.phase == TunnelPhase.ready);
-    },
-  );
+  test('target probe timeout marks unavailable and destroys a late successful channel', () async {
+    final pending = Completer<ForwardConnection>();
+    connector.configure = (session) {
+      session.pendingChannel = pending;
+    };
+    await connect();
+    expect(engine.status.phase, TunnelPhase.targetUnavailable);
+    final orphan = EchoChannel();
+    pending.complete(orphan);
+    await until(() => orphan.destroyed);
+    connector.sessions.single.pendingChannel = null;
+    await until(() => engine.status.phase == TunnelPhase.ready);
+  });
 
   test(
     'trust-store failure fails closed without a prompt or automatic retry',
