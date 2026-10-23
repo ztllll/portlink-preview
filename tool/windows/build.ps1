@@ -41,6 +41,7 @@ try {
         flutter = $sdk.Metadata; toolchain = $toolchain; jni = $jni
         pubspecLockSha256 = $lockHash.ToLowerInvariant(); testsRequested = [bool]$RunTests
         exeSha256 = (Get-FileHash -LiteralPath (Join-Path $release 'portlink.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
+        releaseFiles = @(Get-Inventory $release -IncludeRootManifest)
         runtimeSmokeTested = $false
     }
     Write-Json $provenance (Join-Path $project "build\windows\$Architecture\portlink-build.json")

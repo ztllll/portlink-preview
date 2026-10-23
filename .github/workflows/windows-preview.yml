@@ -19,7 +19,9 @@ jobs:
           cache: true
       - name: Parse PowerShell scripts
         shell: pwsh
-        run: ./tool/windows/check_syntax.ps1
+        run: |
+          ./tool/windows/check_syntax.ps1
+          ./tool/windows/test_helpers.ps1
       - name: Build, validate and run automated regression
         shell: pwsh
         run: ./tool/windows/build.ps1 -FlutterRoot $env:FLUTTER_ROOT -Architecture x64 -ResolveDependencies -RunTests

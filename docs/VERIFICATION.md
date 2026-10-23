@@ -26,7 +26,7 @@
 | 退出保存事务 | 退出等待已接受的配置提交、密码回滚和删除清理，连接/指纹等待取消不死锁；启动部分失败也释放服务和锁 |
 | Android Dart协议 | 16项MethodChannel mock测试通过，含初始化期间停止、晚到FGS确认、重复停止、dispose期间拒绝重入；不能替代Kotlin/真机验收 |
 | Windows包结构测试 | 17项合成PE样本测试通过，覆盖x64/ARM64、EXE/DLL/AOT架构、普通/延迟import、依赖缺失、native manifest与路径安全；本机无PowerShell/Windows主机，脚本未原生执行 |
-| Android构建工具测试 | 6项SDK计划/授权保护/安全解压与7项合成APK校验测试通过；未下载SDK或接受许可，未生成APK |
+| Android构建工具测试 | 11项SDK计划/JDK版本/授权保护/安全解压与18项合成APK/ELF/清单/工具参数测试通过；未下载SDK或接受许可，未生成APK |
 | 构建诊断 | 历史三目标退出2；安装Xcode后Mac检查已退出0，Android/Windows此前缺前置状态未变；10项注入测试覆盖完整Xcode、SPM/CocoaPods、JDK/SDK/NDK/CMake、SDK版本和端口占用；不会安装组件或终止占用者 |
 | Mac钥匙串配置 | 通过真实插件MethodChannel mock验证write/read/delete携带usesDataProtectionKeychain=false且无共享group；移除受限Keychain Sharing权限。现已在真实ad-hoc签名沙盒烟测中完成专用凭据写入/读回/删除；用户正式凭据及升级兼容仍待验 |
 | Mac产品配置 | Xcode27.1完整Release构建退出0，正常入口PortLink.app约49.1MB；主程序和4个framework均含arm64/x86_64，严格签名结构校验通过；实际native库最低13，工程声明已同步13，Release不再注入get-task-allow |

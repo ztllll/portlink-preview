@@ -82,4 +82,4 @@ flutter test --no-pub test/tool/windows_packaging_test.dart --concurrency=1
 dart analyze tool/windows test/tool/windows_packaging_test.dart
 ~~~
 
-合成 x64/ARM64 PE 测试覆盖完整目录、AOT架构、插件/native DLL缺失、CRT、普通/延迟导入、JNI警告、畸形PE、敏感文件和路径逃逸。它可在 macOS 运行，不等于 Windows C++ 编译或 PowerShell 执行。当前主机无 pwsh，不额外安装；真实 PS parser、VS构建、ZIP展开和桌面运行仍需 Windows 环境确认。Lead 统一串行执行 Flutter 测试，避免 native assets 并行复制竞态。
+合成 x64/ARM64 PE 测试覆盖完整目录、AOT架构、插件/native DLL缺失、CRT、普通/延迟导入、JNI警告、畸形PE、敏感文件和路径逃逸。它可在 macOS 运行，不等于 Windows C++ 编译或 PowerShell 执行。当前主机无 pwsh，不额外安装；真实 PS parser、VS构建、ZIP展开和桌面运行仍需 Windows 环境确认。新增test_helpers.ps1覆盖严格版本字段读取、中文UTF8清单、根清单排除/嵌套同名篡改、Release子目录输出拒绝、PS相对路径与完整AOT/DLL/asset构建provenance，但尚未在PowerShell实际执行。ARM64探测支持Hostarm64优先、Hostx64回退，仍需ARM64主机验证。Lead 统一串行执行 Flutter 测试，避免 native assets 并行复制竞态。

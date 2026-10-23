@@ -18,10 +18,13 @@ $output = Get-FullPath $OutputDirectory
 $release = Join-Path $project "build\windows\$Architecture\runner\Release"
 $buildReport = Join-Path $project "build\windows\$Architecture\portlink-build.json"
 if (-not (Test-Path -LiteralPath $buildReport)) { throw 'No build provenance. Run build.ps1 for the normal entry point first.' }
-$provenance = Get-Content -LiteralPath $buildReport -Raw | ConvertFrom-Json
+$provenance = Get-Content -LiteralPath $buildReport -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($provenance.entryPoint -ne 'lib/main.dart' -or $provenance.architecture -ne $Architecture -or $provenance.buildMode -ne 'release') { throw 'Build provenance mismatch.' }
 if ($provenance.exeSha256 -ne (Get-FileHash -LiteralPath (Join-Path $release 'portlink.exe') -Algorithm SHA256).Hash.ToLowerInvariant()) { throw 'Executable changed since build report.' }
+Test-BuildInventory $release $provenance
+if ($provenance.pubspecLockSha256 -ne (Get-FileHash -LiteralPath (Join-Path $project 'pubspec.lock') -Algorithm SHA256).Hash.ToLowerInvariant()) { throw 'pubspec.lock changed since successful build.' }
 Assert-NoLinks $release
+Assert-OutputOutsideSource $output $release
 [IO.Directory]::CreateDirectory($output) | Out-Null
 $identifier = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $name = "PortLink-windows-$Architecture-$identifier"

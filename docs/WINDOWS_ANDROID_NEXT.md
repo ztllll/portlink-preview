@@ -12,7 +12,8 @@
 
 - AndroidSession收口初始化/前台确认取消、停止重入、dispose期间启动拒绝；16项Dart通道mock测试通过，不等同原生APK/真机。
 - Windows完整Release目录验证、PowerShell构建/打包/安全展开复验脚本已交付，17项合成PE测试已通过；需Windows实际执行后才能称原生成功。
-- Android工具链计划脚本默认只输出JSON，不下载；安装必须显式--install --accept-sdk-license，仍通过sdkmanager让用户审阅许可，不写伪造许可hash、不自动yes。
+- Android工具链计划脚本默认只输出JSON，不下载；安装必须显式--install --accept-sdk-license，下载前验证完整JDK17+的java/javac，仍通过sdkmanager让用户审阅许可，不写伪造许可hash、不自动yes。11项计划工具与18项APK/ELF结构合成测试通过。
+- Windows脚本额外修复严格模式版本字段读取、UTF8清单、嵌套同名manifest哈希遗漏、完整AOT/native/asset构建来源校验、Release内输出递归和相对路径基准。对应PowerShell helper测试已写入但本机无pwsh，尚未实际执行。
 
 ## Android 构建准备
 

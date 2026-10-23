@@ -40,7 +40,7 @@ try {
     }
     $manifestPath = Join-Path $extract 'portable-manifest.json'
     if (-not (Test-Path -LiteralPath $manifestPath)) { throw 'Portable manifest missing from ZIP root.' }
-    $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($manifest.architecture -ne $Architecture) { throw 'ZIP architecture mismatch.' }
     Test-Inventory $extract $manifest
     $inspection = Invoke-BundleInspection $project $sdk.Dart $extract $Architecture
