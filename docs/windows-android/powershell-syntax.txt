@@ -1,0 +1,1 @@
+PowerShell parser accepted all Windows scripts; no build or application was started.

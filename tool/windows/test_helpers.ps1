@@ -1,8 +1,9 @@
 [CmdletBinding()]
-param()
+param([string]$TemporaryRoot = ([IO.Path]::GetTempPath()))
 # Portable logic tests only. No Windows toolchain, user credentials or app start.
 . (Join-Path $PSScriptRoot 'common.ps1')
-$temporary = Join-Path ([IO.Path]::GetTempPath()) ('portlink-script-tests-' + [Guid]::NewGuid().ToString('N'))
+$TemporaryRoot = Get-FullPath $TemporaryRoot
+$temporary = Join-Path $TemporaryRoot ('portlink-script-tests-' + [Guid]::NewGuid().ToString('N'))
 [IO.Directory]::CreateDirectory($temporary) | Out-Null
 try {
     $sdk = Join-Path $temporary 'sdk'
@@ -77,9 +78,16 @@ try {
         $relative = Get-FullPath './relative-output'
         if ($relative -ne (Join-Path $temporary 'relative-output')) { throw 'Relative paths must use PowerShell location.' }
     } finally { Set-Location -LiteralPath $originalLocation.Path; [Environment]::CurrentDirectory = $originalDirectory }
-    Write-Host 'Helper tests passed: version shapes, root-only manifest exclusion, tamper detection, output recursion refusal.'
+    $selfExecutable = Join-Path $PSHOME $(if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { 'pwsh.exe' } else { 'pwsh' })
+    if (Test-Path -LiteralPath $selfExecutable) {
+        Invoke-Checked $selfExecutable @('-NoLogo', '-NoProfile', '-Command', 'exit 0')
+        $rejected = $false
+        try { Invoke-Checked $selfExecutable @('-NoLogo', '-NoProfile', '-Command', 'exit 7') } catch { $rejected = $true }
+        if (-not $rejected) { throw 'Native command failure exit status was ignored.' }
+    }
+    Write-Host 'Helper tests passed: version shapes, UTF8 inventory, tamper detection, full build provenance, path safety and native exit propagation.'
 } finally {
     # Exact freshly created test-only temporary child; never a caller-supplied path.
-    $safe = Assert-Under $temporary ([IO.Path]::GetTempPath())
+    $safe = Assert-Under $temporary $TemporaryRoot
     Remove-Item -LiteralPath $safe -Recurse -Force
 }

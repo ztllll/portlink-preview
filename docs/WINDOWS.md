@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-截至 2026-10-24，实施主机是 macOS，未发现运行中的 Windows VM；**尚无 Windows 原生编译、PowerShell 执行或桌面验收结果**。本次提供脚本、缓存源码核对与合成 PE 测试，不能写成“Windows EXE 已构建”。不创建或上传远端仓库，不自动安装工具，不更改签名、执行策略、防火墙或系统安全设置。
+截至 2026-10-24，实施主机是 macOS，未发现运行中的 Windows VM；**尚无 Windows 原生编译或桌面验收结果**。现已在Mac上的隔离官方PowerShell7.6.8中实际执行语法解析和纯逻辑helper回归，均退出0；不等于Windows/PowerShell5.1原生验收。本次提供脚本、缓存源码核对与合成 PE 测试，不能写成“Windows EXE 已构建”。不创建或上传远端仓库，不自动安装工具，不更改签名、执行策略、防火墙或系统安全设置。
 
 生产固定监听 127.0.0.1:3080，SSH 目标也是服务器 127.0.0.1:3080。端口被占时安全失败，不自动换端口、不连接未知已有服务、不终止占用者。
 
@@ -82,4 +82,4 @@ flutter test --no-pub test/tool/windows_packaging_test.dart --concurrency=1
 dart analyze tool/windows test/tool/windows_packaging_test.dart
 ~~~
 
-合成 x64/ARM64 PE 测试覆盖完整目录、AOT架构、插件/native DLL缺失、CRT、普通/延迟导入、JNI警告、畸形PE、敏感文件和路径逃逸。它可在 macOS 运行，不等于 Windows C++ 编译或 PowerShell 执行。当前主机无 pwsh，不额外安装；真实 PS parser、VS构建、ZIP展开和桌面运行仍需 Windows 环境确认。新增test_helpers.ps1覆盖严格版本字段读取、中文UTF8清单、根清单排除/嵌套同名篡改、Release子目录输出拒绝、PS相对路径与完整AOT/DLL/asset构建provenance，但尚未在PowerShell实际执行。ARM64探测支持Hostarm64优先、Hostx64回退，仍需ARM64主机验证。Lead 统一串行执行 Flutter 测试，避免 native assets 并行复制竞态。
+合成 x64/ARM64 PE 测试覆盖完整目录、AOT架构、插件/native DLL缺失、CRT、普通/延迟导入、JNI警告、畸形PE、敏感文件和路径逃逸。它可在 macOS 运行，不等于 Windows C++ 编译或 PowerShell 执行。现已从官方发行SHA256校验后，将PowerShell7.6.8便携包解压到工作区外层.tools，不修改系统PATH/执行策略。真实PS parser接受全部脚本；test_helpers.ps1在Mac实际通过版本字段读取、中文UTF8清单、嵌套同名篡改、完整AOT/DLL/asset provenance、输出路径安全、PS相对位置及外部命令失败传播。Mac的默认临时目录祖先含symlink，测试改用-TemporaryRoot /private/tmp，不放宽路径保护。VS构建、Windows ZIP展开、WindowsPowerShell5.1及桌面运行仍需Windows确认。ARM64探测支持Hostarm64优先、Hostx64回退，仍需ARM64主机验证。Lead 统一串行执行 Flutter 测试，避免 native assets 并行复制竞态。

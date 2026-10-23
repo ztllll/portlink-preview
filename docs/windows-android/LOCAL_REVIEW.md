@@ -10,14 +10,14 @@
 - Python实测：11项SDK工具测试与18项APK合成/ELF/工具参数测试全部通过。样本由测试生成，并非真实APK。
 - Dart/Flutter完整共享回归177 passed /1 skipped，静态No issues found；Windows17项合成PE包含在其中。
 
-## Windows PowerShell修复（仍待真实解析/执行）
+## Windows PowerShell修复（Mac隔离运行库已解析并执行纯逻辑）
 
 - 先检查版本字段存在，避免StrictMode读不存在字段。
 - 哈希清单只排除根portable-manifest.json，不遗漏嵌套同名文件；JSON显式UTF8以支持PS5.1中文路径。
 - 输出不得在Release源树内，检查现存祖先junction；相对路径以PowerShell位置而非.NET旧当前目录为准。
 - 成功构建记录完整Release/AOT/native/assets哈希与依赖锁，打包前持共同lock再次比对，避免runner EXE不变却夹入其他target的AOT。
 - ARM64主机优先Hostarm64/arm64，允许Hostx64回退，仍需匹配ATL。
-- 新test_helpers.ps1及工作流步骤覆盖这些helper路径；本机没有pwsh，此脚本尚未运行，不能以代码已写代替PowerShell通过，更不是EXE构建证明。
+- 新test_helpers.ps1及工作流步骤覆盖这些helper路径。2026-10-24从官方PowerShell7.6.8便携包核验SHA256后在工作区.tools运行：parser与helper均退出0；build.ps1在非Windows环境准确退出1拒绝构建。未修改系统PATH/执行策略，未启动远端构建。PowerShell5.1、Windows C++、ZIP原生展开和EXE运行仍未验。
 
 ## 下一步
 
