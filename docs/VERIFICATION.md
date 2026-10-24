@@ -4,7 +4,7 @@
 
 ## 当前交付性质
 
-**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Windows EXE、Android APK尚未构建。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
+**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Android ARM64 Release预览APK已构建并通过官方签名/ELF/16KB检查，已通过AOSP36 ARM64真实运行验收（前后台数据与通知停止），物理手机待验；Windows EXE尚未构建（GitHub官方workflow权限刷新未完成）。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
 
 ## 已实际执行
 
@@ -13,7 +13,7 @@
 | 正式依赖解析 | 成功，pubspec.lock已固定 dartssh2 4.1.0、flutter_secure_storage 11.2.0、tray_manager 0.8.0 等 |
 | Dart格式 | 48份Dart文件（含原生验收和Windows包检查入口），最终check 0 changed、退出0 |
 | 全项目静态分析 | 最终 `dart analyze`：No issues found，退出0 |
-| 完整Flutter回归 | **177 passed / 1 skipped，退出0**。42 core/data、41 controller、39 UI、27平台/退出/单实例协议、27构建诊断/Windows合成PE、1真实SSH集成；跳过的是需显式开启的截图测试 |
+| 完整Flutter回归 | **178 passed / 1 skipped，退出0**。43 core/data、41 controller、39 UI、27平台/退出/单实例协议、27构建诊断/Windows合成PE、1真实SSH集成；跳过的是需显式开启的截图测试 |
 | 真实SSH集成 | 隔离Python环境asyncssh 2.24.1；随机临时服务器密钥；真实密码认证、完整SHA256指纹核对与保存、4并发×128KiB双向数据、半关闭、重连时不重复确认、错密失败、停止释放监听均通过 |
 | 核心网络测试 | 真实loopback监听、8并发×256KiB半关闭、端口占用、目标不可达后恢复、探活超时与重连、取消/快速切换/迟到session清理、主机算法变化阻断通过 |
 | 配置/控制器测试 | 原子写及验证备份、并发持久化、损坏时fail closed、密码事务回滚、空密码保留、默认选择不切换当前连接、取消指纹/Android启动、shutdown等通过 |
@@ -26,7 +26,7 @@
 | 退出保存事务 | 退出等待已接受的配置提交、密码回滚和删除清理，连接/指纹等待取消不死锁；启动部分失败也释放服务和锁 |
 | Android Dart协议 | 16项MethodChannel mock测试通过，含初始化期间停止、晚到FGS确认、重复停止、dispose期间拒绝重入；不能替代Kotlin/真机验收 |
 | Windows包结构测试 | 17项合成PE样本测试通过，覆盖x64/ARM64、EXE/DLL/AOT架构、普通/延迟import、依赖缺失、native manifest与路径安全；Mac隔离PowerShell7.6.8已通过脚本解析及纯逻辑helper；仍无Windows主机，未执行Windows原生构建/ZIP验收 |
-| Android构建工具测试 | 11项SDK计划/JDK版本/授权保护/安全解压与18项合成APK/ELF/清单/工具参数测试通过；未下载SDK或接受许可，未生成APK |
+| Android构建工具测试 | 11项SDK计划/JDK版本/授权保护/安全解压与18项合成APK/ELF/清单/工具参数测试通过；此前为合成测试；2026-10-24用户授权后真实SDK/NDK安装与APK构建已通过，结果见下方原生记录 |
 | 构建诊断 | 历史三目标退出2；安装Xcode后Mac检查已退出0，Android/Windows此前缺前置状态未变；10项注入测试覆盖完整Xcode、SPM/CocoaPods、JDK/SDK/NDK/CMake、SDK版本和端口占用；不会安装组件或终止占用者 |
 | Mac钥匙串配置 | 通过真实插件MethodChannel mock验证write/read/delete携带usesDataProtectionKeychain=false且无共享group；移除受限Keychain Sharing权限。现已在真实ad-hoc签名沙盒烟测中完成专用凭据写入/读回/删除；用户正式凭据及升级兼容仍待验 |
 | Mac产品配置 | Xcode27.1完整Release构建退出0，正常入口PortLink.app约49.1MB；主程序和4个framework均含arm64/x86_64，严格签名结构校验通过；实际native库最低13，工程声明已同步13，Release不再注入get-task-allow |
@@ -60,7 +60,7 @@
 
 ### Android
 
-系统`java`启动器未关联运行时，但本机已确认Homebrew JDK17.0.18可显式使用；SDK自动探测目录仅包含platform-tools/adb，不是可编译SDK。尚待用户确认SDK组件许可与下载；未运行Gradle/Kotlin/APK构建，也没有真机后台会话验收。详见[Android验收清单](<ANDROID.md>)。
+用户2026-10-24明确确认后，复用JDK17.0.18，官方sdkmanager隔离安装SDK36/35、build-tools36、NDK28.2、CMake3.22及platform-tools，官方许可正常接受。真实assembleDebug退出0（通用包约158MiB）；assembleRelease ARM64分ABI退出0，20,116,139字节。官方apksigner确认Android Debug证书，ELF架构/native manifest/minSdk24/targetSdk36、16KB LOAD和zipalign检查全部通过；这是Release优化的debug签名侧载预览，不是正式发布签名。KGP未来兼容warning保留，不是本次失败。物理设备未连接；AOSP36 ARM64模拟器真实安装、持久化恢复、前台/Home后台各12轮528384B匹配、通知停止后FGS退出/3080不再服务均通过。首版暴露flush竞态，修复后APK重建复验成功，最终哈希f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed。浏览器网页/锁屏/厂商省电未验。详见[Android预览](<ANDROID_PREVIEW.md>)和[原生包记录](<android-native/fixed-arm64-verification.json>)。
 
 ## 工具链来源
 
@@ -72,5 +72,5 @@ Flutter源从官方GitHub stable分支 `abaf9c523780a608bd46686fd5e53740a07077f8
 
 1. Mac已完成本机发布构建与隔离原生烟测；仍需用户真实服务器、正式3080、跨进程重启/升级凭据兼容和睡眠切网验收，公开分发前Developer ID签名及公证。
 2. Windows主机编译并测试托盘、凭据与文件替换。
-3. Android具备JDK/SDK后构建debug APK，按真机清单验证通知、切浏览器、停止与进程终止。
+3. Android已完成ARM64 APK与AOSP模拟器前后台/通知停止验收；仍需物理手机的浏览器、锁屏、厂商省电、进程终止和用户真实服务器验收。
 4. 使用目标服务器测试实际3080协议与认证；本版只保证SSH password登录，不保证需OTP/MFA/键盘交互的服务器。

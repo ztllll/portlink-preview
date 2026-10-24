@@ -1,0 +1,21 @@
+{
+  "serial": "emulator-5580",
+  "api": "36",
+  "abi": "arm64-v8a",
+  "checks": [
+    {
+      "phase": "foreground",
+      "matched": true,
+      "rounds": 12,
+      "bytes": 528384
+    },
+    {
+      "phase": "background-home",
+      "matched": true,
+      "rounds": 12,
+      "bytes": 528384
+    }
+  ],
+  "server": "isolated fixture via test-only adb reverse; not user server",
+  "success": true
+}

@@ -123,6 +123,39 @@ void main() {
     );
   });
 
+  test(
+    'channel pause propagates through both pipe controllers and resumes intact',
+    () async {
+      final gate = Completer<void>();
+      connector.configure = (session) {
+        session.channelReadGate = gate;
+      };
+      await connect();
+      final socket = await Socket.connect('127.0.0.1', listenPort);
+      final result = socket.fold<BytesBuilder>(
+        BytesBuilder(),
+        (all, chunk) => all..add(chunk),
+      );
+      final expected = List<int>.generate(256 * 1024, (index) => index % 251);
+      socket.add(expected);
+      await socket.flush();
+      await socket.close();
+      await until(() => connector.sessions.single.channels.length == 2);
+      final channel = connector.sessions.single.channels.last;
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(
+        channel.acceptedChunks,
+        0,
+      ); // remote window has not admitted a read
+      gate.complete();
+      expect(
+        (await result.timeout(const Duration(seconds: 3))).takeBytes(),
+        expected,
+      );
+      socket.destroy();
+    },
+  );
+
   test('binding conflict is fatal and never retried', () async {
     final occupied = await ServerSocket.bind(
       InternetAddress.loopbackIPv4,
@@ -607,7 +640,7 @@ final class FakeSession implements SshSession {
   final targets = <List<Object>>[];
   final channels = <EchoChannel>[];
   Completer<ForwardConnection>? pendingChannel;
-  Completer<void>? closeGate;
+  Completer<void>? closeGate, channelReadGate;
   @override
   Future<void> get authenticated {
     authObserved = true;
@@ -621,7 +654,7 @@ final class FakeSession implements SshSession {
     targets.add([host, port]);
     if (pendingChannel != null) return pendingChannel!.future;
     if (!targetAvailable) throw SSHChannelOpenError(2, 'refused');
-    final channel = EchoChannel();
+    final channel = EchoChannel(readGate: channelReadGate);
     channels.add(channel);
     return channel;
   }
@@ -641,7 +674,35 @@ final class FakeSession implements SshSession {
 }
 
 final class EchoChannel implements ForwardConnection {
-  EchoChannel() {
+  EchoChannel({Completer<void>? readGate}) {
+    if (readGate != null) {
+      final bridge = StreamController<List<int>>();
+      // Match SSHForwardChannel: map/pipe into a second controller consumed by
+      // a StreamIterator, which reads only when remote-window credit exists.
+      unawaited(
+        input.stream
+            .map((bytes) => bytes)
+            .pipe(bridge.sink)
+            .catchError((Object _) {}),
+      );
+      final iterator = StreamIterator<List<int>>(bridge.stream);
+      unawaited(() async {
+        await Future.any([readGate.future, ended.future]);
+        if (destroyed) {
+          await iterator.cancel();
+          return;
+        }
+        while (await iterator.moveNext()) {
+          acceptedChunks++;
+          received.add(iterator.current);
+        }
+        if (!destroyed) {
+          output.add(received.takeBytes());
+          await output.close();
+        }
+      }());
+      return;
+    }
     input.stream.listen(
       (bytes) {
         received.add(bytes);
@@ -658,14 +719,13 @@ final class EchoChannel implements ForwardConnection {
   final ended = Completer<void>();
   final received = BytesBuilder();
   bool destroyed = false;
+  int acceptedChunks = 0;
   @override
   Stream<Uint8List> get stream => output.stream;
   @override
   StreamSink<List<int>> get sink => input.sink;
   @override
   Future<void> get done => ended.future;
-  @override
-  Future<void> flush() async {}
   @override
   void destroy() {
     if (destroyed) return;

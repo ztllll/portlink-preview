@@ -443,20 +443,18 @@ final class SshTunnelEngine implements TunnelEngine {
       if (!identical(run.session, session)) return;
       run.channels.add(remote);
       remote.done.then((_) {}, onError: (Object _, StackTrace _) {});
-      // addStream propagates consumer pause/resume. EOF closes only that write
-      // half; the opposite direction continues until its own EOF. Native SSH
-      // flow-control windows and paused streams bound buffers.
+      // addStream propagates pause/resume through SSHForwardChannel's map/pipe
+      // and the SSH channel StreamIterator. When its remote window is exhausted,
+      // no next read is issued: addStream stays paused and times out below.
+      // Do NOT flush the shared SSH transport: dartssh2 4.1 delegates that to
+      // TCP IOSink.flush, binding the sink while SSH upload loops still add
+      // packets (StreamSink-is-bound race on Android and backpressured links).
+      // EOF closes only this write half; the other direction remains readable.
       Future<void> upload() async {
         await for (final bytes in socket) {
           await _bounded(
             run,
             remote.sink.addStream(Stream.value(bytes)),
-            _timing.operationTimeout,
-            attemptToken: attemptToken,
-          );
-          await _bounded(
-            run,
-            remote.flush(),
             _timing.operationTimeout,
             attemptToken: attemptToken,
           );

@@ -36,7 +36,6 @@ abstract interface class ForwardConnection {
   Stream<Uint8List> get stream;
   StreamSink<List<int>> get sink;
   Future<void> get done;
-  Future<void> flush();
   void destroy();
 }
 
@@ -108,8 +107,6 @@ final class _DartForward implements ForwardConnection {
   StreamSink<List<int>> get sink => channel.sink;
   @override
   Future<void> get done => channel.done;
-  @override
-  Future<void> flush() => channel.flush();
   @override
   void destroy() => channel.destroy();
 }

@@ -1,0 +1,106 @@
+{
+  "errors": [],
+  "architectures": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86_64"
+  ],
+  "elf": [
+    {
+      "path": "lib/arm64-v8a/libVkLayer_khronos_validation.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/arm64-v8a/libcnativeapi.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 4,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/arm64-v8a/libdartjni.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/arm64-v8a/libflutter.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/armeabi-v7a/libcnativeapi.so",
+      "abi": "armeabi-v7a",
+      "class": 1,
+      "machine": 40,
+      "loadSegments": 4,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/armeabi-v7a/libdartjni.so",
+      "abi": "armeabi-v7a",
+      "class": 1,
+      "machine": 40,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/armeabi-v7a/libflutter.so",
+      "abi": "armeabi-v7a",
+      "class": 1,
+      "machine": 40,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/x86_64/libcnativeapi.so",
+      "abi": "x86_64",
+      "class": 2,
+      "machine": 62,
+      "loadSegments": 4,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/x86_64/libdartjni.so",
+      "abi": "x86_64",
+      "class": 2,
+      "machine": 62,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/x86_64/libflutter.so",
+      "abi": "x86_64",
+      "class": 2,
+      "machine": 62,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    }
+  ],
+  "allELF16KLoadAligned": true,
+  "warnings": [],
+  "structureAndSignatureVerified": true,
+  "sha256": "d32f2f49378b8082ff8dd2a9bbb9d0d3a108ee3ef94f7693be51663286d2d109",
+  "bytes": 165571879,
+  "signature": {
+    "exitCode": 0,
+    "stdout": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 079f2be5e1c82946bc00b0824ee9817582103512bce00714ca36408a8d649447\nSigner #1 certificate SHA-1 digest: 4f7bad2e3fc05c68b0491b7ad12c59a3ad98822d\nSigner #1 certificate MD5 digest: 1130ce36b252b1e8d927f0b73b462395\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 9f834d2f4b3919ec16f1b4aff78cabdb65e382d8b15333673b606759276a7782\nSigner #1 public key SHA-1 digest: b8a9a94b2f8ae4f461ca7c7d187133a33358ce73\nSigner #1 public key MD5 digest: e001bf5801a4b1f0dc18c852a231a662",
+    "stderr": ""
+  },
+  "packageInfo": {
+    "exitCode": 0,
+    "stdout": "package: name='dev.portlink.portlink' versionCode='1' versionName='0.1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'\nsdkVersion:'24'\ntargetSdkVersion:'36'\nuses-permission: name='android.permission.INTERNET'\nuses-permission: name='android.permission.FOREGROUND_SERVICE'\nuses-permission: name='android.permission.FOREGROUND_SERVICE_SPECIAL_USE'\nuses-permission: name='android.permission.POST_NOTIFICATIONS'\nuses-permission: name='dev.portlink.portlink.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'\napplication-label:'端口连 PortLink'\napplication-label-af:'端口连 PortLink'\napplication-label-am:'端口连 PortLink'\napplication-label-ar:'端口连 PortLink'\napplication-label-as:'端口连 PortLink'\napplication-label-az:'端口连 PortLink'\napplication-label-be:'端口连 PortLink'\napplication-label-bg:'端口连 PortLink'\napplication-label-bn:'端口连 PortLink'\napplication-label-bs:'端口连 PortLink'\napplication-label-ca:'端口连 PortLink'\napplication-label-cs:'端口连 PortLink'\napplication-label-da:'端口连 PortLink'\napplication-label-de:'端口连 PortLink'\napplication-label-el:'端口连 PortLink'\napplication-label-en-AU:'端口连 PortLink'\napplication-label-en-CA:'端口连 PortLink'\napplication-label-en-GB:'端口连 PortLink'\napplication-label-en-IN:'端口连 PortLink'\napplication-label-en-XC:'端口连 PortLink'\napplication-label-es:'端口连 PortLink'\napplication-label-es-US:'端口连 PortLink'\napplication-label-et:'端口连 PortLink'\napplication-label-eu:'端口连 PortLink'\napplication-label-fa:'端口连 PortLink'\napplication-label-fi:'端口连 PortLink'\napplication-label-fr:'端口连 PortLink'\napplication-label-fr-CA:'端口连 PortLink'\napplication-label-gl:'端口连 PortLink'\napplication-label-gu:'端口连 PortLink'\napplication-label-hi:'端口连 PortLink'\napplication-label-hr:'端口连 PortLink'\napplication-label-hu:'端口连 PortLink'\napplication-label-hy:'端口连 PortLink'\napplication-label-in:'端口连 PortLink'\napplication-label-is:'端口连 PortLink'\napplication-label-it:'端口连 PortLink'\napplication-label-iw:'端口连 PortLink'\napplication-label-ja:'端口连 PortLink'\napplication-label-ka:'端口连 PortLink'\napplication-label-kk:'端口连 PortLink'\napplication-label-km:'端口连 PortLink'\napplication-label-kn:'端口连 PortLink'\napplication-label-ko:'端口连 PortLink'\napplication-label-ky:'端口连 PortLink'\napplication-label-lo:'端口连 PortLink'\napplication-label-lt:'端口连 PortLink'\napplication-label-lv:'端口连 PortLink'\napplication-label-mk:'端口连 PortLink'\napplication-label-ml:'端口连 PortLink'\napplication-label-mn:'端口连 PortLink'\napplication-label-mr:'端口连 PortLink'\napplication-label-ms:'端口连 PortLink'\napplication-label-my:'端口连 PortLink'\napplication-label-nb:'端口连 PortLink'\napplication-label-ne:'端口连 PortLink'\napplication-label-nl:'端口连 PortLink'\napplication-label-or:'端口连 PortLink'\napplication-label-pa:'端口连 PortLink'\napplication-label-pl:'端口连 PortLink'\napplication-label-pt:'端口连 PortLink'\napplication-label-pt-BR:'端口连 PortLink'\napplication-label-pt-PT:'端口连 PortLink'\napplication-label-ro:'端口连 PortLink'\napplication-label-ru:'端口连 PortLink'\napplication-label-si:'端口连 PortLink'\napplication-label-sk:'端口连 PortLink'\napplication-label-sl:'端口连 PortLink'\napplication-label-sq:'端口连 PortLink'\napplication-label-sr:'端口连 PortLink'\napplication-label-sr-Latn:'端口连 PortLink'\napplication-label-sv:'端口连 PortLink'\napplication-label-sw:'端口连 PortLink'\napplication-label-ta:'端口连 PortLink'\napplication-label-te:'端口连 PortLink'\napplication-label-th:'端口连 PortLink'\napplication-label-tl:'端口连 PortLink'\napplication-label-tr:'端口连 PortLink'\napplication-label-uk:'端口连 PortLink'\napplication-label-ur:'端口连 PortLink'\napplication-label-uz:'端口连 PortLink'\napplication-label-vi:'端口连 PortLink'\napplication-label-zh-CN:'端口连 PortLink'\napplication-label-zh-HK:'端口连 PortLink'\napplication-label-zh-TW:'端口连 PortLink'\napplication-label-zu:'端口连 PortLink'\napplication-icon-160:'res/mipmap-mdpi-v4/ic_launcher.png'\napplication-icon-240:'res/mipmap-hdpi-v4/ic_launcher.png'\napplication-icon-320:'res/mipmap-xhdpi-v4/ic_launcher.png'\napplication-icon-480:'res/mipmap-xxhdpi-v4/ic_launcher.png'\napplication-icon-640:'res/mipmap-xxxhdpi-v4/ic_launcher.png'\napplication: label='端口连 PortLink' icon='res/mipmap-mdpi-v4/ic_launcher.png'\napplication-debuggable\nlaunchable-activity: name='dev.portlink.portlink.MainActivity'  label='' icon=''\nuses-library-not-required:'androidx.window.extensions'\nuses-library-not-required:'androidx.window.sidecar'\nfeature-group: label=''\n  uses-feature: name='android.hardware.faketouch'\n  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'\nmain\nother-activities\nother-receivers\nother-services\nsupports-screens: 'small' 'normal' 'large' 'xlarge'\nsupports-any-density: 'true'\nlocales: '--_--' 'af' 'am' 'ar' 'as' 'az' 'be' 'bg' 'bn' 'bs' 'ca' 'cs' 'da' 'de' 'el' 'en-AU' 'en-CA' 'en-GB' 'en-IN' 'en-XC' 'es' 'es-US' 'et' 'eu' 'fa' 'fi' 'fr' 'fr-CA' 'gl' 'gu' 'hi' 'hr' 'hu' 'hy' 'in' 'is' 'it' 'iw' 'ja' 'ka' 'kk' 'km' 'kn' 'ko' 'ky' 'lo' 'lt' 'lv' 'mk' 'ml' 'mn' 'mr' 'ms' 'my' 'nb' 'ne' 'nl' 'or' 'pa' 'pl' 'pt' 'pt-BR' 'pt-PT' 'ro' 'ru' 'si' 'sk' 'sl' 'sq' 'sr' 'sr-Latn' 'sv' 'sw' 'ta' 'te' 'th' 'tl' 'tr' 'uk' 'ur' 'uz' 'vi' 'zh-CN' 'zh-HK' 'zh-TW' 'zu'\ndensities: '160' '240' '320' '480' '640'\nnative-code: 'arm64-v8a' 'armeabi-v7a' 'x86_64'",
+    "stderr": ""
+  },
+  "notice": "APK structure/signature check only; not production signing identity, installed-device or background SSH acceptance."
+}

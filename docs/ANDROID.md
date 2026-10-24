@@ -59,11 +59,31 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 
 ## 验证状态与必须实机检查的项目
 
-已使用准备好的 Dart SDK 对 AndroidSession 模块执行独立 `dart analyze`，结果为 `No issues found!`；全部 8 份 Android XML 解析及主清单权限/Service/HTTP query 结构断言通过，并已核对本地 Flutter embedding API。**截至本轮审查尚未完成 Android 原生编译/真机验证**。上一轮默认 `/usr/bin/java` 只是启动器，SDK 路径也仅指向 platform-tools；续作已发现现有 Homebrew JDK17.0.18，可显式设置 `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home`。当前剩余环境条件是完整 SDK36、NDK28.2.13676358/CMake；组件许可需用户明确授权，未擅自接受。Lead 独占下载准备及 Flutter/Gradle 构建，此处会根据实际编译输出更新，不把现有JDK、下载或安装完成当成 APK 编译完成。尚未验证某个品牌手机的后台行为。不得把“有通知/代码有 FGS”记为隧道已经实测。无 Xcode 不影响本 Android 方案，但不会据此声称其他平台打包成功。
+**Android 原生编译与 AOSP36 ARM64 模拟器运行验收已通过；物理手机尚未验收。** Lead 在 2026-10-24 使用既有 Homebrew JDK17.0.18、隔离的 Android SDK35/36、Build Tools36、NDK28.2.13676358 与 CMake3.22 完成真实 `flutter build apk --debug` / `assembleDebug`，退出码0，生成约158MiB的 universal 调试 APK，无 Kotlin 编译错误。Gradle 的显式 KGP“未来版本可能失败”警告仍然存在，但本次不是构建失败。
 
-发布 APK 前至少完成：
+Lead 随后用官方 `apksigner` 验证 debug APK 签名成功（Android Debug 证书），APK 结构/ELF检查确认 minSdk24、targetSdk36、全部 native library 的16KB页对齐通过，官方 `zipalign -c -P16` 也通过。
 
-1. 有 JDK + Android SDK 后运行 `flutter analyze`、`flutter test`、`flutter build apk --debug`；核对 merged manifest、权限和目标 SDK。
+**ARM64 release 分 ABI 预览也已真实编译成功**：Lead 执行 `--release --split-per-abi --target-platform android-arm64`，退出码0，产物约20.1MB。该产物同样通过官方 `apksigner`、APK/ELF/ABI/manifest 检查（minSdk24、targetSdk36、native16KB对齐）和 `zipalign -c -P16`。虽为 release 优化构建，签名仍是 Android Debug 证书，**仅为侧载预览，不是正式发布签名**。本段记录的是构建与静态产物检查；随后完成的模拟器运行验收单独列在下文，不将其外推到物理手机。
+
+### 已完成：AOSP36 ARM64 模拟器真实运行
+
+Lead 在 2026-10-24 对修复后的 ARM64 release 预览完成以下验收，不是仅看通知或 Dart mock：
+
+- 成功 `install -r` 并冷启动；表单配置保存、通知权限授权、主机指纹确认和 SSH ready 路径正常。
+- Keystore 凭据与 host pin 持久化，重启后默认服务器自动重新连接成功。
+- 通过 Android loopback 转发实际收发：应用前台12轮，共528384B，全部字节匹配；按 Home 让应用退后台后再12轮，共528384B，全部字节匹配。两阶段 FGS 均为 `isForeground=true`。本次背景验收仅为 **Home 后台**，未进行浏览器网页或锁屏测试。
+- 在系统通知 UI 真实点击 action0“停止转发”，之后 FGS 销毁、UI 显示未连接、3080 转发无响应。修复后验收日志没有 `Unhandled` 异常。
+- 首版运行曾暴露真实库 relay flush/sink 竞态，表现为0字节与 `StreamSink is bound to a stream`；共享核心已修复，以上是修复后 APK 重新安装/冷启动的结果，不把首版失败隐去，也未错误归因于 Android FGS。
+
+此前 AndroidSession 模块与测试的独立 `dart analyze` 无问题、16项 Dart MethodChannel mock 全通过、8份 Android XML 及主清单结构断言通过，均继续有效。
+
+### 尚未完成：物理手机及额外场景
+
+目前没有已连接物理设备，模拟器结果不能替代任何品牌手机与厂商后台策略验收。**未验证**浏览器网页交互、锁屏、Doze、厂商省电/后台策略，以及物理手机的权限拒绝/通道禁用恢复流程。上述数据只能证明指定 AOSP36 模拟器上的前台与 Home 后台转发及系统通知停止路径通过，不是长期保活保证。无 Xcode 不影响本 Android 构建结果，但不会据此声称其他平台打包成功。
+
+设备验收与正式发布前至少完成：
+
+1. 已完成 debug universal 与 arm64 release 预览的编译及上述静态检查；交付时仍需对应最终文件核对签名、ABI、min/target SDK、权限和16KB对齐，不把中间产物的结果套到其他文件。正式发布必须另配受控发布签名，不沿用 debug key。
 2. Android 13+/14+ 真机分别验证通知允许、拒绝、channel 禁用、再次允许。拒绝必须无 SSH socket/listener、无假 ready。
 3. 应用前台连接真实 SSH 服务器，浏览器访问 `http://127.0.0.1:3080`（仅当远端3080实际为HTTP），反复切后台/回来，确认会话不重建、请求实际穿过原 SSH 隧道。
 4. 保持浏览器页面，通知“停止转发”后确认本机3080不再可连、服务器SSH断开、重连timer停止、通知移除；连接中/等待主机确认时也必须能停止。
@@ -81,4 +101,4 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 - [Android：前台服务类型 specialUse](https://developer.android.com/develop/background-work/services/fgs/service-types#special-use)
 - [Android：通知运行时权限与 FGS 的区别](https://developer.android.com/develop/ui/views/notifications/notification-permission)
 
-本轮按 agent-reach 路由用 Jina 读取上述核心资料超时，备用 web-reader MCP 未配置；未取得页面内容，不把这些链接当成本轮已成功抓取的证据，也没有重复做广泛政策调查。随后已读取准备好的本地 Flutter embedding 源码核对：FlutterActivity 的 provideFlutterEngine/shouldDestroyEngineWithHost 支持外部持有 Engine，configureFlutterEngine 不重复注册外部 Engine；FlutterEngine(Context) 自动注册插件，destroy() 明确销毁对应 Dart isolate；Activity onPause/onStop 仅发 lifecycle/处理绘制，onDetach 仅在 shouldDestroyEngineWithHost=true 时销毁引擎。停止兜底先 detachFromFlutterEngine 再 destroy，避免宿主后续向已销毁引擎发消息。仍需 Android 编译与真机端到端验证。
+本轮按 agent-reach 路由用 Jina 读取上述核心资料超时，备用 web-reader MCP 未配置；未取得页面内容，不把这些链接当成本轮已成功抓取的证据，也没有重复做广泛政策调查。随后已读取准备好的本地 Flutter embedding 源码核对：FlutterActivity 的 provideFlutterEngine/shouldDestroyEngineWithHost 支持外部持有 Engine，configureFlutterEngine 不重复注册外部 Engine；FlutterEngine(Context) 自动注册插件，destroy() 明确销毁对应 Dart isolate；Activity onPause/onStop 仅发 lifecycle/处理绘制，onDetach 仅在 shouldDestroyEngineWithHost=true 时销毁引擎。停止兜底先 detachFromFlutterEngine 再 destroy，避免宿主后续向已销毁引擎发消息。Android 原生编译及上述 AOSP36 模拟器端到端验收现已通过；仍需物理手机与未覆盖场景验收，不能以源码审阅或模拟器结果替代厂商设备行为。

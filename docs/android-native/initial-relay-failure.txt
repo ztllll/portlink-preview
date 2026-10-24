@@ -1,0 +1,12 @@
+10-24 20:07:34.867  2363  2363 E flutter : [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: Bad state: StreamSink is bound to a stream
+10-24 20:07:34.867  2363  2363 E flutter : #0      _StreamSinkImpl._controller (dart:io/io_sink.dart:235)
+10-24 20:07:34.867  2363  2363 E flutter : #1      _StreamSinkImpl.add (dart:io/io_sink.dart:155)
+10-24 20:07:34.867  2363  2363 E flutter : #2      _Socket.add (dart:io-patch/socket_patch.dart:2776)
+10-24 20:07:34.867  2363  2363 E flutter : #3      SSHTransport._sendAeadPacket (package:dartssh2/src/ssh_transport.dart:548)
+10-24 20:07:34.867  2363  2363 E flutter : #4      SSHTransport.sendPacket (package:dartssh2/src/ssh_transport.dart:396)
+10-24 20:07:34.867  2363  2363 E flutter : #5      SSHClient._sendMessage (package:dartssh2/src/ssh_client.dart:1016)
+10-24 20:07:34.867  2363  2363 E flutter : #6      SSHChannelController._uploadLoop.<anonymous closure> (package:dartssh2/src/ssh_channel.dart:532)
+10-24 20:07:34.867  2363  2363 E flutter : <asynchronous suspension>
+10-24 20:07:34.867  2363  2363 E flutter : #7      OnceSimultaneously.activate (package:dartssh2/src/ssh_channel.dart:710)
+10-24 20:07:34.867  2363  2363 E flutter : <asynchronous suspension>
+10-24 20:07:34.867  2363  2363 E flutter :

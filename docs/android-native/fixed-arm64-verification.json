@@ -1,0 +1,56 @@
+{
+  "errors": [],
+  "architectures": [
+    "arm64-v8a"
+  ],
+  "elf": [
+    {
+      "path": "lib/arm64-v8a/libapp.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/arm64-v8a/libcnativeapi.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 4,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/arm64-v8a/libdartjni.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    },
+    {
+      "path": "lib/arm64-v8a/libflutter.so",
+      "abi": "arm64-v8a",
+      "class": 2,
+      "machine": 183,
+      "loadSegments": 3,
+      "elf16KLoadAlignment": true
+    }
+  ],
+  "allELF16KLoadAligned": true,
+  "warnings": [],
+  "structureAndSignatureVerified": true,
+  "sha256": "f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed",
+  "bytes": 20116139,
+  "signature": {
+    "exitCode": 0,
+    "stdout": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 079f2be5e1c82946bc00b0824ee9817582103512bce00714ca36408a8d649447\nSigner #1 certificate SHA-1 digest: 4f7bad2e3fc05c68b0491b7ad12c59a3ad98822d\nSigner #1 certificate MD5 digest: 1130ce36b252b1e8d927f0b73b462395\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 9f834d2f4b3919ec16f1b4aff78cabdb65e382d8b15333673b606759276a7782\nSigner #1 public key SHA-1 digest: b8a9a94b2f8ae4f461ca7c7d187133a33358ce73\nSigner #1 public key MD5 digest: e001bf5801a4b1f0dc18c852a231a662",
+    "stderr": ""
+  },
+  "packageInfo": {
+    "exitCode": 0,
+    "stdout": "package: name='dev.portlink.portlink' versionCode='2001' versionName='0.1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'\nsdkVersion:'24'\ntargetSdkVersion:'36'\nuses-permission: name='android.permission.INTERNET'\nuses-permission: name='android.permission.FOREGROUND_SERVICE'\nuses-permission: name='android.permission.FOREGROUND_SERVICE_SPECIAL_USE'\nuses-permission: name='android.permission.POST_NOTIFICATIONS'\nuses-permission: name='dev.portlink.portlink.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'\napplication-label:'端口连 PortLink'\napplication-icon-160:'res/9w.png'\napplication-icon-240:'res/yn.png'\napplication-icon-320:'res/FS.png'\napplication-icon-480:'res/RJ.png'\napplication-icon-640:'res/o-.png'\napplication: label='端口连 PortLink' icon='res/9w.png'\nlaunchable-activity: name='dev.portlink.portlink.MainActivity'  label='' icon=''\nuses-library-not-required:'androidx.window.extensions'\nuses-library-not-required:'androidx.window.sidecar'\nfeature-group: label=''\n  uses-feature: name='android.hardware.faketouch'\n  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'\nmain\nother-activities\nother-receivers\nother-services\nsupports-screens: 'small' 'normal' 'large' 'xlarge'\nsupports-any-density: 'true'\nlocales: '--_--'\ndensities: '160' '240' '320' '480' '640'\nnative-code: 'arm64-v8a'",
+    "stderr": ""
+  },
+  "notice": "APK structure/signature check only; not production signing identity, installed-device or background SSH acceptance."
+}

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +34,9 @@ void main() {
         trustStore: trust,
         timing: const TunnelTiming(
           connectTimeout: Duration(seconds: 5),
-          healthInterval: Duration(seconds: 60),
+          healthInterval: Duration(milliseconds: 40),
+          pingTimeout: Duration(seconds: 5),
+          probeTimeout: Duration(seconds: 5),
           maxRetries: 0,
         ),
       );
@@ -79,7 +83,58 @@ void main() {
         socket.destroy();
       }
 
-      await Future.wait(List.generate(4, transfer));
+      // Keep four channels open while packets, health pings and target probes
+      // interleave. Waiting for each echo BEFORE FIN reproduces the Android
+      // path that a single bulk write immediately followed by close missed.
+      Future<void> interactive(int seed) async {
+        final socket = await Socket.connect('127.0.0.1', listenPort);
+        final input = StreamIterator<Uint8List>(socket);
+        var pending = <int>[];
+        Future<List<int>> readExactly(int length) async {
+          while (pending.length < length) {
+            if (!await input.moveNext()) {
+              fail('Unexpected EOF before request echo');
+            }
+            pending.addAll(input.current);
+          }
+          final result = pending.sublist(0, length);
+          pending = pending.sublist(length);
+          return result;
+        }
+
+        try {
+          for (var round = 0; round < 24; round++) {
+            final request = List<int>.generate(
+              1024 + round * 13,
+              (index) => (index + seed + round) % 251,
+            );
+            socket.add(request);
+            await socket.flush();
+            expect(
+              await readExactly(request.length)
+                  .timeout(const Duration(seconds: 10)),
+              request,
+            );
+            await Future<void>.delayed(
+              Duration(milliseconds: 10 + (seed + round) % 7),
+            );
+          }
+          await socket.close();
+          expect(
+            await input.moveNext().timeout(const Duration(seconds: 5)),
+            isFalse,
+          );
+        } finally {
+          socket.destroy();
+          await input.cancel();
+        }
+      }
+
+      await Future.wait(List.generate(4, interactive));
+      expect(engine.status.phase, TunnelPhase.ready);
+      await Future.wait(
+        List.generate(4, transfer),
+      ); // retain bulk / FIN half-close coverage
       await engine.disconnect();
       final listener = await ServerSocket.bind('127.0.0.1', listenPort);
       await listener.close();

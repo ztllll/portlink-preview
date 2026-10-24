@@ -1,12 +1,12 @@
 # Windows / Android 本轮开发与构建授权
 
-用户已要求继续两端，保留现有Mac产物不变。当前未上传源码至任何远端，也未代用户接受Android SDK许可。
+2026-10-24用户已明确确认Android构建组件许可/下载，以及私有GitHub上传/Actions构建。已有Mac产物保持不变。私有仓库ztllll/portlink-preview已创建；初次push因当前OAuth缺workflow scope被GitHub拒绝，官方device授权刷新请求曾因网络中断及等待确认超时结束，当前仍缺workflow，需要用户完成官方浏览器授权。Android官方sdkmanager已接受授权的android-sdk-license，SDK/NDK/CMake隔离安装完成，ARM64 APK真实构建与AOSP36运行验收已通过（前后台数据及通知停止）。
 
 ## 已确认环境
 
-- 本机Apple Silicon Mac。VMware Fusion存在，但vmrun list返回0个运行VM，未找到授权可用的Windows构建主机；工程没有Git remote。
+- 本机Apple Silicon Mac。VMware Fusion存在，但vmrun list返回0个运行VM，未找到授权可用的Windows构建主机；工程origin现指用户私有库ztllll/portlink-preview，源码push因缺workflow scope仍被拒绝，仓库当前size=0。
 - /usr/bin/java未关联运行时，但Homebrew实际已有JDK17.0.18和25.0.2。Android采用显式JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home，不修改系统Java。
-- 当前只有adb/platform-tools，无完整SDK36/NDK/CMake，也没有连接Android设备（adb devices列表为空）。
+- 已有完整SDK36/35、NDK28.2、CMake3.22及隔离AOSP36 ARM64模拟器运行验收；未连接物理手机。
 
 ## 已推进源码
 
@@ -40,4 +40,4 @@ bash tool/android/build_preview.sh
 
 ## 当前安装包状态
 
-Windows EXE/ZIP未生成，Android APK未生成；下一阶段依赖上述授权或用户提供现成工具/构建主机。已交付Mac预览不受影响。
+Android ARM64 Release优化debug签名APK已生成并通过真实AOSP模拟器运行验收，约20.1MB，见ANDROID_PREVIEW.md；Windows EXE/ZIP仍未生成，须完成GitHub官方workflow权限刷新或提供Windows主机。用户授权已收到，不再是等待许可本身。已交付Mac预览不受影响。
