@@ -1,0 +1,2 @@
+Created preview ZIP and reverified extracted bundle. Temporary verification directory: /tmp/portlink-package-verify.55lwEO
+This is not a Developer ID or notarization assertion.

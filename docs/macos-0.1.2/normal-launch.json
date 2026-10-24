@@ -1,0 +1,14 @@
+{
+  "normalEntryLaunchSurvived": true,
+  "activationPolicy": {
+    "accessory": true,
+    "activationPolicy": 1,
+    "pid": 11705,
+    "terminated": false
+  },
+  "userPid7707Untouched": true,
+  "newProcessNoTcpConnections": true,
+  "scope": "duplicate-instance safe refusal only; full lifecycle/menus proven with separate fixture process",
+  "testProcessStopped": true,
+  "rawStderr": "[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_metal_impeller.mm(53)] Using the Impeller rendering backend (MetalSDF).\n"
+}

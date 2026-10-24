@@ -1,0 +1,28 @@
+00:00 +0: loading <workspace>/portlink/test/platform/desktop_integration_test.dart
+00:00 +0: Mac healthy launch remains hidden with no default configuration
+00:00 +1: Mac ready default starts hidden rather than briefly showing
+00:00 +2: explicit show survives late and repeated finishStartup
+00:00 +3: menu manage action shows and focuses then close only hides
+00:00 +4: Mac right click remains native and left click calls up GUI
+00:00 +5: native trigger is reconfigured after updated menu creation
+00:00 +6: native menu trigger failure falls back to visible manageable window
+00:00 +7: trust prompt during initial connection is visible and never auto accepted
+00:00 +8: preexisting failure shows despite hidden startup policy
+00:00 +9: target unavailable and platform warning each present the hidden window
+00:00 +10: all tray writes preserve colour and use visible 22pt Retina artwork
+00:00 +11: ready becomes red immediately when its target probe becomes unavailable
+00:00 +12: tray idle @1x PNG uses solid correct status colour
+00:00 +13: tray idle @2x PNG uses solid correct status colour
+00:00 +14: tray ready @1x PNG uses solid correct status colour
+00:00 +15: tray ready @2x PNG uses solid correct status colour
+00:00 +16: tray pending @1x PNG uses solid correct status colour
+00:00 +17: tray pending @2x PNG uses solid correct status colour
+00:00 +18: tray failed @1x PNG uses solid correct status colour
+00:00 +19: tray failed @2x PNG uses solid correct status colour
+00:00 +20: healthy tray close hides, fatal or failed tray close exits safely
+00:00 +21: tray failure keeps close intercept until cleanup completes
+00:00 +22: native exit request waits for cleanup and shares concurrent exit work
+00:00 +23: shutdown waits for in-flight menu update before destroying tray
+00:00 +24: persistent error does not steal focus on every health event
+00:00 +25: target unavailable and stale HTTP menu callbacks cannot launch browser
+00:00 +26: All tests passed!

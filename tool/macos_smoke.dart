@@ -169,7 +169,65 @@ Future<void> main(List<String> arguments) async {
       tray.trayManager.trayIcon?.isVisible() == true,
       'native tray not visible',
     );
-    require(await windowManager.isVisible(), 'window not visible');
+    const diagnostic = MethodChannel('dev.portlink/window_diagnostics');
+    final startup = (await diagnostic.invokeMapMethod<String, dynamic>(
+      'snapshot',
+    ))!;
+    require(
+      !await windowManager.isVisible(),
+      'menu-bar app showed a window at startup',
+    );
+    require(
+      startup['lsuiElement'] == true && startup['activationPolicy'] == 1,
+      'app is not accessory/no-Dock',
+    );
+    measurements['menuBarStartup'] = {
+      'windowHidden': true,
+      'lsuiElement': startup['lsuiElement'],
+      'activationPolicy': startup['activationPolicy'],
+    };
+    Future<Map<String, dynamic>> exerciseTray(String method) async {
+      final nativeMenu = tray.trayManager.trayIcon?.getContextMenu();
+      require(nativeMenu != null, 'native context menu unavailable');
+      final result = (await diagnostic
+          .invokeMapMethod<String, dynamic>(method, {
+            'menuAddress': nativeMenu!.nativeObject.address,
+          })
+          .timeout(const Duration(seconds: 10)))!;
+      measurements[method] = result;
+      for (var i = 0; i < 40 && !await windowManager.isVisible(); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      require(
+        await windowManager.isVisible(),
+        'tray interaction failed to show GUI',
+      );
+      return result;
+    }
+
+    final rightClick = await exerciseTray('exerciseTrayMenu');
+    require(
+      rightClick['menuTrackingOpened'] == true &&
+          rightClick['manageActionSelected'] == true,
+      'right-click native menu did not open/select manager',
+    );
+    measurements['rightClickMenu'] = rightClick;
+    completed.add(
+      'AppKit right-click opens actual menu; management action shows GUI',
+    );
+    await windowManager.hide();
+    final leftClick = await exerciseTray('exerciseTrayLeftClick');
+    require(
+      leftClick['menuTrackingOpened'] == false,
+      'left click should show GUI without a second popup',
+    );
+    measurements['leftClickShow'] = leftClick;
+    completed.add('AppKit left-click restores GUI without Dock');
+    await desktop.finishStartup();
+    require(
+      await windowManager.isVisible(),
+      'late startup hid manually shown GUI',
+    );
     Future<Map<String, dynamic>> requireTrayColor(String color) async {
       const diagnostic = MethodChannel('dev.portlink/window_diagnostics');
       for (var attempt = 0; attempt < 40; attempt++) {
@@ -263,7 +321,6 @@ Future<void> main(List<String> arguments) async {
       desktop.warning == null && controller.platformWarning == null,
       'tray update failed before close',
     );
-    const diagnostic = MethodChannel('dev.portlink/window_diagnostics');
     final before = (await diagnostic.invokeMapMethod<String, dynamic>(
       'snapshot',
     ))!;
@@ -309,6 +366,24 @@ Future<void> main(List<String> arguments) async {
       'tray show did not restore window',
     );
     completed.add('close-to-tray + window restore');
+    await windowManager.hide();
+    final repeatedMenu = await exerciseTray('exerciseTrayMenu');
+    require(
+      repeatedMenu['menuTrackingOpened'] == true &&
+          repeatedMenu['manageActionSelected'] == true,
+      'right menu stopped working after status update',
+    );
+    measurements['rightClickAfterConnect'] = repeatedMenu;
+    final shownSnapshot = (await diagnostic.invokeMapMethod<String, dynamic>(
+      'snapshot',
+    ))!;
+    require(
+      shownSnapshot['activationPolicy'] == 1,
+      'showing management GUI restored Dock',
+    );
+    completed.add(
+      'right-click menu works again after SSH status updates; Dock remains absent',
+    );
     nativeStep('large transfer');
     final largeSocket = await Socket.connect(
       InternetAddress.loopbackIPv4,

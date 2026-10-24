@@ -6,6 +6,7 @@ import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nativeapi/nativeapi.dart' as nativeapi;
 import 'package:tray_manager/legacy.dart' as tray;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
@@ -20,6 +21,7 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     tray.TrayManager? trayManager,
     WindowManager? windows,
     Future<void> Function()? onShutdown,
+    this.configureNativeMenuTrigger,
   }) : _tray = trayManager ?? tray.trayManager,
        _window = windows ?? windowManager,
        _onShutdown = onShutdown ?? controller.shutdown;
@@ -27,6 +29,7 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
   final tray.TrayManager _tray;
   final WindowManager _window;
   final Future<void> Function() _onShutdown;
+  final Future<void> Function()? configureNativeMenuTrigger;
   AppLifecycleListener? _lifecycle;
   Future<void>? _shutdown;
   Future<void>? _quitOperation;
@@ -36,7 +39,18 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
   String? warning;
   Object? _lastTrust;
   String? _lastError;
+  String? _lastPlatformWarning;
   TunnelPhase? _lastPhase;
+  bool _windowRequested = false;
+  bool _startupFinished = false;
+
+  bool get _requiresAttention =>
+      warning != null ||
+      controller.pendingTrust != null ||
+      controller.errorMessage != null ||
+      controller.platformWarning != null ||
+      controller.tunnelStatus.phase == TunnelPhase.failed ||
+      controller.tunnelStatus.phase == TunnelPhase.targetUnavailable;
 
   static bool get isDesktop =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
@@ -44,6 +58,8 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
   Future<void> initialize() async {
     if (!isDesktop) return;
     await _window.ensureInitialized();
+    // The macOS nib also starts hidden; setup must not activate the window.
+    if (Platform.isMacOS) await _window.hide();
     await _window.setTitle('端口连 PortLink');
     await _window.setMinimumSize(const Size(430, 540));
     await _window.setSize(const Size(960, 680));
@@ -71,8 +87,12 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       controller.reportPlatformWarning(warning!);
       await _window.setPreventClose(true);
     }
-    await _window.show();
-    await _window.focus();
+    if (_requiresAttention) {
+      await showWindow();
+    } else if (!Platform.isMacOS && !_windowRequested) {
+      await _window.show();
+      await _window.focus();
+    }
   }
 
   Future<void> _setTrayIcon(String state) => _tray.setIcon(
@@ -89,6 +109,15 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
   );
 
   Future<void> finishStartup() async {
+    if (_quitting || _startupFinished) return;
+    _startupFinished = true;
+    if (_requiresAttention) {
+      if (!_windowRequested) await showWindow();
+      return;
+    }
+    // Mac is already hidden. Never re-hide a window the user opened (or a
+    // trust/error prompt) while the initial connection was pending.
+    if (Platform.isMacOS || _windowRequested) return;
     if (_enabled &&
         warning == null &&
         controller.defaultProfileId != null &&
@@ -102,14 +131,19 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
   void _changed() {
     final trust = controller.pendingTrust;
     final error = controller.errorMessage;
+    final platformWarning = controller.platformWarning;
     final phase = controller.tunnelStatus.phase;
     if ((trust != null && !identical(trust, _lastTrust)) ||
         (error != null && error != _lastError) ||
-        (phase == TunnelPhase.failed && phase != _lastPhase)) {
+        (platformWarning != null && platformWarning != _lastPlatformWarning) ||
+        ((phase == TunnelPhase.failed ||
+                phase == TunnelPhase.targetUnavailable) &&
+            phase != _lastPhase)) {
       unawaited(showWindow());
     }
     _lastTrust = trust;
     _lastError = error;
+    _lastPlatformWarning = platformWarning;
     _lastPhase = phase;
     unawaited(_update());
   }
@@ -199,6 +233,7 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
             ],
           ),
         );
+        if (Platform.isMacOS) await _useNativeRightClickMenu();
       } while (_dirty && !_quitting);
     } catch (_) {
       _enabled = false;
@@ -212,16 +247,41 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     }
   }
 
+  Future<void> _useNativeRightClickMenu() async {
+    final configure = configureNativeMenuTrigger;
+    if (configure != null) {
+      await configure();
+      return;
+    }
+    final icon = _tray.trayIcon;
+    if (icon == null) throw StateError('Native tray icon is unavailable');
+    // Run menu tracking on the native AppKit event thread. Opening a menu from
+    // a replayed Dart mouse callback re-enters synchronous FFI/performClick.
+    icon.setContextMenuTrigger(nativeapi.ContextMenuTrigger.rightClicked);
+  }
+
   Future<void> showWindow() async {
     if (_quitting || !isDesktop) return;
+    _windowRequested = true;
     await _window.show();
     await _window.focus();
   }
 
   @override
-  void onTrayIconMouseDown() => unawaited(_tray.popUpContextMenu());
+  void onTrayIconMouseDown() {
+    if (Platform.isMacOS) {
+      unawaited(showWindow());
+    } else {
+      unawaited(_tray.popUpContextMenu());
+    }
+  }
+
   @override
-  void onTrayIconRightMouseDown() => unawaited(_tray.popUpContextMenu());
+  void onTrayIconRightMouseDown() {
+    // AppKit owns macOS right-click tracking through the native trigger above.
+    if (!Platform.isMacOS) unawaited(_tray.popUpContextMenu());
+  }
+
   @override
   void onTrayMenuItemClick(tray.MenuItem menuItem) =>
       unawaited(_activate(menuItem.key));

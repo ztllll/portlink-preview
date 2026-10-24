@@ -7,6 +7,7 @@ import 'dart:ui' show AppExitResponse;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:portlink/core/host_trust.dart';
 import 'package:portlink/core/tunnel_status.dart';
 import 'package:portlink/platform/desktop_integration.dart';
 import 'package:tray_manager/legacy.dart' as tray;
@@ -18,7 +19,7 @@ class FakeTray implements tray.TrayManager {
   tray.Menu? menu;
   final iconCalls = <({String path, bool? isTemplate, int? size})>[];
   bool failIcon = false;
-  int destroys = 0;
+  int destroys = 0, popUps = 0, nativeMenuConfigurations = 0;
   Completer<void>? menuGate;
   @override
   dynamic noSuchMethod(Invocation invocation) {
@@ -36,7 +37,9 @@ class FakeTray implements tray.TrayManager {
             ? Future<void>.error(StateError('icon'))
             : Future<void>.value();
       case #setToolTip:
+        return Future<void>.value();
       case #popUpContextMenu:
+        popUps++;
         return Future<void>.value();
       case #setContextMenu:
         menu = invocation.positionalArguments.single as tray.Menu;
@@ -51,8 +54,8 @@ class FakeTray implements tray.TrayManager {
 }
 
 class FakeWindows implements WindowManager {
-  int shows = 0, hides = 0, destroys = 0;
-  bool preventClose = false;
+  int shows = 0, hides = 0, destroys = 0, focuses = 0;
+  bool preventClose = false, visible = false;
   @override
   dynamic noSuchMethod(Invocation invocation) {
     switch (invocation.memberName) {
@@ -61,9 +64,11 @@ class FakeWindows implements WindowManager {
         return null;
       case #show:
         shows++;
+        visible = true;
         return Future<void>.value();
       case #hide:
         hides++;
+        visible = false;
         return Future<void>.value();
       case #destroy:
         destroys++;
@@ -76,7 +81,9 @@ class FakeWindows implements WindowManager {
       case #setMinimumSize:
       case #setSize:
       case #center:
+        return Future<void>.value();
       case #focus:
+        focuses++;
         return Future<void>.value();
       default:
         return super.noSuchMethod(invocation);
@@ -104,12 +111,167 @@ void main() {
       controller,
       trayManager: trayManager,
       windows: windows,
+      configureNativeMenuTrigger: () async {
+        trayManager.nativeMenuConfigurations++;
+      },
     );
   });
   tearDown(() async {
     await desktop.prepareForExit();
     controller.dispose();
   });
+
+  test(
+    'Mac healthy launch remains hidden with no default configuration',
+    () async {
+      await desktop.initialize();
+      expect(windows.shows, Platform.isMacOS ? 0 : 1);
+      expect(windows.focuses, Platform.isMacOS ? 0 : 1);
+      expect(windows.visible, !Platform.isMacOS);
+      await desktop.finishStartup();
+      expect(windows.visible, !Platform.isMacOS);
+    },
+  );
+
+  test('Mac ready default starts hidden rather than briefly showing', () async {
+    controller.defaultProfileId = 'default';
+    controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.ready);
+    await desktop.initialize();
+    expect(windows.shows, Platform.isMacOS ? 0 : 1);
+    await desktop.finishStartup();
+    expect(windows.visible, isFalse);
+    expect(windows.focuses, Platform.isMacOS ? 0 : 1);
+  });
+
+  test('explicit show survives late and repeated finishStartup', () async {
+    controller.defaultProfileId = 'default';
+    await desktop.initialize();
+    await desktop.showWindow();
+    final hidesBeforeReady = windows.hides;
+    controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.ready);
+    controller.update();
+    await settleAsync();
+    await desktop.finishStartup();
+    await desktop.finishStartup();
+    expect(windows.visible, isTrue);
+    expect(windows.hides, hidesBeforeReady);
+  });
+
+  test('menu manage action shows and focuses then close only hides', () async {
+    await desktop.initialize();
+    final shows = windows.shows;
+    final focuses = windows.focuses;
+    final showItem = trayManager.menu!.items!.firstWhere(
+      (item) => item.key == 'show',
+    );
+    desktop.onTrayMenuItemClick(showItem);
+    await settleAsync();
+    expect(windows.shows, shows + 1);
+    expect(windows.focuses, focuses + 1);
+    expect(windows.visible, isTrue);
+    desktop.onWindowClose();
+    await settleAsync();
+    expect(windows.visible, isFalse);
+    expect(windows.destroys, 0);
+    expect(controller.disconnectCalls, 0);
+  });
+
+  test('Mac right click remains native and left click calls up GUI', () async {
+    await desktop.initialize();
+    expect(trayManager.nativeMenuConfigurations, Platform.isMacOS ? 1 : 0);
+    desktop.onTrayIconRightMouseDown();
+    desktop.onTrayIconRightMouseUp();
+    await settleAsync();
+    expect(trayManager.popUps, Platform.isMacOS ? 0 : 1);
+    final shows = windows.shows;
+    desktop.onTrayIconMouseDown();
+    desktop.onTrayIconMouseUp();
+    await settleAsync();
+    expect(trayManager.popUps, Platform.isMacOS ? 0 : 2);
+    expect(windows.shows, shows + (Platform.isMacOS ? 1 : 0));
+    if (Platform.isMacOS) expect(windows.visible, isTrue);
+  });
+
+  test('native trigger is reconfigured after updated menu creation', () async {
+    await desktop.initialize();
+    controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.connecting);
+    controller.update();
+    await settleAsync();
+    expect(trayManager.nativeMenuConfigurations, Platform.isMacOS ? 2 : 0);
+  });
+
+  test(
+    'native menu trigger failure falls back to visible manageable window',
+    () async {
+      desktop = DesktopIntegration(
+        controller,
+        trayManager: trayManager,
+        windows: windows,
+        configureNativeMenuTrigger: () async =>
+            throw StateError('trigger failure'),
+      );
+      await desktop.initialize();
+      if (Platform.isMacOS) {
+        expect(desktop.warning, isNotNull);
+        expect(windows.visible, isTrue);
+        expect(windows.focuses, greaterThan(0));
+      }
+    },
+  );
+
+  test(
+    'trust prompt during initial connection is visible and never auto accepted',
+    () async {
+      await desktop.initialize();
+      controller.pendingTrust = const HostTrustRequest(
+        host: 'fixture.example',
+        port: 22,
+        keyType: 'ssh-ed25519',
+        fingerprint: 'SHA256:fixture',
+      );
+      controller.update();
+      await settleAsync();
+      expect(windows.visible, isTrue);
+      expect(controller.trustAnswers, isEmpty);
+      controller.pendingTrust = null;
+      controller.defaultProfileId = 'default';
+      controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.ready);
+      controller.update();
+      await settleAsync();
+      final hides = windows.hides;
+      await desktop.finishStartup();
+      expect(windows.visible, isTrue);
+      expect(windows.hides, hides);
+    },
+  );
+
+  test('preexisting failure shows despite hidden startup policy', () async {
+    controller.errorMessage = '配置无法读取';
+    await desktop.initialize();
+    expect(windows.visible, isTrue);
+    expect(windows.focuses, greaterThan(0));
+    await desktop.finishStartup();
+    expect(windows.visible, isTrue);
+  });
+
+  test(
+    'target unavailable and platform warning each present the hidden window',
+    () async {
+      await desktop.initialize();
+      controller.tunnelStatus = const TunnelStatus(
+        phase: TunnelPhase.targetUnavailable,
+      );
+      controller.update();
+      await settleAsync();
+      expect(windows.visible, isTrue);
+      desktop.onWindowClose();
+      await settleAsync();
+      expect(windows.visible, isFalse);
+      controller.reportPlatformWarning('系统会话不可用');
+      await settleAsync();
+      expect(windows.visible, isTrue);
+    },
+  );
 
   test(
     'all tray writes preserve colour and use visible 22pt Retina artwork',
@@ -215,9 +377,10 @@ void main() {
     'healthy tray close hides, fatal or failed tray close exits safely',
     () async {
       await desktop.initialize();
+      final startupHides = windows.hides;
       desktop.onWindowClose();
       await settleAsync();
-      expect(windows.hides, 1);
+      expect(windows.hides, startupHides + 1);
       expect(windows.preventClose, isTrue);
       expect(windows.destroys, 0);
       await Future.wait([desktop.quit(), desktop.quit()]);
@@ -234,6 +397,9 @@ void main() {
       controller,
       trayManager: trayManager,
       windows: windows,
+      configureNativeMenuTrigger: () async {
+        trayManager.nativeMenuConfigurations++;
+      },
       onShutdown: () async {
         await gate.future;
         cleaned = true;
@@ -241,6 +407,8 @@ void main() {
     );
     await desktop.initialize();
     expect(desktop.warning, isNotNull);
+    expect(windows.visible, isTrue);
+    expect(windows.focuses, greaterThan(0));
     expect(windows.preventClose, isTrue);
     desktop.onWindowClose();
     await settleAsync();
@@ -259,6 +427,9 @@ void main() {
         controller,
         trayManager: trayManager,
         windows: windows,
+        configureNativeMenuTrigger: () async {
+          trayManager.nativeMenuConfigurations++;
+        },
         onShutdown: () async {
           calls++;
           await gate.future;
