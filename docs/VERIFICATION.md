@@ -60,7 +60,7 @@
 
 ### Android
 
-用户2026-10-24明确确认后，复用JDK17.0.18，官方sdkmanager隔离安装SDK36/35、build-tools36、NDK28.2、CMake3.22及platform-tools，官方许可正常接受。真实assembleDebug退出0（通用包约158MiB）；assembleRelease ARM64分ABI退出0，20,116,139字节。官方apksigner确认Android Debug证书，ELF架构/native manifest/minSdk24/targetSdk36、16KB LOAD和zipalign检查全部通过；这是Release优化的debug签名侧载预览，不是正式发布签名。KGP未来兼容warning保留，不是本次失败。物理设备未连接；AOSP36 ARM64模拟器真实安装、持久化恢复、前台/Home后台各12轮528384B匹配、通知停止后FGS退出/3080不再服务均通过。首版暴露flush竞态，修复后APK重建复验成功，最终哈希f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed。浏览器网页/锁屏/厂商省电未验。详见[Android预览](<ANDROID_PREVIEW.md>)和[原生包记录](<android-native/fixed-arm64-verification.json>)。
+用户2026-10-24明确确认后，复用JDK17.0.18，官方sdkmanager隔离安装SDK36/35、build-tools36、NDK28.2、CMake3.22及platform-tools，官方许可正常接受。真实assembleDebug退出0（通用包约158MiB）；assembleRelease ARM64分ABI退出0，20,116,139字节。官方apksigner确认Android Debug证书，ELF架构/native manifest/minSdk24/targetSdk36、16KB LOAD和zipalign检查全部通过；这是Release优化的debug签名侧载预览，不是正式发布签名。KGP未来兼容warning保留，不是本次失败。物理设备未连接；AOSP36 ARM64模拟器真实安装、持久化恢复、前台/Home后台各12轮528384B匹配、通知停止后FGS退出/3080不再服务均通过。首版暴露flush竞态，修复后APK重建复验成功，最终哈希f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed。补充通过应用按钮打开系统WebView测试浏览器，localhost3080随机标记HTTP页面成功、FGS后台存活；系统撤销权限后服务/监听消失，冷启动拒绝通知时无转发。锁屏/物理机Chrome/厂商省电未验。详见[Android预览](<ANDROID_PREVIEW.md>)和[原生包记录](<android-native/fixed-arm64-verification.json>)。
 
 ## 工具链来源
 

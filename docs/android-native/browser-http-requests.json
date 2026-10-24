@@ -1,0 +1,8 @@
+{
+  "requests": [
+    "GET / HTTP/1.1",
+    "GET /favicon.ico HTTP/1.1"
+  ],
+  "fixtureMarker": "PORTLINK-BROWSER-282e47935efe",
+  "isolatedHostAndHttpOnly": true
+}

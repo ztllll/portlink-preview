@@ -21,7 +21,7 @@
 - 真正Gradle assembleDebug及ARM64 assembleRelease均退出0，没有Kotlin编译错误；KGP未来兼容警告保留，不冒充无警告。
 - 官方apksigner verify通过，真实APK的ELF机器类型/架构、native manifest库引用、包名/minSdk检查通过。所有嵌入ELF LOAD满足16KB对齐；官方zipalign -c -P16 -v4通过。
 - 修复后共享178项Flutter回归及Android16项MethodChannel测试已通过，但mock测试不等于原生设备运行。
-- AOSP ARM64 API36隔离模拟器已真实安装/冷启动，通过UI保存配置、系统通知授权、指纹核对、覆盖安装后凭据与指纹恢复自动连接；前台及Home后台各12轮528,384字节往返匹配。真实通知“停止转发”后FGS退出、UI未连接且3080停止服务，修复后logcat无Unhandled/StreamSink bound。物理手机、具体浏览器页面、锁屏与厂商省电行为仍未验收。
+- AOSP ARM64 API36隔离模拟器已真实安装/冷启动，通过UI保存配置、系统通知授权、指纹核对、覆盖安装后凭据与指纹恢复自动连接；前台及Home后台各12轮528,384字节往返匹配。真实通知“停止转发”后FGS退出、UI未连接且3080停止服务，修复后logcat无Unhandled/StreamSink bound。补验应用按钮打开系统WebView测试浏览器，127.0.0.1:3080实际显示随机测试页面；撤销/拒绝通知后不再转发。物理手机、手机Chrome等其他浏览器、锁屏与厂商省电行为仍未验收。
 - App数据禁备份，SSH密码走系统安全存储；跨设备迁移、卸载后保留、正式签名升级不在此预览保证范围。
 
 Windows仍待GitHub官方workflow权限刷新，私有库创建本身不是EXE构建成功。Mac原预览ZIP保持不变。
