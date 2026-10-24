@@ -2,7 +2,7 @@
 
 一个极简的 SSH 本地转发工具：保存多个服务器，选一台连接，将远端服务器自身 `127.0.0.1:3080` 映射到当前设备的 `127.0.0.1:3080`。
 
-> 预览版0.1.0：Mac发布应用已构建并通过本机隔离原生验收，最低macOS13，支持Apple Silicon（同时含Intel架构但未实机验）。当前ad-hoc签名、未公证；详见[Mac安装说明](<docs/MAC_PREVIEW.md>)和[验证记录](<docs/VERIFICATION.md>)。Android现有ARM64侧载预览APK（Release优化、debug签名，已通过AOSP模拟器前后台转发及通知停止，物理手机待验）；Windows仍待官方workflow权限后原生构建。
+> Mac预览版0.1.1：包含SSH并发写入修复与22pt红绿菜单栏图标，已通过本机隔离原生大流量验收，最低macOS13，支持Apple Silicon（同时含Intel架构但未实机验）。当前ad-hoc签名、未公证；详见[Mac安装说明](<docs/MAC_PREVIEW.md>)和[验证记录](<docs/VERIFICATION.md>)。Android现有ARM64侧载预览APK（Release优化、debug签名，已通过AOSP模拟器前后台转发及通知停止，物理手机待验）；Windows按用户最新要求先本地构建、再上传GitHub，待Windows x64主机接入。
 
 ## 使用
 

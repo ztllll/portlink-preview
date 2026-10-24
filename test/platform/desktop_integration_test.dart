@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/services.dart';
@@ -14,6 +16,7 @@ import '../ui/fake_app_controller.dart';
 
 class FakeTray implements tray.TrayManager {
   tray.Menu? menu;
+  final iconCalls = <({String path, bool? isTemplate, int? size})>[];
   bool failIcon = false;
   int destroys = 0;
   Completer<void>? menuGate;
@@ -24,6 +27,11 @@ class FakeTray implements tray.TrayManager {
       case #removeListener:
         return null;
       case #setIcon:
+        iconCalls.add((
+          path: invocation.positionalArguments.single as String,
+          isTemplate: invocation.namedArguments[#isTemplate] as bool?,
+          size: invocation.namedArguments[#iconSize] as int?,
+        ));
         return failIcon
             ? Future<void>.error(StateError('icon'))
             : Future<void>.value();
@@ -102,6 +110,106 @@ void main() {
     await desktop.prepareForExit();
     controller.dispose();
   });
+
+  test(
+    'all tray writes preserve colour and use visible 22pt Retina artwork',
+    () async {
+      await desktop.initialize();
+      expect(trayManager.iconCalls, hasLength(1));
+      for (final phase in TunnelPhase.values) {
+        controller.tunnelStatus = TunnelStatus(phase: phase);
+        controller.update();
+        await settleAsync();
+        final state = switch (phase) {
+          TunnelPhase.ready => 'ready',
+          TunnelPhase.failed => 'failed',
+          TunnelPhase.idle => 'idle',
+          _ => 'pending',
+        };
+        final expected = Platform.isWindows
+            ? 'assets/tray/windows_$state.ico'
+            : Platform.isMacOS
+            ? 'assets/tray/$state@2x.png'
+            : 'assets/tray/$state.png';
+        expect(trayManager.iconCalls.last.path, expected, reason: phase.name);
+      }
+      for (final call in trayManager.iconCalls) {
+        expect(call.isTemplate, isFalse, reason: call.path);
+        expect(call.size, 22, reason: call.path);
+      }
+    },
+  );
+
+  test(
+    'ready becomes red immediately when its target probe becomes unavailable',
+    () async {
+      controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.ready);
+      await desktop.initialize();
+      expect(trayManager.iconCalls.last.path, contains('ready'));
+      controller.tunnelStatus = const TunnelStatus(
+        phase: TunnelPhase.targetUnavailable,
+      );
+      controller.update();
+      await settleAsync();
+      expect(trayManager.iconCalls.last.path, contains('pending'));
+      expect(trayManager.iconCalls.last.path, isNot(contains('ready')));
+      controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.idle);
+      controller.update();
+      await settleAsync();
+      expect(trayManager.iconCalls.last.path, contains('idle'));
+    },
+  );
+
+  for (final state in ['idle', 'ready', 'pending', 'failed']) {
+    for (final scale in [1, 2]) {
+      test(
+        'tray $state @${scale}x PNG uses solid correct status colour',
+        () async {
+          final suffix = scale == 1 ? '' : '@2x';
+          final bytes = await File('assets/tray/$state$suffix.png')
+              .readAsBytes();
+          final codec = await ui.instantiateImageCodec(bytes);
+          final frame = await codec.getNextFrame();
+          final image = frame.image;
+          try {
+            expect(image.width, 22 * scale);
+            expect(image.height, 22 * scale);
+            final rgba = await image.toByteData(
+              format: ui.ImageByteFormat.rawRgba,
+            );
+            expect(rgba, isNotNull);
+            var red = 0;
+            var green = 0;
+            var white = 0;
+            var transparent = 0;
+            for (var offset = 0; offset < rgba!.lengthInBytes; offset += 4) {
+              final r = rgba.getUint8(offset);
+              final g = rgba.getUint8(offset + 1);
+              final b = rgba.getUint8(offset + 2);
+              final a = rgba.getUint8(offset + 3);
+              if (a == 0) transparent++;
+              if (a < 220) continue;
+              if (r > 160 && r > g * 1.5 && r > b * 1.5) red++;
+              if (g > 100 && g > r * 1.5 && g > b * 1.5) green++;
+              if (r > 240 && g > 240 && b > 240) white++;
+            }
+            final pixels = image.width * image.height;
+            expect(state == 'ready' ? green : red, greaterThan(pixels * .3));
+            expect(state == 'ready' ? red : green, 0);
+            expect(white, greaterThan(0), reason: 'non-colour state symbol');
+            expect(
+              transparent,
+              greaterThan(0),
+              reason: 'transparent outer corners',
+            );
+          } finally {
+            image.dispose();
+            codec.dispose();
+          }
+        },
+      );
+    }
+  }
 
   test(
     'healthy tray close hides, fatal or failed tray close exits safely',

@@ -1,0 +1,47 @@
+{
+  "executableExitCode": 0,
+  "nativeSmoke": {
+    "success": true,
+    "checks": [
+      "sandbox application support + OS file lock",
+      "native macOS login Keychain write/read",
+      "native tray creation/menu: red non-template image at least 20pt",
+      "isolated persistent configuration + credential save",
+      "real SSH password authentication + pinned fixture host + target probe",
+      "ready native tray image: green and non-template",
+      "real native-process tunneled payload roundtrips",
+      "native close event exactly once; NSWindowWillClose unchanged; tunnel remains ready",
+      "close-to-tray + window restore",
+      "32 MiB native sandbox SSH interactive transfer matched before FIN",
+      "disconnect releases isolated local listener",
+      "new controller reloads default and Keychain password + auto-connect without host prompt",
+      "native Keychain fixture key deleted"
+    ],
+    "measurements": {
+      "redTray": {
+        "greenPixels": 0,
+        "width": 22.0,
+        "redPixels": 1006,
+        "height": 22.0,
+        "isTemplate": false
+      },
+      "greenTray": {
+        "isTemplate": false,
+        "height": 22.0,
+        "greenPixels": 952,
+        "redPixels": 0,
+        "width": 22.0
+      },
+      "largeTransfer": {
+        "bytes": 33554432,
+        "rounds": 512,
+        "milliseconds": 53221,
+        "matched": true
+      }
+    },
+    "localPort": "isolated ephemeral; production remains 3080",
+    "server": "isolated local SSH fixture; not user server"
+  },
+  "rawStdout": "PORTLINK_NATIVE_SMOKE_STEP keychain\nPORTLINK_NATIVE_SMOKE_STEP desktop\nPORTLINK_NATIVE_SMOKE_STEP ssh\nPORTLINK_NATIVE_SMOKE_STEP window-close\nPORTLINK_NATIVE_SMOKE_STEP native close call returned\nPORTLINK_NATIVE_SMOKE_STEP window hidden\nPORTLINK_NATIVE_SMOKE_STEP show window call returned\nPORTLINK_NATIVE_SMOKE_STEP large transfer\nPORTLINK_NATIVE_SMOKE_STEP before disconnect\nPORTLINK_NATIVE_SMOKE_STEP disconnect complete\nPORTLINK_NATIVE_SMOKE_STEP autoconnect\nPORTLINK_NATIVE_SMOKE_STEP before shell cleanup\nPORTLINK_NATIVE_SMOKE_STEP shell cleanup complete\nPORTLINK_NATIVE_SMOKE {\"success\":true,\"checks\":[\"sandbox application support + OS file lock\",\"native macOS login Keychain write/read\",\"native tray creation/menu: red non-template image at least 20pt\",\"isolated persistent configuration + credential save\",\"real SSH password authentication + pinned fixture host + target probe\",\"ready native tray image: green and non-template\",\"real native-process tunneled payload roundtrips\",\"native close event exactly once; NSWindowWillClose unchanged; tunnel remains ready\",\"close-to-tray + window restore\",\"32 MiB native sandbox SSH interactive transfer matched before FIN\",\"disconnect releases isolated local listener\",\"new controller reloads default and Keychain password + auto-connect without host prompt\",\"native Keychain fixture key deleted\"],\"measurements\":{\"redTray\":{\"greenPixels\":0,\"width\":22.0,\"redPixels\":1006,\"height\":22.0,\"isTemplate\":false},\"greenTray\":{\"isTemplate\":false,\"height\":22.0,\"greenPixels\":952,\"redPixels\":0,\"width\":22.0},\"largeTransfer\":{\"bytes\":33554432,\"rounds\":512,\"milliseconds\":53221,\"matched\":true}},\"localPort\":\"isolated ephemeral; production remains 3080\",\"server\":\"isolated local SSH fixture; not user server\"}\n",
+  "rawStderr": "[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_metal_impeller.mm(53)] Using the Impeller rendering backend (MetalSDF).\nembedder.cc (3079): 'FlutterPlatformMessageCreateResponseHandle' returned 'kInvalidArguments'. Engine handle was invalid.\n2026-10-24 21:39:07.374 PortLink[5518:2457760] Failed to create a FlutterPlatformMessageResponseHandle (2)\n"
+}

@@ -1,0 +1,10 @@
+{
+  "normalEntryLaunchSurvived": true,
+  "testPid": 6418,
+  "existingUserPid": 2818,
+  "existingPort3080OwnerUntouched": true,
+  "newProcessHasNoTcpConnections": true,
+  "scope": "duplicate-instance safe refusal; not user credentials/profile auto-connect acceptance",
+  "testOnlyProcessStopped": true,
+  "rawStderr": ""
+}

@@ -44,6 +44,7 @@ Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   var failed = false;
   final completed = <String>[];
+  final measurements = <String, Object?>{};
   final options = <String, String>{};
   for (final argument in arguments) {
     if (argument.startsWith('--') && argument.contains('=')) {
@@ -169,7 +170,34 @@ Future<void> main(List<String> arguments) async {
       'native tray not visible',
     );
     require(await windowManager.isVisible(), 'window not visible');
-    completed.add('native tray creation/menu and visible Flutter window');
+    Future<Map<String, dynamic>> requireTrayColor(String color) async {
+      const diagnostic = MethodChannel('dev.portlink/window_diagnostics');
+      for (var attempt = 0; attempt < 40; attempt++) {
+        final snapshot = (await diagnostic.invokeMapMethod<String, dynamic>(
+          'snapshot',
+        ))!;
+        final images = (snapshot['trayImages'] as List?) ?? [];
+        for (final raw in images) {
+          final image = Map<String, dynamic>.from(raw as Map);
+          if (image['isTemplate'] == false &&
+              (image['width'] as num) >= 20 &&
+              (image['height'] as num) >= 20 &&
+              (image['${color}Pixels'] as num) > 20) {
+            measurements['${color}Tray'] = image;
+            return image;
+          }
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      throw StateError(
+        'native $color tray image not found or too small/template',
+      );
+    }
+
+    await requireTrayColor('red');
+    completed.add(
+      'native tray creation/menu: red non-template image at least 20pt',
+    );
     await controller.initialize();
     await controller.saveProfile(
       name: 'Native smoke fixture',
@@ -202,6 +230,8 @@ Future<void> main(List<String> arguments) async {
     completed.add(
       'real SSH password authentication + pinned fixture host + target probe',
     );
+    await requireTrayColor('green');
+    completed.add('ready native tray image: green and non-template');
     for (var i = 0; i < 3; i++) {
       final socket = await Socket.connect(
         InternetAddress.loopbackIPv4,
@@ -279,8 +309,54 @@ Future<void> main(List<String> arguments) async {
       'tray show did not restore window',
     );
     completed.add('close-to-tray + window restore');
+    nativeStep('large transfer');
+    final largeSocket = await Socket.connect(
+      InternetAddress.loopbackIPv4,
+      listenPort,
+    );
+    final largeInput = StreamIterator<List<int>>(largeSocket);
+    var pending = <int>[];
+    final uploadClock = Stopwatch()..start();
+    const rounds =
+        512; // 32 MiB with a response before FIN, not a single bulk close.
+    try {
+      for (var round = 0; round < rounds; round++) {
+        final chunk = List<int>.generate(64 * 1024, (i) => (i + round) % 251);
+        largeSocket.add(chunk);
+        await largeSocket.flush().timeout(const Duration(seconds: 15));
+        while (pending.length < chunk.length) {
+          require(
+            await largeInput.moveNext().timeout(const Duration(seconds: 15)),
+            'large transfer early EOF',
+          );
+          pending.addAll(largeInput.current);
+        }
+        for (var i = 0; i < chunk.length; i++) {
+          require(pending[i] == chunk[i], 'large transfer byte mismatch');
+        }
+        pending = pending.sublist(chunk.length);
+      }
+    } finally {
+      largeSocket.destroy();
+      await largeInput.cancel();
+    }
+    uploadClock.stop();
+    measurements['largeTransfer'] = {
+      'bytes': rounds * 64 * 1024,
+      'rounds': rounds,
+      'milliseconds': uploadClock.elapsedMilliseconds,
+      'matched': true,
+    };
+    require(
+      engine.status.phase == TunnelPhase.ready,
+      'large transfer broke tunnel',
+    );
+    completed.add(
+      '32 MiB native sandbox SSH interactive transfer matched before FIN',
+    );
     nativeStep('before disconnect');
     await controller.disconnect();
+    await requireTrayColor('red');
     nativeStep('disconnect complete');
     final rebound = await ServerSocket.bind(
       InternetAddress.loopbackIPv4,
@@ -352,7 +428,7 @@ Future<void> main(List<String> arguments) async {
       failed = true;
     }
     stdout.writeln(
-      'PORTLINK_NATIVE_SMOKE ${jsonEncode({'success': !failed, 'checks': completed, 'localPort': 'isolated ephemeral; production remains 3080', 'server': 'isolated local SSH fixture; not user server'})}',
+      'PORTLINK_NATIVE_SMOKE ${jsonEncode({'success': !failed, 'checks': completed, 'measurements': measurements, 'localPort': 'isolated ephemeral; production remains 3080', 'server': 'isolated local SSH fixture; not user server'})}',
     );
     await stdout.flush();
     // AppKit does not preserve exitCode reliably; the harness requires the

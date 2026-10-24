@@ -58,12 +58,8 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       },
     );
     try {
-      await _tray.setIcon(
-        Platform.isWindows
-            ? 'assets/tray/windows_idle.ico'
-            : 'assets/tray/idle.png',
-        isTemplate: Platform.isMacOS,
-      );
+      await _setTrayIcon('idle');
+      _lastIcon = 'idle';
       await _window.setPreventClose(true);
       _enabled = true;
       controller.addListener(_changed);
@@ -78,6 +74,19 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     await _window.show();
     await _window.focus();
   }
+
+  Future<void> _setTrayIcon(String state) => _tray.setIcon(
+    Platform.isWindows
+        ? 'assets/tray/windows_$state.ico'
+        : Platform.isMacOS
+        // The native asset loader reads the exact file, not Flutter's variants.
+        // Supply 44px artwork explicitly, then display it at 22 logical points.
+        ? 'assets/tray/$state@2x.png'
+        : 'assets/tray/$state.png',
+    // A macOS template image discards our required red/green status colours.
+    isTemplate: false,
+    iconSize: 22,
+  );
 
   Future<void> finishStartup() async {
     if (_enabled &&
@@ -130,12 +139,9 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
           _ => 'pending',
         };
         if (_lastIcon != icon) {
-          await _tray.setIcon(
-            Platform.isWindows
-                ? 'assets/tray/windows_$icon.ico'
-                : 'assets/tray/$icon.png',
-            isTemplate: Platform.isMacOS,
-          );
+          // Only ready is green. Even an authenticated tunnel whose target
+          // probe is failing must use a red icon, never a false healthy signal.
+          await _setTrayIcon(icon);
           _lastIcon = icon;
         }
         final label = switch (status.phase) {

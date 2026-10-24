@@ -4,7 +4,7 @@
 
 ## 当前交付性质
 
-**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Android ARM64 Release预览APK已构建并通过官方签名/ELF/16KB检查，已通过AOSP36 ARM64真实运行验收（前后台数据与通知停止），物理手机待验；Windows EXE尚未构建（GitHub官方workflow权限刷新未完成）。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
+**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Android ARM64 Release预览APK已构建并通过官方签名/ELF/16KB检查，已通过AOSP36 ARM64真实运行验收（前后台数据与通知停止），物理手机待验；Windows EXE尚未构建（按最新要求先本地构建，待用户所选Windows x64主机接入）。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
 
 ## 已实际执行
 
@@ -13,7 +13,7 @@
 | 正式依赖解析 | 成功，pubspec.lock已固定 dartssh2 4.1.0、flutter_secure_storage 11.2.0、tray_manager 0.8.0 等 |
 | Dart格式 | 48份Dart文件（含原生验收和Windows包检查入口），最终check 0 changed、退出0 |
 | 全项目静态分析 | 最终 `dart analyze`：No issues found，退出0 |
-| 完整Flutter回归 | **178 passed / 1 skipped，退出0**。43 core/data、41 controller、39 UI、27平台/退出/单实例协议、27构建诊断/Windows合成PE、1真实SSH集成；跳过的是需显式开启的截图测试 |
+| 完整Flutter回归 | **189 passed / 1 skipped，退出0**。43 core/data、41 controller、39 UI、37平台/退出/单实例协议、27构建诊断/Windows合成PE、2真实SSH集成（含32MiB HTTP上传）；跳过的是需显式开启的截图测试 |
 | 真实SSH集成 | 隔离Python环境asyncssh 2.24.1；随机临时服务器密钥；真实密码认证、完整SHA256指纹核对与保存、4并发×128KiB双向数据、半关闭、重连时不重复确认、错密失败、停止释放监听均通过 |
 | 核心网络测试 | 真实loopback监听、8并发×256KiB半关闭、端口占用、目标不可达后恢复、探活超时与重连、取消/快速切换/迟到session清理、主机算法变化阻断通过 |
 | 配置/控制器测试 | 原子写及验证备份、并发持久化、损坏时fail closed、密码事务回滚、空密码保留、默认选择不切换当前连接、取消指纹/Android启动、shutdown等通过 |
@@ -29,15 +29,16 @@
 | Android构建工具测试 | 11项SDK计划/JDK版本/授权保护/安全解压与18项合成APK/ELF/清单/工具参数测试通过；此前为合成测试；2026-10-24用户授权后真实SDK/NDK安装与APK构建已通过，结果见下方原生记录 |
 | 构建诊断 | 历史三目标退出2；安装Xcode后Mac检查已退出0，Android/Windows此前缺前置状态未变；10项注入测试覆盖完整Xcode、SPM/CocoaPods、JDK/SDK/NDK/CMake、SDK版本和端口占用；不会安装组件或终止占用者 |
 | Mac钥匙串配置 | 通过真实插件MethodChannel mock验证write/read/delete携带usesDataProtectionKeychain=false且无共享group；移除受限Keychain Sharing权限。现已在真实ad-hoc签名沙盒烟测中完成专用凭据写入/读回/删除；用户正式凭据及升级兼容仍待验 |
-| Mac产品配置 | Xcode27.1完整Release构建退出0，正常入口PortLink.app约49.1MB；主程序和4个framework均含arm64/x86_64，严格签名结构校验通过；实际native库最低13，工程声明已同步13，Release不再注入get-task-allow |
+| Mac产品配置 | Xcode27.1完整Release构建退出0，正常入口PortLink.app约49.3MB（0.1.1）；主程序和4个framework均含arm64/x86_64，严格签名结构校验通过；实际native库最低13，工程声明已同步13，Release不再注入get-task-allow |
+| Mac0.1.1大流量/红绿图标 | 原生32MiB/512轮53.221秒匹配；NSStatusBarButton image实测22pt、非template、ready绿/断开红；HTTP32MiB+4×4MiB上传及持久连接通过，不能代替远端DSH复现 |
 | Mac真实原生烟测 | 独立沙盒Release入口，真实Keychain/托盘原生bounds/窗口显示与真实close事件恰一次且NSWindowWillClose未增加、隐藏恢复/SSH往返/监听释放/默认配置重载自连/专属凭据清理均通过，终态success:true；不是mock，不是用户真实服务器 |
-| Mac正常入口启动 | 正常入口进程存活，标准应用退出后processExitCode0；AppleScript回复-128及退出时Engine handle invalid警告已保留，不宣称远程脚本退出全部无警告 |
+| Mac正常入口启动 | 旧版正常入口启动/退出曾验；0.1.1正常入口在用户旧实例运行时存活、安全拒绝重复连接且新进程无TCP，保留旧2818监听未动，仅终止测试进程。完整功能用独立原生烟测验，未代用户跨版本重连；烟测退出Engine handle invalid警告保留 |
 | Windows原生依赖 | 对jni1.1.0未定义TARGET_NAME的条件性Windows路径增加受限作用域兼容值；只读源码/结构检查，仍待Windows配置链接验证 |
 | 原生托盘依赖 | cnativeapi构建钩子在本机命令行工具下产出arm64动态库并用于Flutter测试；不等于菜单栏真实交互通过 |
 
 ## 监听端口隔离与本机已有程序
 
-验收时用户既有 Tabby PID1288 正监听 `127.0.0.1:3080`。没有关闭该程序，也没有改变用户的转发配置。首次测试因真实端口冲突正确报错，后续增加明确命名的 `SshTunnelEngine.forTesting(listenPort: ...)` 供自动测试使用隔离端口。
+初次验收时用户既有 Tabby PID1288 正监听 `127.0.0.1:3080`；0.1.1修复验收时此端口由用户旧PortLink PID2818监听。两轮都没有关闭既有程序或改变用户的转发配置。首次测试因真实端口冲突正确报错，后续增加明确命名的 `SshTunnelEngine.forTesting(listenPort: ...)` 供自动测试使用隔离端口。
 
 - 正式应用仍通过普通构造固定监听 `127.0.0.1:3080`，没有UI或配置端口变更入口。
 - 测试用构造仅替换本地监听端口，目标请求仍是远端 `127.0.0.1:3080`；SSH fixture内部映射至其临时echo服务，避免同机客户端/服务端端口冲突。
@@ -48,11 +49,11 @@
 
 ### macOS（2026-10-24已解除工具链阻碍）
 
-用户安装完整Xcode27.1，xcode-select已指向/Applications/Xcode.app/Contents/Developer，版本和首次初始化检查均退出0。发布正常入口lib/main.dart完整构建退出0，PortLink.app约49.1MB；ZIP约19MB，ditto保留bundle结构，重新展开后codesign --verify --deep --strict与所有嵌入Mach-O的arm64检查通过。
+用户安装完整Xcode27.1，xcode-select已指向/Applications/Xcode.app/Contents/Developer，版本和首次初始化检查均退出0。发布正常入口lib/main.dart完整构建退出0，PortLink.app约49.3MB（0.1.1）；ZIP约19MB，ditto保留bundle结构，重新展开后codesign --verify --deep --strict与所有嵌入Mach-O的arm64检查通过。
 
 最初App声明12但cnativeapi/objective_c真实minos13，现已把工程最低版本同步13；Release显式禁止注入base entitlements，最终实际权限无get-task-allow。托盘应用最后窗口关闭策略设false，原生烟测验证关窗后的存活/恢复和连接清理。
 
-当前签名Signature=adhoc、TeamIdentifier=not set，没有Developer ID或公证；spctl实际拒绝，该限制没有通过删除quarantine或关闭系统安全来绕过。原生烟测专属数据与失败尝试的测试项已精准清理，未读取/修改用户真实凭据。验收证据位于[macOS原生记录](<macos-native/native-smoke.json>)及[包结构记录](<macos-native/bundle-verification.json>)。
+当前签名Signature=adhoc、TeamIdentifier=not set，没有Developer ID或公证；spctl实际拒绝，该限制没有通过删除quarantine或关闭系统安全来绕过。原生烟测专属数据与失败尝试的测试项已精准清理，未读取/修改用户真实凭据。0.1.1验收证据位于[本轮原生记录](<macos-0.1.1/native-smoke.json>)及[包结构记录](<macos-0.1.1/bundle-verification.json>)；历史0.1.0记录保留在macos-native。
 
 ### Windows
 
