@@ -6,6 +6,10 @@
 
 生产固定监听 127.0.0.1:3080，SSH 目标也是服务器 127.0.0.1:3080。端口被占时安全失败，不自动换端口、不连接未知已有服务、不终止占用者。
 
+## 本次构建顺序
+
+用户已选择提供Windows x64主机，要求先构建安装包、随后上传GitHub。本会话不继续push或Actions，等待实际主机入口；交接见[Windows本地构建](<WINDOWS_LOCAL_HANDOFF.md>)。本机VMware旧ARM VM记录失效，不是可用编译环境。
+
 ## Windows 前置
 
 - Windows 10/11 x64 或 ARM64；Flutter **3.47+**、Dart **3.13+** 的已准备 Windows SDK。

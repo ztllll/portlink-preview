@@ -5,6 +5,10 @@
 1. 允许下载本项目Android SDK/NDK/CMake等官方构建组件，并代表用户接受本次构建所需官方组件许可。
 2. 允许在当前已登录GitHub账号下创建私有仓库、上传项目源码并使用Actions构建Windows版。可能使用账号Actions额度。
 
+## 最新执行顺序（2026-10-24）
+
+用户后续明确要求先构建Windows安装包、再上传GitHub，并选择提供Windows x64主机。该要求覆盖前述CI优先路线：暂停源码push/Actions/workflow权限刷新，在实际可操作的Windows x64主机编译验收，成功后才继续上传。目前尚未收到主机操作入口；详见WINDOWS_LOCAL_HANDOFF.md。
+
 ## 限定范围
 
 - 不上传用户服务器配置/真实密码、签名私钥、凭据库、工作区.tools、.dart_tool、build/dist或其他本机缓存。已跟踪内容经清单核对仅为源码、测试、工程、图标与验证文档。

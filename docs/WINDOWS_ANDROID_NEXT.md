@@ -2,6 +2,10 @@
 
 2026-10-24用户已明确确认Android构建组件许可/下载，以及私有GitHub上传/Actions构建。已有Mac产物保持不变。私有仓库ztllll/portlink-preview已创建；初次push因当前OAuth缺workflow scope被GitHub拒绝，官方device授权刷新请求曾因网络中断及等待确认超时结束，当前仍缺workflow，需要用户完成官方浏览器授权。Android官方sdkmanager已接受授权的android-sdk-license，SDK/NDK/CMake隔离安装完成，ARM64 APK真实构建与AOSP36运行验收已通过（前后台数据及通知停止）。
 
+## 最新路线：先本地构建、再上传
+
+用户已改为“先继续构建Windows安装包，随后再上传GitHub”，并选择提供Windows x64主机。停止push/Actions/权限刷新；等待Windows主机可操作入口或在该机继续的Harness会话，当前不再以前述workflow权限为本地构建前置。Mac的VMware旧ARM虚拟机记录为broken，对应文件不存在，未擅自新建Windows。接续见WINDOWS_LOCAL_HANDOFF.md。
+
 ## 已确认环境
 
 - 本机Apple Silicon Mac。VMware Fusion存在，但vmrun list返回0个运行VM，未找到授权可用的Windows构建主机；工程origin现指用户私有库ztllll/portlink-preview，源码push因缺workflow scope仍被拒绝，仓库当前size=0。
