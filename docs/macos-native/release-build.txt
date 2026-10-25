@@ -1,0 +1,3 @@
+Building macOS application...
+Xcode 27 no longer requires macOS binaries to support the x86_64 architecture. To build ARM-only macOS apps now, run: "flutter config --enable-macos-arm64-only". This will become the default behavior in a future Flutter release.
+✓ Built build/macos/Build/Products/Release/PortLink.app (49.1MB)

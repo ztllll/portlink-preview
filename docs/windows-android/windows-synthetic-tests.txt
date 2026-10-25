@@ -1,0 +1,19 @@
+00:00 +0: loading <project>/test/tool/windows_packaging_test.dart
+00:00 +0: complete x64 bundle verifies without claiming runtime or signing
+00:00 +1: complete ARM64 bundle uses matching PE and native manifest architecture
+00:00 +2: missing plugin is fatal even with executable and engine present
+00:00 +3: all four state icons are required for Windows tray transitions
+00:00 +4: native manifest must name packaged cnativeapi DLL
+00:00 +5: absolute tester paths and traversal cannot leak into a portable artifact
+00:00 +6: regular and delay import dependencies must be app-local or known Windows system DLLs
+00:00 +7: only optional dartjni delay-load jvm is warned not silently bundled from developer JDK
+00:00 +8: development credentials and debug kernel are rejected
+00:00 +9: case-insensitive DLL collisions cannot pass Linux or Mac fixture inspection
+00:00 +10: malformed PE and wrong architecture are fatal
+00:00 +11: AOT app.so is verified as PE and cannot hide wrong architecture
+00:00 +12: native manifest is mandatory even when cnativeapi DLL exists
+00:00 +13: PE bounds checks reject arbitrary truncated and hostile offsets
+00:00 +14: PE reader preserves ordinary and delayed import distinction
+00:00 +15: plugin list excludes FFI target name and fails closed on malformed generated source
+00:00 +16: safe relative paths reject host drives links and Windows normalization escapes
+00:00 +17: All tests passed!

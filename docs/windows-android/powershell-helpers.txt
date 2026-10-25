@@ -1,0 +1,1 @@
+Helper tests passed: version shapes, UTF8 inventory, tamper detection, full build provenance, path safety and native exit propagation.

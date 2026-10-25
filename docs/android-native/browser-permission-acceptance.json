@@ -1,0 +1,19 @@
+{
+  "browserPackage": "org.chromium.webview_shell",
+  "browser": "WebView Browser Tester 133.0.6943.137",
+  "url": "http://127.0.0.1:3080/",
+  "fixtureMarkerMatched": true,
+  "foregroundServiceWhileBrowserVisible": true,
+  "serverIsIsolatedFixture": true,
+  "serviceGoneAfterPermissionRevoked": true,
+  "disconnectedUiAfterPermissionRevoked": true,
+  "multipleProfilesCount": 2,
+  "notificationDeniedViaRealSystemUi": true,
+  "notificationPermissionDialogOnRestart": true,
+  "serviceAbsentAfterRestart": true,
+  "noConnectionWithoutNotification": true,
+  "port3080ClosedWithoutNotification": true,
+  "notificationRevocationMayKillProcess": true,
+  "doesNotProveBackgroundTimerRecheck": true,
+  "dedicatedEmulatorAppUninstalledAfterTest": true
+}

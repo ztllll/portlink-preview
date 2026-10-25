@@ -1,0 +1,199 @@
+00:00 +0: loading <project>/test/ui/server_profile_dialog_test.dart
+00:00 +0: <project>/test/ui/server_profile_dialog_test.dart: new profile requires fields and password
+00:01 +1: <project>/test/ui/server_profile_dialog_test.dart: edit never shows saved password and blank retains it
+00:01 +2: <project>/test/ui/server_profile_dialog_test.dart: save failure stays in dialog with safe inline feedback
+00:01 +3: <project>/test/ui/server_profile_dialog_test.dart: add form fits a narrow viewport without intrinsic layout errors
+00:01 +4: <project>/test/ui/server_profile_dialog_test.dart: direct dialog cannot save before initialization
+00:01 +5: <project>/test/ui/server_profile_dialog_test.dart: save callback rechecks controller busy state
+00:01 +6: <project>/test/ui/server_profile_dialog_test.dart: invalid endpoint does not invoke controller
+00:02 +7: loading <project>/test/ui/portlink_app_test.dart
+00:02 +7: <project>/test/ui/portlink_app_test.dart: platform warning stays visible independently from SSH errors
+00:03 +8: <project>/test/ui/portlink_app_test.dart: UI does not initialize or automatically connect
+00:03 +9: <project>/test/ui/portlink_app_test.dart: failed initialization is persistent and every mutation stays disabled
+00:03 +10: <project>/test/ui/portlink_app_test.dart: stale callbacks cannot bypass busy mutation guard
+00:03 +11: <project>/test/ui/portlink_app_test.dart: delete confirmation rechecks loading and busy before mutation
+00:03 +12: <project>/test/ui/portlink_app_test.dart: app unmount does not dispose the caller-owned controller
+00:03 +13: <project>/test/ui/portlink_app_test.dart: busy connecting can always be cancelled
+00:03 +14: <project>/test/ui/portlink_app_test.dart: changing default does not switch current connection
+00:03 +15: <project>/test/ui/portlink_app_test.dart: delete requires explicit confirmation
+00:03 +16: <project>/test/ui/portlink_app_test.dart: trust prompt blocks outside dismissal and never auto-accepts
+00:04 +17: <project>/test/ui/portlink_app_test.dart: trust modal also covers an already open edit dialog
+00:04 +18: <project>/test/ui/portlink_app_test.dart: errors are inline and raw exception secrets are not shown
+00:04 +19: <project>/test/ui/portlink_app_test.dart: copy local address uses plain loopback endpoint
+00:04 +20: <project>/test/ui/portlink_app_test.dart: appearance can follow system or change explicitly
+00:04 +21: <project>/test/ui/portlink_app_test.dart: empty configuration is responsive on mobile
+00:04 +22: <project>/test/ui/portlink_app_test.dart: root fits width 320.0
+00:04 +23: <project>/test/ui/portlink_app_test.dart: root fits width 390.0
+00:04 +24: <project>/test/ui/portlink_app_test.dart: root fits width 720.0
+00:05 +25: <project>/test/ui/portlink_app_test.dart: root fits width 900.0
+00:05 +26: <project>/test/ui/portlink_app_test.dart: root fits width 1280.0
+00:05 +27: loading <project>/test/ui/server_list_test.dart
+00:05 +27: <project>/test/ui/server_list_test.dart: default action identifies profile without connecting
+00:06 +28: <project>/test/ui/server_list_test.dart: busy disables mutations but keeps active cancellation
+00:06 +29: <project>/test/ui/server_list_test.dart: server cards fit narrow mobile width
+00:06 +30: loading <project>/test/ui/host_trust_dialog_test.dart
+00:06 +30: <project>/test/ui/host_trust_dialog_test.dart: trust requires explicit verification and affirmative click
+00:07 +31: <project>/test/ui/host_trust_dialog_test.dart: reject is available without accepting fingerprint
+00:07 +32: <project>/test/ui/host_trust_dialog_test.dart: long fingerprint fits mobile viewport
+00:07 +33: loading <project>/test/ui/preview_capture_test.dart
+00:07 +33: <project>/test/ui/preview_capture_test.dart: capture simulated configuration previews from real Flutter rendering
+00:07 +33 ~1: loading <project>/test/ui/connection_panel_test.dart
+00:08 +33 ~1: <project>/test/ui/connection_panel_test.dart: busy connecting remains cancellable
+00:08 +34 ~1: <project>/test/ui/connection_panel_test.dart: HTTP action is explicit and unavailable before ready
+00:08 +35 ~1: <project>/test/ui/connection_panel_test.dart: target unavailable keeps stop but not HTTP action
+00:08 +36 ~1: <project>/test/ui/connection_panel_test.dart: connection panel fits width 320.0
+00:08 +37 ~1: <project>/test/ui/connection_panel_test.dart: connection panel fits width 390.0
+00:08 +38 ~1: <project>/test/ui/connection_panel_test.dart: connection panel fits width 760.0
+00:09 +39 ~1: loading <project>/test/core/dartssh_adapter_test.dart
+00:09 +39 ~1: <project>/test/core/dartssh_adapter_test.dart: production adapter bounds silent TCP peer handshake and closes socket
+00:09 +40 ~1: <project>/test/core/dartssh_adapter_test.dart: production adapter rejects refused TCP connection within connect deadline
+00:09 +41 ~1: loading <project>/test/core/models_test.dart
+00:10 +41 ~1: <project>/test/core/models_test.dart: profile validates IPv4 IPv6 and DNS without URL or control characters
+00:10 +42 ~1: <project>/test/core/models_test.dart: profile JSON strictly roundtrips without credentials
+00:10 +43 ~1: <project>/test/core/models_test.dart: phase activity and transport connectivity follow contract
+00:10 +44 ~1: loading <project>/test/core/tunnel_engine_test.dart
+00:10 +44 ~1: <project>/test/core/tunnel_engine_test.dart: ready requires auth, real exclusive loopback listener and SSH target probe
+00:10 +45 ~1: <project>/test/core/tunnel_engine_test.dart: eight concurrent streams preserve payloads and response after upload half-close
+00:10 +46 ~1: <project>/test/core/tunnel_engine_test.dart: binding conflict is fatal and never retried
+00:10 +47 ~1: <project>/test/core/tunnel_engine_test.dart: production constructor keeps fixed 3080 and fails safely if already occupied
+00:10 +48 ~1: <project>/test/core/tunnel_engine_test.dart: target failure keeps listener and periodically reprobes through SSH
+00:11 +49 ~1: <project>/test/core/tunnel_engine_test.dart: ping hang has timeout, closes old session and reconnects once
+00:11 +50 ~1: <project>/test/core/tunnel_engine_test.dart: transient initial failure returns before retries and backoff is bounded
+00:11 +51 ~1: <project>/test/core/tunnel_engine_test.dart: auth failure never retries or reveals server text or password
+00:11 +52 ~1: <project>/test/core/tunnel_engine_test.dart: unknown prompts once, repeated key skips prompt, changed key hard-stops
+00:11 +53 ~1: <project>/test/core/tunnel_engine_test.dart: transport cannot publish ready if it skipped host verification
+00:11 +54 ~1: <project>/test/core/tunnel_engine_test.dart: algorithm changes are fatal before first-use prompt
+00:11 +55 ~1: <project>/test/core/tunnel_engine_test.dart: rejecting trust does not save or retry
+00:11 +56 ~1: <project>/test/core/tunnel_engine_test.dart: disconnect pending trust returns promptly and stale acceptance cannot persist
+00:11 +57 ~1: <project>/test/core/tunnel_engine_test.dart: stale late connector is closed and cannot bind or overwrite newer status
+00:11 +58 ~1: <project>/test/core/tunnel_engine_test.dart: rapid double switch waits for the oldest teardown and only latest connects
+00:11 +59 ~1: <project>/test/core/tunnel_engine_test.dart: cancel retry timer prevents any later connection attempt
+00:11 +60 ~1: <project>/test/core/tunnel_engine_test.dart: late failed accepted channel is cleaned after disconnect
+00:11 +61 ~1: <project>/test/core/tunnel_engine_test.dart: connect timeout retires late host prompt and closes late session
+00:12 +62 ~1: <project>/test/core/tunnel_engine_test.dart: hung authentication expires and only transient timeout is retried
+00:12 +63 ~1: <project>/test/core/tunnel_engine_test.dart: hung authentication is bounded and disconnect clears its timer
+00:12 +64 ~1: <project>/test/core/tunnel_engine_test.dart: target probe timeout marks unavailable and destroys a late successful channel
+00:12 +65 ~1: <project>/test/core/tunnel_engine_test.dart: trust-store failure fails closed without a prompt or automatic retry
+00:12 +66 ~1: <project>/test/core/tunnel_engine_test.dart: session closing during initial probe never emits ready
+00:12 +67 ~1: <project>/test/core/tunnel_engine_test.dart: stale open from retired attempt cannot leak after auto-reconnect
+00:12 +68 ~1: <project>/test/core/tunnel_engine_test.dart: dispose is idempotent and prevents new connects
+00:12 +69 ~1: loading <project>/test/ssh_integration_test.dart
+00:13 +69 ~1: <project>/test/ssh_integration_test.dart: real SSH password, pinned host, forwarding, concurrent data and cleanup
+00:14 +70 ~1: loading <project>/test/platform/application_cleanup_test.dart
+00:15 +70 ~1: <project>/test/platform/application_cleanup_test.dart: simultaneous exit paths share ordered cleanup once
+00:15 +71 ~1: <project>/test/platform/application_cleanup_test.dart: startup cleanup continues releasing session and lock after engine failure
+00:15 +72 ~1: loading <project>/test/platform/desktop_integration_test.dart
+00:15 +72 ~1: <project>/test/platform/desktop_integration_test.dart: healthy tray close hides, fatal or failed tray close exits safely
+00:15 +73 ~1: <project>/test/platform/desktop_integration_test.dart: tray failure keeps close intercept until cleanup completes
+00:15 +74 ~1: <project>/test/platform/desktop_integration_test.dart: native exit request waits for cleanup and shares concurrent exit work
+00:15 +75 ~1: <project>/test/platform/desktop_integration_test.dart: shutdown waits for in-flight menu update before destroying tray
+00:15 +76 ~1: <project>/test/platform/desktop_integration_test.dart: persistent error does not steal focus on every health event
+00:15 +77 ~1: <project>/test/platform/desktop_integration_test.dart: target unavailable and stale HTTP menu callbacks cannot launch browser
+00:16 +78 ~1: loading <project>/test/platform/android_session_test.dart
+00:16 +78 ~1: <project>/test/platform/android_session_test.dart: desktop adapter never invokes Android platform channel
+00:16 +79 ~1: <project>/test/platform/android_session_test.dart: concurrent initialization is one platform request
+00:16 +80 ~1: <project>/test/platform/android_session_test.dart: no tunnel session may start without a registered stop handler
+00:16 +81 ~1: <project>/test/platform/android_session_test.dart: concurrent starts wait for actual foreground confirmation once
+00:16 +82 ~1: <project>/test/platform/android_session_test.dart: native stop acknowledges only completed actual disconnect
+00:16 +83 ~1: <project>/test/platform/android_session_test.dart: failed disconnect returns false so native watchdog can close isolate
+00:16 +84 ~1: <project>/test/platform/android_session_test.dart: notification permission and FGS errors propagate without fallback
+00:16 +85 ~1: <project>/test/platform/android_session_test.dart: native stop without handler is never acknowledged as disconnected
+00:16 +86 ~1: <project>/test/platform/android_session_test.dart: duplicate native stops share one pending disconnect
+00:16 +87 ~1: <project>/test/platform/android_session_test.dart: native disconnect may call session stop without a channel deadlock
+00:16 +88 ~1: <project>/test/platform/android_session_test.dart: failed initialization can retry and restore native stop callback
+00:16 +89 ~1: <project>/test/platform/android_session_test.dart: stop while initializing prevents the delayed platform start
+00:16 +90 ~1: <project>/test/platform/android_session_test.dart: late foreground ack cannot complete a cancelled Dart start
+00:16 +91 ~1: <project>/test/platform/android_session_test.dart: new start does not reuse the previous cancelled platform operation
+00:16 +92 ~1: <project>/test/platform/android_session_test.dart: dispose rejects restart while native cleanup is still pending
+00:16 +93 ~1: <project>/test/platform/android_session_test.dart: disposed session cannot restart and unregisters its callback
+00:16 +94 ~1: loading <project>/test/platform/single_instance_guard_test.dart
+00:16 +94 ~1: <project>/test/platform/single_instance_guard_test.dart: same isolate refuses duplicate, release is idempotent and stale file is safe
+00:16 +95 ~1: <project>/test/platform/single_instance_guard_test.dart: separate process cannot take an owned OS lock
+00:17 +96 ~1: <project>/test/platform/single_instance_guard_test.dart: process termination releases lock without deleting its file
+00:17 +97 ~1: loading <project>/test/app_controller_test.dart
+00:17 +97 ~1: <project>/test/app_controller_test.dart: initialize loads immutable profiles and auto-connects only default once
+00:17 +98 ~1: <project>/test/app_controller_test.dart: concurrent initialize calls share a single load and autoconnect
+00:17 +99 ~1: <project>/test/app_controller_test.dart: initialization error forbids every mutation and connection without leaking errors
+00:17 +100 ~1: <project>/test/app_controller_test.dart: new profile requires password before metadata or secret writes
+00:17 +101 ~1: <project>/test/app_controller_test.dart: invalid profile is rejected before touching secure storage
+00:17 +102 ~1: <project>/test/app_controller_test.dart: first saved profile becomes default without automatically connecting
+00:17 +103 ~1: <project>/test/app_controller_test.dart: failed metadata save rolls existing password back and leaves configuration unchanged
+00:17 +104 ~1: <project>/test/app_controller_test.dart: failed new-profile save removes newly written credential
+00:17 +105 ~1: <project>/test/app_controller_test.dart: failed credential rollback surfaces explicit repair warning without exposing secrets
+00:17 +106 ~1: <project>/test/app_controller_test.dart: secure-store write failure never commits metadata or updates UI state
+00:17 +107 ~1: <project>/test/app_controller_test.dart: editing blank password keeps credential and only restarts active profile after save succeeds
+00:17 +108 ~1: <project>/test/app_controller_test.dart: setting default persists choice but never switches a live connection
+00:17 +109 ~1: <project>/test/app_controller_test.dart: failed default save leaves the previous selection intact
+00:17 +110 ~1: <project>/test/app_controller_test.dart: delete active default disconnects before stopping Android session and chooses first remaining
+00:17 +111 ~1: <project>/test/app_controller_test.dart: delete inactive profile does not disconnect the current server
+00:17 +112 ~1: <project>/test/app_controller_test.dart: delete secret failure leaves metadata deleted with honest cleanup warning
+00:17 +113 ~1: <project>/test/app_controller_test.dart: delete metadata failure preserves credential and configuration
+00:17 +114 ~1: <project>/test/app_controller_test.dart: busy metadata transaction gates all other mutations and connect switches
+00:17 +115 ~1: <project>/test/app_controller_test.dart: host-key prompt can be explicitly accepted and is cleared exactly once
+00:17 +116 ~1: <project>/test/app_controller_test.dart: disconnect bypasses busy and rejects a hanging host-key prompt
+00:17 +117 ~1: <project>/test/app_controller_test.dart: fatal engine status dismisses outstanding trust and stops platform session
+00:17 +118 ~1: <project>/test/app_controller_test.dart: Android start failure prevents SSH connect and cleans session without leaking platform text
+00:17 +119 ~1: <project>/test/app_controller_test.dart: cancel during pending Android start cannot later open SSH
+00:17 +120 ~1: <project>/test/app_controller_test.dart: missing password never starts Android or opens SSH
+00:17 +121 ~1: <project>/test/app_controller_test.dart: transient reconnect keeps Android session while fatal status stops it
+00:17 +122 ~1: <project>/test/app_controller_test.dart: stale queued failure cannot stop a newer healthy connection
+00:17 +123 ~1: <project>/test/app_controller_test.dart: secure-store read failure never opens SSH or leaks backend exception
+00:17 +124 ~1: <project>/test/app_controller_test.dart: failed native stop is not acknowledged and delete does not commit metadata
+00:17 +125 ~1: <project>/test/app_controller_test.dart: target unavailable remains an active Android forwarding session
+00:17 +126 ~1: <project>/test/app_controller_test.dart: shutdown while loading cannot resurrect profiles or auto-connect default
+00:17 +127 ~1: <project>/test/app_controller_test.dart: shutdown during default save never updates closed controller state
+00:17 +128 ~1: <project>/test/app_controller_test.dart: shutdown waits for credential rollback before allowing process exit
+00:17 +129 ~1: <project>/test/app_controller_test.dart: shutdown during delete lets committed credential cleanup finish without UI resurrection
+00:17 +130 ~1: <project>/test/app_controller_test.dart: disconnect during secure-store read cancels before Android session starts
+00:17 +131 ~1: <project>/test/app_controller_test.dart: shutdown during delayed engine completion cannot republish ready
+00:17 +132 ~1: <project>/test/app_controller_test.dart: password whitespace is preserved rather than silently trimmed
+00:17 +133 ~1: <project>/test/app_controller_test.dart: saving an unknown edit ID never creates or overwrites credentials
+00:17 +134 ~1: <project>/test/app_controller_test.dart: deleting the final profile clears the default and stored password
+00:17 +135 ~1: <project>/test/app_controller_test.dart: explicit host trust rejection stops platform session without an uncaught error
+00:17 +136 ~1: <project>/test/app_controller_test.dart: failed new-profile rollback warns about remaining orphaned credential
+00:17 +137 ~1: <project>/test/app_controller_test.dart: shutdown is idempotent, rejects pending trust and blocks later mutation/connect
+00:17 +138 ~1: loading <project>/test/data/macos_keychain_options_test.dart
+00:18 +138 ~1: <project>/test/data/macos_keychain_options_test.dart: standalone Mac password operations use login Keychain without sharing entitlement
+00:18 +139 ~1: loading <project>/test/data/secret_store_test.dart
+00:18 +139 ~1: <project>/test/data/secret_store_test.dart: password roundtrip is namespaced per profile and delete is isolated
+00:18 +140 ~1: <project>/test/data/secret_store_test.dart: platform secure-storage failures propagate and never become silent fallback
+00:18 +141 ~1: <project>/test/data/secret_store_test.dart: invalid IDs cannot escape credential namespace
+00:18 +142 ~1: loading <project>/test/data/repositories_test.dart
+00:19 +142 ~1: <project>/test/data/repositories_test.dart: empty first run, immutable snapshot and validated round trip
+00:19 +143 ~1: <project>/test/data/repositories_test.dart: atomic backup recovers corrupt primary and preserves last good backup
+00:19 +144 ~1: <project>/test/data/repositories_test.dart: concurrent repository instances never expose partial documents
+00:19 +145 ~1: <project>/test/data/repositories_test.dart: schema limits duplicate IDs missing default and plaintext fields are rejected
+00:19 +146 ~1: <project>/test/data/repositories_test.dart: host pins normalize host case, isolate ports and block algorithm changes
+00:19 +147 ~1: <project>/test/data/repositories_test.dart: trust read-modify-write serialized across instances without losing pins
+00:19 +148 ~1: <project>/test/data/repositories_test.dart: pin formats and malformed trust documents fail closed
+00:19 +149 ~1: <project>/test/data/repositories_test.dart: trust corruption fails closed even with a valid stale backup
+00:19 +150 ~1: loading <project>/test/tool/windows_packaging_test.dart
+00:19 +150 ~1: <project>/test/tool/windows_packaging_test.dart: complete x64 bundle verifies without claiming runtime or signing
+00:19 +151 ~1: <project>/test/tool/windows_packaging_test.dart: complete ARM64 bundle uses matching PE and native manifest architecture
+00:19 +152 ~1: <project>/test/tool/windows_packaging_test.dart: missing plugin is fatal even with executable and engine present
+00:19 +153 ~1: <project>/test/tool/windows_packaging_test.dart: all four state icons are required for Windows tray transitions
+00:19 +154 ~1: <project>/test/tool/windows_packaging_test.dart: native manifest must name packaged cnativeapi DLL
+00:19 +155 ~1: <project>/test/tool/windows_packaging_test.dart: absolute tester paths and traversal cannot leak into a portable artifact
+00:19 +156 ~1: <project>/test/tool/windows_packaging_test.dart: regular and delay import dependencies must be app-local or known Windows system DLLs
+00:19 +157 ~1: <project>/test/tool/windows_packaging_test.dart: only optional dartjni delay-load jvm is warned not silently bundled from developer JDK
+00:19 +158 ~1: <project>/test/tool/windows_packaging_test.dart: development credentials and debug kernel are rejected
+00:19 +159 ~1: <project>/test/tool/windows_packaging_test.dart: case-insensitive DLL collisions cannot pass Linux or Mac fixture inspection
+00:19 +160 ~1: <project>/test/tool/windows_packaging_test.dart: malformed PE and wrong architecture are fatal
+00:19 +161 ~1: <project>/test/tool/windows_packaging_test.dart: AOT app.so is verified as PE and cannot hide wrong architecture
+00:19 +162 ~1: <project>/test/tool/windows_packaging_test.dart: native manifest is mandatory even when cnativeapi DLL exists
+00:19 +163 ~1: <project>/test/tool/windows_packaging_test.dart: PE bounds checks reject arbitrary truncated and hostile offsets
+00:19 +164 ~1: <project>/test/tool/windows_packaging_test.dart: PE reader preserves ordinary and delayed import distinction
+00:19 +165 ~1: <project>/test/tool/windows_packaging_test.dart: plugin list excludes FFI target name and fails closed on malformed generated source
+00:19 +166 ~1: <project>/test/tool/windows_packaging_test.dart: safe relative paths reject host drives links and Windows normalization escapes
+00:19 +167 ~1: loading <project>/test/tool/preflight_test.dart
+00:20 +167 ~1: <project>/test/tool/preflight_test.dart: missing full Xcode and CocoaPods are explicit separate blockers
+00:20 +168 ~1: <project>/test/tool/preflight_test.dart: 3080 occupied is runtime warning not build failure or network request
+00:20 +169 ~1: <project>/test/tool/preflight_test.dart: SPM-integrated project does not require CocoaPods
+00:20 +170 ~1: <project>/test/tool/preflight_test.dart: adb-only Android directory cannot pass as a complete SDK
+00:20 +171 ~1: <project>/test/tool/preflight_test.dart: Android platform and pinned NDK plus JDK17 satisfy file prerequisites
+00:20 +172 ~1: <project>/test/tool/preflight_test.dart: Java launcher without runtime fails even if command exists
+00:20 +173 ~1: <project>/test/tool/preflight_test.dart: Windows target on macOS fails host check without invoking Windows tools
+00:20 +174 ~1: <project>/test/tool/preflight_test.dart: old SDK and malformed cached versions cannot claim readiness
+00:20 +175 ~1: <project>/test/tool/preflight_test.dart: local pre-release SDK gets source provenance warning
+00:20 +176 ~1: <project>/test/tool/preflight_test.dart: invalid target rejected before any tools run
+00:20 +177 ~1: All tests passed!

@@ -1,0 +1,9 @@
+# Android 首次模拟器运行发现与修复中状态
+
+2026-10-24：正式ARM64 Release预览APK已在专属AOSP API36 ARM64模拟器emulator-5580安装并冷启动成功。真实UI添加专用RuntimeFixture、系统通知授权、完整随机SSH指纹比对和信任后显示ready；原生dumpsys确认TunnelSessionService isForeground=true。
+
+但真实发送echo数据时收到0字节，logcat捕获Unhandled Exception: Bad state: StreamSink is bound to a stream，stack为dartssh2 SSHTransport._sendAeadPacket->native Socket.add。因此不能把首个20MB APK报告为完整转发运行验收通过。已停止该模拟器内测试应用，未操作物理设备或用户真实服务器。
+
+本地Dart/库源码追踪：应用上传relay逐块remote.sink.addStream后调用remote.flush，最终经过SSHForwardChannel/SSHChannel/SSHClient到共享SSHSocket.flush。Dart IOSink.flush会暂时_isBound=true，但其他SSH通道异步upload loop/控制消息仍可socket.add，产生竞态。修复限定共享relay去掉这个并不代表channel排空的native flush；sink.addStream经StreamController.pipe和StreamIterator暂停传播+SSH窗口形成真实背压，本地下载socket仍保留单writer flush。
+
+最终状态：竞态已修复；32项核心/真实SSH回归与178项完整共享回归通过。修复后Release APK重建安装，真实AOSP36前台/Home后台各12轮528384B数据匹配，通知停止后FGS退出且3080不再服务。首版失败包从交付目录移至非交付缓存，最终交付哈希f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed。详细见RUNTIME_ACCEPTANCE.md，不隐藏初版失败，也不外推物理手机。

@@ -1,0 +1,37 @@
+00:00 +0: loading <workspace>/portlink/test/core/dartssh_adapter_test.dart
+00:00 +0: <workspace>/portlink/test/core/dartssh_adapter_test.dart: production adapter bounds silent TCP peer handshake and closes socket
+00:00 +1: <workspace>/portlink/test/core/dartssh_adapter_test.dart: production adapter rejects refused TCP connection within connect deadline
+00:00 +2: loading <workspace>/portlink/test/core/models_test.dart
+00:00 +2: <workspace>/portlink/test/core/models_test.dart: profile validates IPv4 IPv6 and DNS without URL or control characters
+00:00 +3: <workspace>/portlink/test/core/models_test.dart: profile JSON strictly roundtrips without credentials
+00:00 +4: <workspace>/portlink/test/core/models_test.dart: phase activity and transport connectivity follow contract
+00:00 +5: loading <workspace>/portlink/test/core/tunnel_engine_test.dart
+00:01 +5: <workspace>/portlink/test/core/tunnel_engine_test.dart: ready requires auth, real exclusive loopback listener and SSH target probe
+00:01 +6: <workspace>/portlink/test/core/tunnel_engine_test.dart: eight concurrent streams preserve payloads and response after upload half-close
+00:01 +7: <workspace>/portlink/test/core/tunnel_engine_test.dart: channel pause propagates through both pipe controllers and resumes intact
+00:01 +8: <workspace>/portlink/test/core/tunnel_engine_test.dart: binding conflict is fatal and never retried
+00:01 +9: <workspace>/portlink/test/core/tunnel_engine_test.dart: production constructor keeps fixed 3080 and fails safely if already occupied
+00:01 +10: <workspace>/portlink/test/core/tunnel_engine_test.dart: target failure keeps listener and periodically reprobes through SSH
+00:01 +11: <workspace>/portlink/test/core/tunnel_engine_test.dart: ping hang has timeout, closes old session and reconnects once
+00:01 +12: <workspace>/portlink/test/core/tunnel_engine_test.dart: transient initial failure returns before retries and backoff is bounded
+00:02 +13: <workspace>/portlink/test/core/tunnel_engine_test.dart: auth failure never retries or reveals server text or password
+00:02 +14: <workspace>/portlink/test/core/tunnel_engine_test.dart: unknown prompts once, repeated key skips prompt, changed key hard-stops
+00:02 +15: <workspace>/portlink/test/core/tunnel_engine_test.dart: transport cannot publish ready if it skipped host verification
+00:02 +16: <workspace>/portlink/test/core/tunnel_engine_test.dart: algorithm changes are fatal before first-use prompt
+00:02 +17: <workspace>/portlink/test/core/tunnel_engine_test.dart: rejecting trust does not save or retry
+00:02 +18: <workspace>/portlink/test/core/tunnel_engine_test.dart: disconnect pending trust returns promptly and stale acceptance cannot persist
+00:02 +19: <workspace>/portlink/test/core/tunnel_engine_test.dart: stale late connector is closed and cannot bind or overwrite newer status
+00:02 +20: <workspace>/portlink/test/core/tunnel_engine_test.dart: rapid double switch waits for the oldest teardown and only latest connects
+00:02 +21: <workspace>/portlink/test/core/tunnel_engine_test.dart: cancel retry timer prevents any later connection attempt
+00:02 +22: <workspace>/portlink/test/core/tunnel_engine_test.dart: late failed accepted channel is cleaned after disconnect
+00:02 +23: <workspace>/portlink/test/core/tunnel_engine_test.dart: connect timeout retires late host prompt and closes late session
+00:02 +24: <workspace>/portlink/test/core/tunnel_engine_test.dart: hung authentication expires and only transient timeout is retried
+00:03 +25: <workspace>/portlink/test/core/tunnel_engine_test.dart: hung authentication is bounded and disconnect clears its timer
+00:03 +26: <workspace>/portlink/test/core/tunnel_engine_test.dart: target probe timeout marks unavailable and destroys a late successful channel
+00:03 +27: <workspace>/portlink/test/core/tunnel_engine_test.dart: trust-store failure fails closed without a prompt or automatic retry
+00:03 +28: <workspace>/portlink/test/core/tunnel_engine_test.dart: session closing during initial probe never emits ready
+00:03 +29: <workspace>/portlink/test/core/tunnel_engine_test.dart: stale open from retired attempt cannot leak after auto-reconnect
+00:03 +30: <workspace>/portlink/test/core/tunnel_engine_test.dart: dispose is idempotent and prevents new connects
+00:03 +31: loading <workspace>/portlink/test/ssh_integration_test.dart
+00:04 +31: <workspace>/portlink/test/ssh_integration_test.dart: real SSH password, pinned host, forwarding, concurrent data and cleanup
+00:06 +32: All tests passed!

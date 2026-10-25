@@ -1,0 +1,7 @@
+{
+  "notificationUiClicked": true,
+  "foregroundServiceRemoved": true,
+  "uiDisconnected": true,
+  "port3080NoLongerServesData": true,
+  "persistedProfileStillVisible": true
+}

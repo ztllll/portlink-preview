@@ -1,0 +1,5 @@
+Exception: <project>/tool/windows/common.ps1:7
+Line |
+   7 |          throw 'Requires a real Windows host. Nothing was installed or …
+     |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Requires a real Windows host. Nothing was installed or built.

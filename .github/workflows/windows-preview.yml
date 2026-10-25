@@ -1,0 +1,35 @@
+name: Windows preview package
+# This workflow is a build definition only. Upload/dispatch requires owner consent.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          ./tool/windows/check_syntax.ps1
+          ./tool/windows/test_helpers.ps1
+      - name: Build, validate and run automated regression
+        shell: pwsh
+        run: ./tool/windows/build.ps1 -FlutterRoot $env:FLUTTER_ROOT -Architecture x64 -ResolveDependencies -RunTests
+      - name: Package complete portable bundle
+        shell: pwsh
+        run: ./tool/windows/package.ps1 -FlutterRoot $env:FLUTTER_ROOT -Architecture x64 -OutputDirectory "$env:RUNNER_TEMP/PortLink-Windows-preview"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PortLink-Windows-x64-preview
+          path: ${{ runner.temp }}/PortLink-Windows-preview/
+          if-no-files-found: error

@@ -1,0 +1,13 @@
+{
+  "productionEntrypoint": true,
+  "pid": 85697,
+  "aliveAfterStartup": true,
+  "quitRequest": {
+    "exitCode": 1,
+    "stdout": "",
+    "stderr": "47:51: execution error: “PortLink”遇到一个错误：用户已取消。 (-128)\n"
+  },
+  "processExitCode": 0,
+  "stdout": "",
+  "stderr": "[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_metal_impeller.mm(53)] Using the Impeller rendering backend (MetalSDF).\nembedder.cc (3079): 'FlutterPlatformMessageCreateResponseHandle' returned 'kInvalidArguments'. Engine handle was invalid.\n2026-10-24 00:47:29.664 PortLink[85697:1982708] Failed to create a FlutterPlatformMessageResponseHandle (2)\n"
+}

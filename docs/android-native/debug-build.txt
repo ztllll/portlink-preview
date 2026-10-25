@@ -1,0 +1,7 @@
+Running Gradle task 'assembleDebug'...
+WARNING: Your Android app project: app located at: <workspace>/portlink/android/app/build.gradle.kts
+applies the Kotlin Gradle Plugin, which will cause build failures in future versions of Flutter.
+Please migrate your app to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers
+
+Running Gradle task 'assembleDebug'...                            475.2s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
