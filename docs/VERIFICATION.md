@@ -13,7 +13,7 @@
 | 正式依赖解析 | 成功，pubspec.lock已固定 dartssh2 4.1.0、flutter_secure_storage 11.2.0、tray_manager 0.8.0 等 |
 | Dart格式 | 51份Dart文件（含原生验收和Windows包检查入口），最终check 0 changed、退出0 |
 | 全项目静态分析 | 最终 `dart analyze`：No issues found，退出0 |
-| 完整Flutter回归 | **合并版245 passed / 1 skipped，退出0**。覆盖多规则核心/配置迁移、共享UI、原生桌面协议、Windows合成包、2真实SSH集成（含32MiB HTTP上传）；跳过的是需显式开启的截图测试 |
+| 完整Flutter回归 | **Android统一版247 passed / 1 skipped，退出0**。覆盖多规则核心/配置迁移、共享UI、原生桌面协议、Windows合成包、2真实SSH集成（含32MiB HTTP上传）；跳过的是需显式开启的截图测试 |
 | 真实SSH集成 | 隔离Python环境asyncssh 2.24.1；随机临时服务器密钥；真实密码认证、完整SHA256指纹核对与保存、4并发×128KiB双向数据、半关闭、重连时不重复确认、错密失败、停止释放监听均通过 |
 | 核心网络测试 | 真实loopback监听、8并发×256KiB半关闭、端口占用、目标不可达后恢复、探活超时与重连、取消/快速切换/迟到session清理、主机算法变化阻断通过 |
 | 配置/控制器测试 | 原子写及验证备份、并发持久化、损坏时fail closed、密码事务回滚、空密码保留、默认选择不切换当前连接、取消指纹/Android启动、shutdown等通过 |
@@ -62,7 +62,9 @@
 
 ### Android
 
-用户2026-10-24明确确认后，复用JDK17.0.18，官方sdkmanager隔离安装SDK36/35、build-tools36、NDK28.2、CMake3.22及platform-tools，官方许可正常接受。真实assembleDebug退出0（通用包约158MiB）；assembleRelease ARM64分ABI退出0，20,116,139字节。官方apksigner确认Android Debug证书，ELF架构/native manifest/minSdk24/targetSdk36、16KB LOAD和zipalign检查全部通过；这是Release优化的debug签名侧载预览，不是正式发布签名。KGP未来兼容warning保留，不是本次失败。物理设备未连接；AOSP36 ARM64模拟器真实安装、持久化恢复、前台/Home后台各12轮528384B匹配、通知停止后FGS退出/3080不再服务均通过。首版暴露flush竞态，修复后APK重建复验成功，最终哈希f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed。补充通过应用按钮打开系统WebView测试浏览器，localhost3080随机标记HTTP页面成功、FGS后台存活；系统撤销权限后服务/监听消失，冷启动拒绝通知时无转发。锁屏/物理机Chrome/厂商省电未验。详见[Android预览](<ANDROID_PREVIEW.md>)和[原生包记录](<android-native/fixed-arm64-verification.json>)。
+2026-10-25 Android0.1.3多端口APK真实assembleRelease成功：20,297,837字节/code2004，sha2565654fdfb8f8ff619a5a8bd07f08dcc4bb61a780b16f27c54715c1b7d6d81e7e4，min24/target36、Android Debug证书、官方签名/ELF/NativeAssetsManifest/16KB对齐检查通过。AOSP36 ARM64真实UI配置18080/18081两规则和localhost目标、系统授权与host pin确认；前台/Home后台双流各12轮每rule786432B全匹配，精确通知action0停止后FGS与全部监听释放；新进程默认自连恢复两rule/Keystore凭据/pin。物理手机/锁屏/厂商行为未验，旧0.1.0浏览器结果不套成本轮。详见[本轮发布记录](<ANDROID_0.1.3_RELEASE.md>)和[运行结果](<android-0.1.3/multiport-runtime.json>)。Mac安装包已上传GitHub独立preview Release，Windows原发布不变。
+
+以下为旧0.1.0单端口记录：用户2026-10-24明确确认后，复用JDK17.0.18，官方sdkmanager隔离安装SDK36/35、build-tools36、NDK28.2、CMake3.22及platform-tools，官方许可正常接受。真实assembleDebug退出0（通用包约158MiB）；assembleRelease ARM64分ABI退出0，20,116,139字节。官方apksigner确认Android Debug证书，ELF架构/native manifest/minSdk24/targetSdk36、16KB LOAD和zipalign检查全部通过；这是Release优化的debug签名侧载预览，不是正式发布签名。KGP未来兼容warning保留，不是本次失败。物理设备未连接；AOSP36 ARM64模拟器真实安装、持久化恢复、前台/Home后台各12轮528384B匹配、通知停止后FGS退出/3080不再服务均通过。首版暴露flush竞态，修复后APK重建复验成功，最终哈希f81c4de163f46339f0212ed740b5f775dfc5991e26e3a1c942290ba3f3f6efed。补充通过应用按钮打开系统WebView测试浏览器，localhost3080随机标记HTTP页面成功、FGS后台存活；系统撤销权限后服务/监听消失，冷启动拒绝通知时无转发。锁屏/物理机Chrome/厂商省电未验。详见[Android预览](<ANDROID_PREVIEW.md>)和[原生包记录](<android-native/fixed-arm64-verification.json>)。
 
 ## 工具链来源
 

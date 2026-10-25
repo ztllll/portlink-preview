@@ -2,7 +2,11 @@
 
 ## 使用目标与边界
 
-打开 PortLink，在前台开始连接后，把本机 `127.0.0.1:3080` 转发到所选 SSH 服务器的 `127.0.0.1:3080`。切到浏览器/Home 时保留**本次**会话；用完在应用或通知点“停止转发”。Android 14+ 若系统允许划掉进行中通知，划掉也按停止处理，不把通知隐藏后继续转发。这不是 VPN、不修改路由、不监听局域网地址、不提供终端、不设开机启动。注意 Android loopback 不是应用私有网络隔离：同一设备上有网络权限的其他应用也可能连接该端口，所以只在需要时开启，并保留远端服务本身的认证。
+打开 PortLink，在前台开始连接后，所选 SSH 服务器的一条会话同时承载该配置中启用的多条 TCP 转发规则：`本地绑定地址:本地端口 → 经 SSH → 目标主机:目标端口`。Android 与 macOS/Windows 使用同一套服务器、规则编辑与连接状态逻辑；`127.0.0.1:3080 → 127.0.0.1:3080` 只作为旧配置迁移/新规则的默认示例，不再是固定唯一端口。目标主机由 SSH 服务器侧连接，可填写服务器可达的主机/IP；本地绑定默认 loopback。
+
+切到浏览器/Home 时保留**本次**会话；用完在应用或通知点“停止转发”，结束整次 SSH 会话及全部规则。通知显示“本次多端口 SSH 转发”，引导打开应用查看各规则，不假报某个固定端口或每条规则都已 ready。Android 14+ 若系统允许划掉进行中通知，划掉也按停止处理。
+
+这不是 VPN、不修改路由、不提供终端、不设开机启动。保持默认 `127.0.0.1` 时仅本机可连；若主动改成 `0.0.0.0` 或其他非 loopback IPv4，监听可能暴露给同网络设备，界面会提示风险，需按实际网络/防火墙自行控制。Android loopback 也不是应用私有隔离：同设备其他应用可能访问监听端口，所以只在需要时开启，并保留目标服务本身的认证。
 
 FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或网络永不断的保证。Doze、断网、系统任务管理器停止、强制停止、厂商策略或进程被杀仍会中断。没有部分唤醒锁、忽略电池优化申请、精确闹钟、BOOT receiver、sticky 重启、WorkManager 或定时拉活。Activity 真正结束/划掉最近任务会结束本次会话；单纯切浏览器不结束。Android 12+ 根 Activity 的 Back 可能只把任务移到后台，不能把 Back 手势本身当成“已停止”，使用通知或应用内停止最明确。系统销毁并重建进程时不会从 Service 自动恢复；用户重新打开应用才会按应用设置连接默认服务器。
 
@@ -32,7 +36,9 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 
 使用 `specialUse`，而不是假称 mediaPlayback、dataSync、connectedDevice 或 VPN。具体 subtype：
 
-> User-started SSH local TCP forwarding session: exposes only device loopback 127.0.0.1:3080 to the selected SSH server loopback 127.0.0.1:3080 while the user switches to a browser; stops on explicit app/notification stop or task removal. No boot start or persistent background maintenance.
+> User-started SSH local TCP forwarding session for user-configured local listeners, ports and targets; loopback by default. Continues while the user switches apps, stops on explicit app/notification stop or task removal. No boot start or persistent background maintenance.
+
+多规则版本的 manifest subtype 同步描述用户自定义规则、监听和目标（默认 loopback）；此变更不增加权限，不改变 `specialUse` 类型或用户可见的停止要求。
 
 此用途是明确由用户开始、在切换应用时仍需当前连接、可随时停止的本次交互会话。声明应准确反映实际行为；不代表 Google Play 审核或任何设备厂商的批准。本项目侧载自用、不上架；将来若上架需另行审查届时的政策，不扩大本实现权限。
 
@@ -57,9 +63,15 @@ FGS 提高当前进程的运行优先级，但不是不被杀、永不休眠或�
 
 启动确认、再次开始已有会话和Activity恢复前台时重新检查通知权限/通道。用户开始的FGS还会在主线程可调度时每5秒检查；通知被禁用后请求停止真实隧道并走同一ack/销毁兜底。此检查不申请wakelock、不唤醒设备，Doze/系统调度可能推迟检查，不能承诺精确5秒内停止。原生改动仍需真机验证。Dart通道现有16项mock回归，覆盖FGS确认、停止失败不误ack、重复停止共用、回调内再次stop不死锁，以及初始化期间停止/晚到FGS确认的取消。Lead 已在唯一Flutter测试窗口执行全部16项，exit0、全部通过，其中第16项验证 dispose 等待原生 stop 时拒绝重入启动/注册 handler。dispose 在入口同步关闭准入，而非等平台 stop 返回才设 disposed。模块与测试的独立Dart analyzer也通过。这些mock不是Android系统或真机测试。
 
-## 验证状态与必须实机检查的项目
+## 多端口版本的 Android 功能与验收状态
 
-**Android 原生编译与 AOSP36 ARM64 模拟器运行验收已通过；物理手机尚未验收。** Lead 在 2026-10-24 使用既有 Homebrew JDK17.0.18、隔离的 Android SDK35/36、Build Tools36、NDK28.2.13676358 与 CMake3.22 完成真实 `flutter build apk --debug` / `assembleDebug`，退出码0，生成约158MiB的 universal 调试 APK，无 Kotlin 编译错误。Gradle 的显式 KGP“未来版本可能失败”警告仍然存在，但本次不是构建失败。
+共享源码已具备规则增加/删除/启用、名称、本地 IPv4/端口、目标主机/端口编辑，窄屏使用分行布局。连接面板逐规则显示状态、本地/目标地址、复制入口与显式 HTTP 打开入口；HTTP 只对 ready 规则启用，`0.0.0.0` 打开时转换成设备 loopback，不把普通 TCP 自动当成 HTTP。没有发现 Android 平台分支隐藏这些入口。以上是源码只读审查，不代替 Android UI 点击/软键盘验收。
+
+**2026-10-25 Android0.1.3多端口ARM64 Release APK已真实构建与模拟器验收通过。** 247项Flutter回归/1项截图跳过；真实390×844 Android布局widget测试双规则新增/自定义bind,target/保存回读与编辑。正式APK在AOSP36 ARM64通过真实UI配置两条18080/18081监听、自定义localhost目标、通知授权及指纹确认，前台/Home后台两规则并发各12轮786432B全匹配。系统通知action0停止后FGS移除、两个端口停止服务；应用内停止和跨进程默认自动连接/密码与host pin恢复均通过。新原生通知不增加规则传输协议，详情以应用内共享状态为准。签名/ELF/16KB检查通过，仍是Android Debug证书侧载预览，非正式发布；物理手机未验。下文旧0.1.0单端口结果仅历史记录。详情见ANDROID_PREVIEW.md。
+
+## 历史单端口版本的验证记录
+
+**以下是旧版单端口 Android 原生编译与 AOSP36 ARM64 模拟器记录，不是本轮多端口 APK 验收；物理手机尚未验收。** Lead 在 2026-10-24 使用既有 Homebrew JDK17.0.18、隔离的 Android SDK35/36、Build Tools36、NDK28.2.13676358 与 CMake3.22 完成真实 `flutter build apk --debug` / `assembleDebug`，退出码0，生成约158MiB的 universal 调试 APK，无 Kotlin 编译错误。Gradle 的显式 KGP“未来版本可能失败”警告仍然存在，但本次不是构建失败。
 
 Lead 随后用官方 `apksigner` 验证 debug APK 签名成功（Android Debug 证书），APK 结构/ELF检查确认 minSdk24、targetSdk36、全部 native library 的16KB页对齐通过，官方 `zipalign -c -P16` 也通过。
 
@@ -86,8 +98,8 @@ Lead 在 2026-10-24 对修复后的 ARM64 release 预览完成以下验收，不
 
 1. 已完成 debug universal 与 arm64 release 预览的编译及上述静态检查；交付时仍需对应最终文件核对签名、ABI、min/target SDK、权限和16KB对齐，不把中间产物的结果套到其他文件。正式发布必须另配受控发布签名，不沿用 debug key。
 2. Android 13+/14+ 真机分别验证通知允许、拒绝、channel 禁用、再次允许。拒绝必须无 SSH socket/listener、无假 ready。
-3. 应用前台连接真实 SSH 服务器，浏览器访问 `http://127.0.0.1:3080`（仅当远端3080实际为HTTP），反复切后台/回来，确认会话不重建、请求实际穿过原 SSH 隧道。
-4. 保持浏览器页面，通知“停止转发”后确认本机3080不再可连、服务器SSH断开、重连timer停止、通知移除；连接中/等待主机确认时也必须能停止。
+3. 新多端口 APK 配置至少两条不同本地端口/目标规则，核对逐条启停状态与真实双向流量，并覆盖自定义目标主机；仅对实际 HTTP 目标使用对应规则的“打开”，逐规则复制应得到各自地址。反复切后台/回来确认同一 SSH 会话保持。
+4. 保持客户端请求，通知“停止转发”后确认**全部启用规则**不再提供转发、服务器SSH断开、重连timer停止、通知移除；连接中/等待主机确认时也必须能停止，不能只验证旧默认3080。
 5. Home 保持；Activity 真正 finish、最近任务划掉结束；分别记录目标 Android 版本 Back 手势是 finish 还是仅移到后台，不能误判为停止。旋转/配置重建不得启动第二 Engine/重复监听。系统强停后无自启动。
 6. 断网/Wi-Fi切蜂窝/服务端3080关闭等按核心状态机处理，不把FGS存活误认SSH ready；fatal failure回收通知。
 7. 锁屏与Doze测试只记录实际行为，不承诺免休眠。用 `dumpsys activity services` 核对真实 FGS，再结合端到端请求确认真实隧道，而不是只看通知。

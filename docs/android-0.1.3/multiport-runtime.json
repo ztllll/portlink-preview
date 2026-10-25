@@ -1,0 +1,55 @@
+{
+  "serial": "emulator-5580",
+  "api": "36",
+  "abi": "arm64-v8a",
+  "rules": [
+    {
+      "local": 18080,
+      "target": "127.0.0.1:3080"
+    },
+    {
+      "local": 18081,
+      "target": "localhost:3080"
+    }
+  ],
+  "checks": [
+    {
+      "phase": "foreground",
+      "concurrentRules": [
+        {
+          "localPort": 18080,
+          "bytes": 786432,
+          "rounds": 12,
+          "matched": true
+        },
+        {
+          "localPort": 18081,
+          "bytes": 786432,
+          "rounds": 12,
+          "matched": true
+        }
+      ],
+      "foregroundService": true
+    },
+    {
+      "phase": "home-background",
+      "concurrentRules": [
+        {
+          "localPort": 18080,
+          "bytes": 786432,
+          "rounds": 12,
+          "matched": true
+        },
+        {
+          "localPort": 18081,
+          "bytes": 786432,
+          "rounds": 12,
+          "matched": true
+        }
+      ],
+      "foregroundService": true
+    }
+  ],
+  "server": "isolated SSH fixture via test-only adb reverse",
+  "success": true
+}

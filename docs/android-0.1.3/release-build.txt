@@ -1,0 +1,16 @@
+Resolving dependencies...
+Downloading packages...
+  material_color_utilities 0.13.0 (0.13.1 available)
+  screen_retriever 0.2.2 (0.3.0 available)
+  test_api 0.7.12 (0.7.15 available)
+Got dependencies!
+3 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Running Gradle task 'assembleRelease'...
+WARNING: Your Android app project: app located at: <workspace>/portlink/android/app/build.gradle.kts
+applies the Kotlin Gradle Plugin, which will cause build failures in future versions of Flutter.
+Please migrate your app to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers
+
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 4724 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Running Gradle task 'assembleRelease'...                           64.0s
+✓ Built build/app/outputs/flutter-apk/app-arm64-v8a-release.apk (20.3MB)

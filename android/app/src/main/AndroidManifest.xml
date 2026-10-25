@@ -39,7 +39,7 @@
             android:stopWithTask="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="User-started SSH local TCP forwarding session: exposes only device loopback 127.0.0.1:3080 to the selected SSH server loopback 127.0.0.1:3080 while the user switches to a browser; stops on explicit app/notification stop or task removal. No boot start or persistent background maintenance." />
+                android:value="User-started SSH TCP forwarding session with user-configured local listeners and server-side destinations; loopback is the default and non-loopback binding requires an explicit rule. Keeps the same Dart SSH engine while the user switches to a browser; stops all rules on explicit app/notification stop or task removal. No boot start or persistent background maintenance." />
         </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

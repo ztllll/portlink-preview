@@ -190,6 +190,178 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> androidSmallScreen(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
+  Future<void> enterVisible(
+    WidgetTester tester,
+    Finder input,
+    String value,
+  ) async {
+    await tester.ensureVisible(input);
+    await tester.pumpAndSettle();
+    await tester.enterText(input, value);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('Android 390x844 adds and saves multiple custom forwards', (
+    tester,
+  ) async {
+    await androidSmallScreen(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    expect(
+      Theme.of(tester.element(find.byType(ServerProfileDialog))).platform,
+      TargetPlatform.android,
+    );
+    await enterVisible(tester, field('显示名称'), 'Android 多端口');
+    await enterVisible(tester, field('主机地址'), 'ssh.example.com');
+    await enterVisible(tester, field('SSH 用户名'), 'alice');
+    await enterVisible(tester, field('SSH 密码'), 'android-test-password');
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-label-0')),
+      '网页',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-local-0')),
+      '18080',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-remote-0')),
+      '8080',
+    );
+    await tester.ensureVisible(find.byKey(const ValueKey('rule-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rule-add')).hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('rule-local-1')), findsOneWidget);
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-label-1')),
+      '数据库',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-bind-1')),
+      '0.0.0.0',
+    );
+    expect(find.textContaining('同一网络中的其他设备'), findsOneWidget);
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-local-1')),
+      '15432',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-target-1')),
+      '10.23.0.8',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-remote-1')),
+      '5432',
+    );
+    tester.testTextInput.hide();
+    await save(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.byType(ServerProfileDialog), findsNothing);
+    final saved = controller.savedProfiles.single;
+    expect(saved['name'], 'Android 多端口');
+    expect(saved['host'], 'ssh.example.com');
+    final rules = saved['rules']! as List<ForwardRule>;
+    expect(rules, hasLength(2));
+    expect(rules[0].label, '网页');
+    expect(rules[0].bindHost, '127.0.0.1');
+    expect(rules[0].targetHost, '127.0.0.1');
+    expect([rules[0].localPort, rules[0].remotePort], [18080, 8080]);
+    expect(rules[1].label, '数据库');
+    expect(rules[1].bindHost, '0.0.0.0');
+    expect(rules[1].targetHost, '10.23.0.8');
+    expect([rules[1].localPort, rules[1].remotePort], [15432, 5432]);
+    expect(rules.every((rule) => rule.enabled), isTrue);
+    expect(rules.map((rule) => rule.id).toSet(), hasLength(2));
+    expect(ForwardRule.validateAll(rules), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('Android 390x844 reloads and edits saved custom rule fields', (
+    tester,
+  ) async {
+    await androidSmallScreen(tester);
+    final existing = profile.copyWith(
+      rules: const [
+        ForwardRule(id: 'web', label: '网页', localPort: 18080, remotePort: 8080),
+        ForwardRule(
+          id: 'db',
+          label: '数据库',
+          bindHost: '0.0.0.0',
+          localPort: 15432,
+          targetHost: 'db.internal',
+          remotePort: 5432,
+        ),
+      ],
+    );
+    final controller = FakeAppController()
+      ..profiles = [existing]
+      ..defaultProfileId = existing.id;
+    await tester.pumpWidget(PortLinkApp(controller: controller));
+    await tester.ensureVisible(find.byTooltip('工作服务器的更多操作'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('工作服务器的更多操作').hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('编辑服务器').hitTestable());
+    await tester.pumpAndSettle();
+    expect(
+      Theme.of(tester.element(find.byType(ServerProfileDialog))).platform,
+      TargetPlatform.android,
+    );
+    for (final entry in const {
+      'rule-bind-1': '0.0.0.0',
+      'rule-target-1': 'db.internal',
+      'rule-local-1': '15432',
+      'rule-remote-1': '5432',
+    }.entries) {
+      final input = find.byKey(ValueKey(entry.key));
+      await tester.ensureVisible(input);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextFormField>(input).controller!.text, entry.value);
+    }
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-target-1')),
+      '10.23.0.9',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-local-1')),
+      '25432',
+    );
+    await enterVisible(
+      tester,
+      find.byKey(const ValueKey('rule-remote-1')),
+      '6432',
+    );
+    tester.testTextInput.hide();
+    await save(tester);
+    expect(tester.takeException(), isNull);
+    expect(controller.savedProfiles.single['id'], existing.id);
+    expect(controller.savedProfiles.single['password'], isNull);
+    final rules =
+        controller.savedProfiles.single['rules']! as List<ForwardRule>;
+    expect(rules.map((rule) => rule.id), ['web', 'db']);
+    expect(rules[0].toJson(), existing.rules[0].toJson());
+    expect(rules[1].bindHost, '0.0.0.0');
+    expect(rules[1].targetHost, '10.23.0.9');
+    expect([rules[1].localPort, rules[1].remotePort], [25432, 6432]);
+    expect(ForwardRule.validateAll(rules), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
   testWidgets('a new server starts with one editable default rule', (
     tester,
   ) async {

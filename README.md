@@ -2,7 +2,13 @@
 
 一个极简的 SSH 本地转发工具：保存多个服务器，每台服务器可配置多条端口转发（本地地址:端口 → 服务器可访问的目标地址:端口），选一台连接后所有已启用的转发共用同一条 SSH 会话。默认规则仍是 `127.0.0.1:3080` → 服务器自身 `127.0.0.1:3080`，旧版配置会自动升级为这一条规则。
 
-> Mac统一功能预览版0.1.3：多端口转发、自定义监听/目标地址及逐规则状态与Windows共用实现；原生右键菜单、无Dock/隐藏启动，左键状态图标呼出GUI；保留SSH并发写入修复与22pt红绿菜单栏图标，已通过本机隔离原生大流量验收，最低macOS13，支持Apple Silicon（同时含Intel架构但未实机验）。当前ad-hoc签名、未公证；详见[Mac安装说明](<docs/MAC_PREVIEW.md>)和[验证记录](<docs/VERIFICATION.md>)。Android现有ARM64侧载预览APK（Release优化、debug签名，已通过AOSP模拟器前后台转发及通知停止，物理手机待验）；Windows已有用户在Windows11 x64构建并推送的版本，本次保留其打包修复与单文件启动器；合并后的源码需在Windows重新构建，既有EXE不会自动更新。
+> Mac统一功能预览版0.1.3：多端口转发、自定义监听/目标地址及逐规则状态与Windows共用实现；原生右键菜单、无Dock/隐藏启动，左键状态图标呼出GUI；保留SSH并发写入修复与22pt红绿菜单栏图标，已通过本机隔离原生大流量验收，最低macOS13，支持Apple Silicon（同时含Intel架构但未实机验）。当前ad-hoc签名、未公证；详见[Mac安装说明](<docs/MAC_PREVIEW.md>)和[验证记录](<docs/VERIFICATION.md>)。Android0.1.3 ARM64多端口APK已与桌面业务统一（Release优化、debug签名，AOSP36双规则并发前后台/通知全部停止/跨进程恢复通过，物理手机待验）；Windows已有用户在Windows11 x64构建并推送的版本，本次保留其打包修复与单文件启动器；合并后的源码需在Windows重新构建，既有EXE不会自动更新。
+
+## 下载预览
+
+- [Mac0.1.3安装包与SHA256](https://github.com/ztllll/portlink-preview/releases/tag/macos-preview-0.1.3)（macOS13+，ad-hoc/未公证）
+- [Android0.1.3多端口APK与SHA256](https://github.com/ztllll/portlink-preview/releases/tag/android-preview-0.1.3)（Android7+/ARM64，debug证书侧载预览）
+- [Windows现有发布](https://github.com/ztllll/portlink-preview/releases/tag/windows-x64-preview-2)（原用户发布保持不变）
 
 ## 使用
 
@@ -12,7 +18,7 @@
 4. 在“端口转发”里添加最多32条规则：本地地址（默认 127.0.0.1）、本地端口（1024–65535）、目标地址（默认 127.0.0.1，即服务器自身；也可填服务器能访问的内网地址）、目标端口。通道就绪后访问各规则显示的本地地址。若服务是HTTP，可点击对应规则的“打开”，HTTPS或其他协议请在对应应用中使用。
 5. 下次启动自动连接默认服务器。同一时刻只连接一台服务器；不同服务器的规则若使用相同本地端口，切换时先释放旧连接。某条规则的本地端口被占用只会让该条标红，其余规则继续转发，PortLink不会自动换端口，也不会结束占用者。
 
-配置写出使用schemaVersion 2：旧v1配置自动迁移为默认3080规则；保存后旧版本应用不能读取v2，升级前请保留备份，不用旧程序覆盖新配置。多规则功能在Mac和Windows一致；Mac保留22pt红绿状态图、原生右键和无Dock启动，Windows保留绿/红/黄托盘。
+配置写出使用schemaVersion 2：旧v1配置自动迁移为默认3080规则；保存后旧版本应用不能读取v2，升级前请保留备份，不用旧程序覆盖新配置。多规则业务功能在Mac、Windows和Android0.1.3一致；Mac保留22pt红绿状态图、原生右键和无Dock启动，Windows保留绿/红/黄托盘。
 
 ### 状态
 

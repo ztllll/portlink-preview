@@ -1,0 +1,17 @@
+{
+  "notificationDescribesMultiPort": true,
+  "exactSystemNotificationAction0Clicked": true,
+  "foregroundServiceRemoved": true,
+  "allRuleListenersStopped": [
+    {
+      "localPort": 18080,
+      "noDataAfterStop": true
+    },
+    {
+      "localPort": 18081,
+      "noDataAfterStop": true
+    }
+  ],
+  "uiDisconnected": true,
+  "noUnhandledAppExceptions": true
+}
