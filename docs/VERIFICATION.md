@@ -1,19 +1,19 @@
 # 开发验证记录
 
-更新：2026-10-24（本机 Apple Silicon，macOS 27.0.1 / arm64，完整Xcode27.1已安装并初始化）。
+更新：2026-10-25（本机 Apple Silicon，macOS 27.0.1 / arm64，完整Xcode27.1已安装并初始化）。
 
 ## 当前交付性质
 
-**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Android ARM64 Release预览APK已构建并通过官方签名/ELF/16KB检查，已通过AOSP36 ARM64真实运行验收（前后台数据与通知停止），物理手机待验；Windows EXE尚未构建（按最新要求先本地构建，待用户所选Windows x64主机接入）。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
+**Mac发布模式应用已构建、打包并在本机通过隔离原生烟测；交付为ad-hoc签名预览ZIP，不是Developer ID签名/苹果公证的正式发行版。Android ARM64 Release预览APK已构建并通过官方签名/ELF/16KB检查，已通过AOSP36 ARM64真实运行验收（前后台数据与通知停止），物理手机待验；Windows已有用户在x64主机构建并提交的版本及构建记录；本次Mac合并未重新执行Windows原生编译，合并源码需Windows再构建。** 详细安装和验收边界见[Mac预览说明](<MAC_PREVIEW.md>)。
 
 ## 已实际执行
 
 | 检查 | 结果与范围 |
 | --- | --- |
 | 正式依赖解析 | 成功，pubspec.lock已固定 dartssh2 4.1.0、flutter_secure_storage 11.2.0、tray_manager 0.8.0 等 |
-| Dart格式 | 48份Dart文件（含原生验收和Windows包检查入口），最终check 0 changed、退出0 |
+| Dart格式 | 51份Dart文件（含原生验收和Windows包检查入口），最终check 0 changed、退出0 |
 | 全项目静态分析 | 最终 `dart analyze`：No issues found，退出0 |
-| 完整Flutter回归 | **199 passed / 1 skipped，退出0**。43 core/data、41 controller、39 UI、47平台/退出/单实例协议、27构建诊断/Windows合成PE、2真实SSH集成（含32MiB HTTP上传）；跳过的是需显式开启的截图测试 |
+| 完整Flutter回归 | **合并版245 passed / 1 skipped，退出0**。覆盖多规则核心/配置迁移、共享UI、原生桌面协议、Windows合成包、2真实SSH集成（含32MiB HTTP上传）；跳过的是需显式开启的截图测试 |
 | 真实SSH集成 | 隔离Python环境asyncssh 2.24.1；随机临时服务器密钥；真实密码认证、完整SHA256指纹核对与保存、4并发×128KiB双向数据、半关闭、重连时不重复确认、错密失败、停止释放监听均通过 |
 | 核心网络测试 | 真实loopback监听、8并发×256KiB半关闭、端口占用、目标不可达后恢复、探活超时与重连、取消/快速切换/迟到session清理、主机算法变化阻断通过 |
 | 配置/控制器测试 | 原子写及验证备份、并发持久化、损坏时fail closed、密码事务回滚、空密码保留、默认选择不切换当前连接、取消指纹/Android启动、shutdown等通过 |
@@ -58,7 +58,7 @@
 
 ### Windows
 
-已生成独立Windows工程和插件注册；没有Windows主机/C++桌面工具链，因此未构建EXE，未实测系统凭据存储、托盘或Windows原子文件覆盖行为。工作流仅是源码定义，未上传远端运行。
+用户已在Windows11 x64完成构建并推送；远端db9925f/21448d7的文档记录Flutter3.47.8/Dart3.13.7、VS2022 BuildTools/ATL/SDK和便携包核验成功，Windows实机交互与单实例疑点仍按远端文档保留。本Mac会话合并其ELF64 AOT校验器、系统DLL白名单、单文件启动器和多规则功能，不把用户构建记录宣称成本机重编译。合并源码0.1.3需Windows再次构建；工作流未修改或启动。
 
 ### Android
 

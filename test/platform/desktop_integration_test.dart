@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:portlink/core/host_trust.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/tunnel_status.dart';
 import 'package:portlink/platform/desktop_integration.dart';
 import 'package:tray_manager/legacy.dart' as tray;
@@ -285,7 +286,7 @@ void main() {
         final state = switch (phase) {
           TunnelPhase.ready => 'ready',
           TunnelPhase.failed => 'failed',
-          TunnelPhase.idle => 'idle',
+          TunnelPhase.idle => Platform.isMacOS ? 'idle' : 'failed',
           _ => 'pending',
         };
         final expected = Platform.isWindows
@@ -318,7 +319,10 @@ void main() {
       controller.tunnelStatus = const TunnelStatus(phase: TunnelPhase.idle);
       controller.update();
       await settleAsync();
-      expect(trayManager.iconCalls.last.path, contains('idle'));
+      expect(
+        trayManager.iconCalls.last.path,
+        contains(Platform.isMacOS ? 'idle' : 'failed'),
+      );
     },
   );
 
@@ -487,6 +491,172 @@ void main() {
     expect(windows.shows, initial + 2);
   });
   test(
+    'platform colours retain Windows yellow while Mac partial is red artwork',
+    () async {
+      const first = ForwardRule.legacy();
+      const second = ForwardRule(
+        id: 'second',
+        label: '管理',
+        localPort: 8080,
+        remotePort: 80,
+      );
+      const partial = TunnelStatus(
+        phase: TunnelPhase.ready,
+        rules: [
+          RuleStatus(rule: first, state: RuleState.ready),
+          RuleStatus(rule: second, state: RuleState.bindFailed),
+        ],
+      );
+      expect(DesktopIntegration.trayIconFor(partial), 'pending');
+      expect(DesktopIntegration.trayIconFor(partial, macOS: true), 'pending');
+      expect(
+        DesktopIntegration.trayIconFor(
+          const TunnelStatus(phase: TunnelPhase.idle),
+        ),
+        'failed',
+      );
+      expect(
+        DesktopIntegration.trayIconFor(
+          const TunnelStatus(phase: TunnelPhase.idle),
+          macOS: true,
+        ),
+        'idle',
+      );
+      controller.tunnelStatus = partial;
+      await desktop.initialize();
+      expect(trayManager.iconCalls.last.path, contains('pending'));
+      expect(trayManager.menu!.items!.first.label, contains('部分转发可用（1/2）'));
+      expect(
+        trayManager.menu!.items!
+            .firstWhere((item) => item.key == 'http:default')
+            .disabled,
+        isFalse,
+      );
+      expect(
+        trayManager.menu!.items!
+            .firstWhere((item) => item.key == 'http:second')
+            .disabled,
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'multi-port copy uses live selected rule and ignores stale missing ids',
+    () async {
+      const web = ForwardRule.legacy();
+      const admin = ForwardRule(
+        id: 'admin',
+        label: '管理',
+        localPort: 8088,
+        remotePort: 8080,
+        bindHost: '0.0.0.0',
+      );
+      controller.tunnelStatus = const TunnelStatus(
+        phase: TunnelPhase.ready,
+        rules: [
+          RuleStatus(rule: web, state: RuleState.ready),
+          RuleStatus(rule: admin, state: RuleState.ready),
+        ],
+      );
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final copied = <String>[];
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied.add((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await desktop.initialize();
+      expect(
+        trayManager.menu!.items!.where(
+          (item) => item.key?.startsWith('copy:') ?? false,
+        ),
+        hasLength(2),
+      );
+      desktop.onTrayMenuItemClick(
+        tray.MenuItem(key: 'copy:admin', label: 'copy'),
+      );
+      await settleAsync();
+      expect(copied, ['0.0.0.0:8088']);
+      controller.tunnelStatus = const TunnelStatus(
+        phase: TunnelPhase.ready,
+        rules: [RuleStatus(rule: web, state: RuleState.ready)],
+      );
+      desktop.onTrayMenuItemClick(
+        tray.MenuItem(key: 'copy:admin', label: 'stale'),
+      );
+      await settleAsync();
+      expect(copied, hasLength(1));
+    },
+  );
+
+  test('HTTP action selects ready rule port, normalizes wildcard, and stays user initiated', () async {
+    const wildcard = ForwardRule(
+      id: 'admin',
+      label: '管理',
+      localPort: 8088,
+      remotePort: 80,
+      bindHost: '0.0.0.0',
+    );
+    controller.tunnelStatus = const TunnelStatus(
+      phase: TunnelPhase.ready,
+      rules: [RuleStatus(rule: wildcard, state: RuleState.ready)],
+    );
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    final urls = <String>[];
+    messenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/url_launcher'),
+      (call) async {
+        if (call.method.startsWith('launch')) {
+          urls.add((call.arguments as Map)['url'] as String);
+        }
+        return true;
+      },
+    );
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/url_launcher'),
+        null,
+      ),
+    );
+    await desktop.initialize();
+    expect(urls, isEmpty);
+    desktop.onTrayMenuItemClick(
+      tray.MenuItem(key: 'http:admin', label: 'open'),
+    );
+    await settleAsync();
+    expect(urls, ['http://127.0.0.1:8088']);
+    controller.initialized = false;
+    desktop.onTrayMenuItemClick(
+      tray.MenuItem(key: 'http:admin', label: 'stale'),
+    );
+    await settleAsync();
+    expect(urls, hasLength(1));
+  });
+
+  test('empty rules show no fixed-port action or browser entry', () async {
+    await desktop.initialize();
+    expect(
+      trayManager.menu!.items!
+          .firstWhere((item) => item.key == 'copy-none')
+          .disabled,
+      isTrue,
+    );
+    expect(
+      trayManager.menu!.items!.where(
+        (item) => item.key?.startsWith('http') ?? false,
+      ),
+      isEmpty,
+    );
+  });
+
+  test(
     'target unavailable and stale HTTP menu callbacks cannot launch browser',
     () async {
       final messenger =
@@ -508,15 +678,26 @@ void main() {
       await desktop.initialize();
       controller.tunnelStatus = const TunnelStatus(
         phase: TunnelPhase.targetUnavailable,
+        rules: [
+          RuleStatus(
+            rule: ForwardRule.legacy(),
+            state: RuleState.targetUnavailable,
+          ),
+        ],
       );
       controller.update();
       await settleAsync();
       expect(
-        trayManager.menu!.items!.firstWhere((i) => i.key == 'http').disabled,
+        trayManager.menu!.items!
+            .firstWhere((i) => i.key == 'http:default')
+            .disabled,
         isTrue,
       );
       desktop.onTrayMenuItemClick(
-        tray.MenuItem(key: 'http', label: 'old HTTP'),
+        tray.MenuItem(key: 'http:default', label: 'old HTTP'),
+      );
+      desktop.onTrayMenuItemClick(
+        tray.MenuItem(key: 'http:gone', label: 'stale missing rule'),
       );
       await settleAsync();
       expect(launches, 0);

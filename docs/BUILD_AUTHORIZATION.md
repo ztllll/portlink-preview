@@ -5,7 +5,11 @@
 1. 允许下载本项目Android SDK/NDK/CMake等官方构建组件，并代表用户接受本次构建所需官方组件许可。
 2. 允许在当前已登录GitHub账号下创建私有仓库、上传项目源码并使用Actions构建Windows版。可能使用账号Actions额度。
 
-## 最新执行顺序（2026-10-24）
+## 最新授权（2026-10-25）
+
+用户已确认Windows构建完成并推送，要求本机检查远端现有代码、合并Mac修复后直接推送，且两端业务功能一致。现允许正常合并并push到既有origin/main，不强推、不改仓库可见性、不改已有tag/release、不上传凭据或构建缓存。本机核验远端现为public（此前private为历史状态），工作流保持远端原blob不变；无需以workflow权限作为本次不改工作流的push前置，实际是否接受以GitHub结果为准。
+
+## 历史执行顺序（2026-10-24）
 
 用户后续明确要求先构建Windows安装包、再上传GitHub，并选择提供Windows x64主机。该要求覆盖前述CI优先路线：暂停源码push/Actions/workflow权限刷新，在实际可操作的Windows x64主机编译验收，成功后才继续上传。目前尚未收到主机操作入口；详见WINDOWS_LOCAL_HANDOFF.md。
 

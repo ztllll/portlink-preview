@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:portlink/core/host_trust.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/server_profile.dart';
 import 'package:portlink/data/host_trust_store.dart';
 import 'package:portlink/data/profile_repository.dart';
@@ -46,8 +47,65 @@ void main() {
       expect(loaded.profiles.single.toJson(), profile('one').toJson());
       expect(loaded.defaultProfileId, 'one');
       final json = await File(path).readAsString();
-      expect(jsonDecode(json)['schemaVersion'], 1);
+      expect(jsonDecode(json)['schemaVersion'], 2);
       expect(json, isNot(contains('password')));
+    },
+  );
+  test('v1 missing rules migrates but v2 missing rules fails closed', () {
+    final old = profile('one').toJson()..remove('rules');
+    final json = <String, dynamic>{
+      'schemaVersion': 1,
+      'profiles': [old],
+      'defaultProfileId': 'one',
+    };
+    final migrated = ProfileSnapshot.fromJson(json);
+    expect(migrated.profiles.single.rules.single.localPort, 3080);
+    expect(migrated.toJson()['schemaVersion'], 2);
+    expect(
+      () => ProfileSnapshot.fromJson({...json, 'schemaVersion': 2}),
+      throwsFormatException,
+    );
+  });
+  test('snapshot rules stay immutable after caller list mutation', () async {
+    final rules = <ForwardRule>[const ForwardRule.legacy()];
+    final original = profile('one').copyWith(rules: rules);
+    final snapshot = ProfileSnapshot(
+      profiles: [original],
+      defaultProfileId: 'one',
+    );
+    rules.clear();
+    expect(snapshot.profiles.single.rules.single.localPort, 3080);
+    expect(
+      () => snapshot.profiles.single.rules.clear(),
+      throwsUnsupportedError,
+    );
+    final repo = JsonProfileRepository(path);
+    await repo.save(snapshot);
+    final loaded = await repo.load();
+    expect(
+      () => loaded.profiles.single.rules.add(const ForwardRule.legacy()),
+      throwsUnsupportedError,
+    );
+  });
+  test(
+    'corrupt v2 rules recover valid backup rather than defaulting to 3080',
+    () async {
+      final repo = JsonProfileRepository(path);
+      await repo.save(
+        ProfileSnapshot(profiles: [profile('one')], defaultProfileId: 'one'),
+      );
+      await repo.save(
+        ProfileSnapshot(profiles: [profile('two')], defaultProfileId: 'two'),
+      );
+      final corrupt = profile('two').toJson()..remove('rules');
+      await File(path).writeAsString(
+        jsonEncode({
+          'schemaVersion': 2,
+          'profiles': [corrupt],
+          'defaultProfileId': 'two',
+        }),
+      );
+      expect((await repo.load()).defaultProfileId, 'one');
     },
   );
   test(
@@ -120,9 +178,9 @@ void main() {
       throwsFormatException,
     );
     for (final data in [
-      {'schemaVersion': 2, 'profiles': []},
+      {'schemaVersion': 3, 'profiles': []},
       {
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'profiles': [
           {...profile('x').toJson(), 'password': 'never-store'},
         ],

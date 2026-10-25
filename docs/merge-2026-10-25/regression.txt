@@ -1,0 +1,268 @@
+00:00 +0: loading <workspace>/portlink/test/ui/server_profile_dialog_test.dart
+00:00 +0: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: new profile requires fields and password
+00:01 +1: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: edit never shows saved password and blank retains it
+00:01 +2: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: save failure stays in dialog with safe inline feedback
+00:01 +3: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: add form fits a narrow viewport without intrinsic layout errors
+00:01 +4: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: direct dialog cannot save before initialization
+00:01 +5: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: save callback rechecks controller busy state
+00:01 +6: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: invalid endpoint does not invoke controller
+00:02 +7: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: a new server starts with one editable default rule
+00:02 +8: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: several forwards, custom ports and custom hosts are saved
+00:02 +9: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: a clashing local port is rejected before the controller is called
+00:02 +10: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: a privileged local port is rejected
+00:02 +11: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: listening on 0.0.0.0 shows a network-exposure warning
+00:02 +12: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: disabling every rule is rejected; removing a rule works
+00:03 +13: <workspace>/portlink/test/ui/server_profile_dialog_test.dart: editing keeps the rules the server already has
+00:03 +14: loading <workspace>/portlink/test/ui/portlink_app_test.dart
+00:03 +14: <workspace>/portlink/test/ui/portlink_app_test.dart: platform warning stays visible independently from SSH errors
+00:04 +15: <workspace>/portlink/test/ui/portlink_app_test.dart: UI does not initialize or automatically connect
+00:04 +16: <workspace>/portlink/test/ui/portlink_app_test.dart: failed initialization is persistent and every mutation stays disabled
+00:04 +17: <workspace>/portlink/test/ui/portlink_app_test.dart: stale callbacks cannot bypass busy mutation guard
+00:04 +18: <workspace>/portlink/test/ui/portlink_app_test.dart: delete confirmation rechecks loading and busy before mutation
+00:04 +19: <workspace>/portlink/test/ui/portlink_app_test.dart: app unmount does not dispose the caller-owned controller
+00:04 +20: <workspace>/portlink/test/ui/portlink_app_test.dart: busy connecting can always be cancelled
+00:04 +21: <workspace>/portlink/test/ui/portlink_app_test.dart: changing default does not switch current connection
+00:05 +22: <workspace>/portlink/test/ui/portlink_app_test.dart: delete requires explicit confirmation
+00:05 +23: <workspace>/portlink/test/ui/portlink_app_test.dart: trust prompt blocks outside dismissal and never auto-accepts
+00:05 +24: <workspace>/portlink/test/ui/portlink_app_test.dart: trust modal also covers an already open edit dialog
+00:05 +25: <workspace>/portlink/test/ui/portlink_app_test.dart: errors are inline and raw exception secrets are not shown
+00:05 +26: <workspace>/portlink/test/ui/portlink_app_test.dart: copy local address uses plain loopback endpoint
+00:05 +27: <workspace>/portlink/test/ui/portlink_app_test.dart: appearance can follow system or change explicitly
+00:06 +28: <workspace>/portlink/test/ui/portlink_app_test.dart: empty configuration is responsive on mobile
+00:06 +29: <workspace>/portlink/test/ui/portlink_app_test.dart: root fits width 320.0
+00:06 +30: <workspace>/portlink/test/ui/portlink_app_test.dart: root fits width 390.0
+00:06 +31: <workspace>/portlink/test/ui/portlink_app_test.dart: root fits width 720.0
+00:06 +32: <workspace>/portlink/test/ui/portlink_app_test.dart: root fits width 900.0
+00:06 +33: <workspace>/portlink/test/ui/portlink_app_test.dart: root fits width 1280.0
+00:06 +34: loading <workspace>/portlink/test/ui/server_list_test.dart
+00:06 +34: <workspace>/portlink/test/ui/server_list_test.dart: default action identifies profile without connecting
+00:07 +35: <workspace>/portlink/test/ui/server_list_test.dart: busy disables mutations but keeps active cancellation
+00:07 +36: <workspace>/portlink/test/ui/server_list_test.dart: server cards fit narrow mobile width
+00:07 +37: loading <workspace>/portlink/test/ui/host_trust_dialog_test.dart
+00:07 +37: <workspace>/portlink/test/ui/host_trust_dialog_test.dart: trust requires explicit verification and affirmative click
+00:08 +38: <workspace>/portlink/test/ui/host_trust_dialog_test.dart: reject is available without accepting fingerprint
+00:08 +39: <workspace>/portlink/test/ui/host_trust_dialog_test.dart: long fingerprint fits mobile viewport
+00:08 +40: loading <workspace>/portlink/test/ui/preview_capture_test.dart
+00:09 +40: <workspace>/portlink/test/ui/preview_capture_test.dart: capture simulated configuration previews from real Flutter rendering
+00:09 +40 ~1: loading <workspace>/portlink/test/ui/connection_panel_test.dart
+00:09 +40 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: busy connecting remains cancellable
+00:10 +41 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: every enabled rule is listed with its own local and remote address
+00:10 +42 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: disabled rules are not listed
+00:10 +43 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: copy and open act on the chosen rule only
+00:10 +44 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: HTTP action is unavailable until that rule is ready
+00:10 +45 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: a bind failure is shown on its rule while others stay usable
+00:10 +46 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: a rule listening beyond loopback carries an exposure warning
+00:10 +47 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: loopback rules show no exposure warning
+00:10 +48 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: target unavailable keeps stop
+00:10 +49 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: connection panel fits width 320.0
+00:10 +50 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: connection panel fits width 390.0
+00:10 +51 ~1: <workspace>/portlink/test/ui/connection_panel_test.dart: connection panel fits width 760.0
+00:10 +52 ~1: loading <workspace>/portlink/test/core/dartssh_adapter_test.dart
+00:11 +52 ~1: <workspace>/portlink/test/core/dartssh_adapter_test.dart: production adapter bounds silent TCP peer handshake and closes socket
+00:11 +53 ~1: <workspace>/portlink/test/core/dartssh_adapter_test.dart: production adapter rejects refused TCP connection within connect deadline
+00:11 +54 ~1: loading <workspace>/portlink/test/core/models_test.dart
+00:11 +54 ~1: <workspace>/portlink/test/core/models_test.dart: profile validates IPv4 IPv6 and DNS without URL or control characters
+00:11 +55 ~1: <workspace>/portlink/test/core/models_test.dart: profile JSON strictly roundtrips without credentials
+00:11 +56 ~1: <workspace>/portlink/test/core/models_test.dart: phase activity and transport connectivity follow contract
+00:11 +57 ~1: loading <workspace>/portlink/test/core/forward_rule_test.dart
+00:12 +57 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: ForwardRule validation accepts ordinary rules and custom hosts
+00:12 +58 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: ForwardRule validation rejects privileged local ports and out-of-range ports
+00:12 +59 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: ForwardRule validation the listen address must be a literal IPv4 address
+00:12 +60 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: ForwardRule validation target host cannot smuggle a scheme, path, whitespace or userinfo
+00:12 +61 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: ForwardRule validation labels are bounded and free of control characters
+00:12 +62 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: ForwardRule validation loopback detection distinguishes network exposure
+00:12 +63 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: rule set validation needs at least one enabled rule and is size-bounded
+00:12 +64 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: rule set validation duplicate ids and clashing local ports are rejected
+00:12 +65 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: rule set validation the same port on different loopback addresses is allowed
+00:12 +66 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: rule set validation 0.0.0.0 overlaps every address on that port
+00:12 +67 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: rule set validation a disabled rule does not reserve its port
+00:12 +68 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: JSON and migration rules round-trip and reject unknown or mistyped fields
+00:12 +69 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: JSON and migration a v1 profile without rules upgrades to the legacy 3080 rule
+00:12 +70 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: JSON and migration a profile with rules round-trips through JSON
+00:12 +71 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: JSON and migration a stored profile with invalid rules is rejected
+00:12 +72 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: tray icon colour green only when connected and every rule is usable
+00:12 +73 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: tray icon colour red when not connected or failed
+00:12 +74 ~1: <workspace>/portlink/test/core/forward_rule_test.dart: tray icon colour yellow while connecting or only partially usable
+00:12 +75 ~1: loading <workspace>/portlink/test/core/tunnel_engine_test.dart
+00:12 +75 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: connection freezes caller rules before asynchronous trust confirmation
+00:12 +76 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: ready requires auth, real exclusive loopback listener and SSH target probe
+00:12 +77 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: eight concurrent streams preserve payloads and response after upload half-close
+00:12 +78 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: channel pause propagates through both pipe controllers and resumes intact
+00:12 +79 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: binding conflict is fatal and never retried
+00:12 +80 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: legacy default rule still maps local 3080 to remote 3080
+00:12 +81 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: one SSH session forwards several rules to different remote ports
+00:12 +82 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: an occupied local port fails only its rule; the others keep forwarding
+00:12 +83 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: every rule occupied is a fatal bind failure and never retried
+00:13 +84 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: a custom target host is passed to the server, not hard-coded
+00:13 +85 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: a rule with an unreachable remote is reported without hiding the others
+00:13 +86 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: disabled rules never open a listener
+00:13 +87 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: target failure keeps listener and periodically reprobes through SSH
+00:13 +88 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: ping hang has timeout, closes old session and reconnects once
+00:13 +89 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: transient initial failure returns before retries and backoff is bounded
+00:13 +90 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: auth failure never retries or reveals server text or password
+00:13 +91 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: unknown prompts once, repeated key skips prompt, changed key hard-stops
+00:13 +92 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: transport cannot publish ready if it skipped host verification
+00:13 +93 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: algorithm changes are fatal before first-use prompt
+00:13 +94 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: rejecting trust does not save or retry
+00:13 +95 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: disconnect pending trust returns promptly and stale acceptance cannot persist
+00:13 +96 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: stale late connector is closed and cannot bind or overwrite newer status
+00:13 +97 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: rapid double switch waits for the oldest teardown and only latest connects
+00:13 +98 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: cancel retry timer prevents any later connection attempt
+00:14 +99 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: late failed accepted channel is cleaned after disconnect
+00:14 +100 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: connect timeout retires late host prompt and closes late session
+00:14 +101 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: hung authentication expires and only transient timeout is retried
+00:14 +102 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: hung authentication is bounded and disconnect clears its timer
+00:14 +103 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: target probe timeout marks unavailable and destroys a late successful channel
+00:14 +104 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: trust-store failure fails closed without a prompt or automatic retry
+00:15 +105 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: session closing during initial probe never emits ready
+00:15 +106 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: stale open from retired attempt cannot leak after auto-reconnect
+00:15 +107 ~1: <workspace>/portlink/test/core/tunnel_engine_test.dart: dispose is idempotent and prevents new connects
+00:15 +108 ~1: loading <workspace>/portlink/test/ssh_integration_test.dart
+00:15 +108 ~1: <workspace>/portlink/test/ssh_integration_test.dart: real SSH password, pinned host, forwarding, concurrent data and cleanup
+00:17 +109 ~1: <workspace>/portlink/test/ssh_integration_test.dart: real SSH streams 32MiB HTTP multipart plus concurrent uploads without request FIN
+00:54 +110 ~1: loading <workspace>/portlink/test/platform/application_cleanup_test.dart
+00:55 +110 ~1: <workspace>/portlink/test/platform/application_cleanup_test.dart: simultaneous exit paths share ordered cleanup once
+00:55 +111 ~1: <workspace>/portlink/test/platform/application_cleanup_test.dart: startup cleanup continues releasing session and lock after engine failure
+00:55 +112 ~1: loading <workspace>/portlink/test/platform/desktop_integration_test.dart
+00:55 +112 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: Mac healthy launch remains hidden with no default configuration
+00:55 +113 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: Mac ready default starts hidden rather than briefly showing
+00:55 +114 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: explicit show survives late and repeated finishStartup
+00:55 +115 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: menu manage action shows and focuses then close only hides
+00:55 +116 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: Mac right click remains native and left click calls up GUI
+00:55 +117 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: native trigger is reconfigured after updated menu creation
+00:55 +118 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: native menu trigger failure falls back to visible manageable window
+00:55 +119 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: trust prompt during initial connection is visible and never auto accepted
+00:55 +120 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: preexisting failure shows despite hidden startup policy
+00:55 +121 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: target unavailable and platform warning each present the hidden window
+00:55 +122 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: all tray writes preserve colour and use visible 22pt Retina artwork
+00:56 +123 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: ready becomes red immediately when its target probe becomes unavailable
+00:56 +124 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray idle @1x PNG uses solid correct status colour
+00:56 +125 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray idle @2x PNG uses solid correct status colour
+00:56 +126 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray ready @1x PNG uses solid correct status colour
+00:56 +127 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray ready @2x PNG uses solid correct status colour
+00:56 +128 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray pending @1x PNG uses solid correct status colour
+00:56 +129 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray pending @2x PNG uses solid correct status colour
+00:56 +130 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray failed @1x PNG uses solid correct status colour
+00:56 +131 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray failed @2x PNG uses solid correct status colour
+00:56 +132 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: healthy tray close hides, fatal or failed tray close exits safely
+00:56 +133 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: tray failure keeps close intercept until cleanup completes
+00:56 +134 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: native exit request waits for cleanup and shares concurrent exit work
+00:56 +135 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: shutdown waits for in-flight menu update before destroying tray
+00:56 +136 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: persistent error does not steal focus on every health event
+00:56 +137 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: platform colours retain Windows yellow while Mac partial is red artwork
+00:56 +138 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: multi-port copy uses live selected rule and ignores stale missing ids
+00:56 +139 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: HTTP action selects ready rule port, normalizes wildcard, and stays user initiated
+00:56 +140 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: empty rules show no fixed-port action or browser entry
+00:56 +141 ~1: <workspace>/portlink/test/platform/desktop_integration_test.dart: target unavailable and stale HTTP menu callbacks cannot launch browser
+00:56 +142 ~1: loading <workspace>/portlink/test/platform/android_session_test.dart
+00:56 +142 ~1: <workspace>/portlink/test/platform/android_session_test.dart: desktop adapter never invokes Android platform channel
+00:56 +143 ~1: <workspace>/portlink/test/platform/android_session_test.dart: concurrent initialization is one platform request
+00:56 +144 ~1: <workspace>/portlink/test/platform/android_session_test.dart: no tunnel session may start without a registered stop handler
+00:56 +145 ~1: <workspace>/portlink/test/platform/android_session_test.dart: concurrent starts wait for actual foreground confirmation once
+00:56 +146 ~1: <workspace>/portlink/test/platform/android_session_test.dart: native stop acknowledges only completed actual disconnect
+00:56 +147 ~1: <workspace>/portlink/test/platform/android_session_test.dart: failed disconnect returns false so native watchdog can close isolate
+00:56 +148 ~1: <workspace>/portlink/test/platform/android_session_test.dart: notification permission and FGS errors propagate without fallback
+00:56 +149 ~1: <workspace>/portlink/test/platform/android_session_test.dart: native stop without handler is never acknowledged as disconnected
+00:56 +150 ~1: <workspace>/portlink/test/platform/android_session_test.dart: duplicate native stops share one pending disconnect
+00:56 +151 ~1: <workspace>/portlink/test/platform/android_session_test.dart: native disconnect may call session stop without a channel deadlock
+00:56 +152 ~1: <workspace>/portlink/test/platform/android_session_test.dart: failed initialization can retry and restore native stop callback
+00:56 +153 ~1: <workspace>/portlink/test/platform/android_session_test.dart: stop while initializing prevents the delayed platform start
+00:56 +154 ~1: <workspace>/portlink/test/platform/android_session_test.dart: late foreground ack cannot complete a cancelled Dart start
+00:56 +155 ~1: <workspace>/portlink/test/platform/android_session_test.dart: new start does not reuse the previous cancelled platform operation
+00:56 +156 ~1: <workspace>/portlink/test/platform/android_session_test.dart: dispose rejects restart while native cleanup is still pending
+00:56 +157 ~1: <workspace>/portlink/test/platform/android_session_test.dart: disposed session cannot restart and unregisters its callback
+00:56 +158 ~1: loading <workspace>/portlink/test/platform/single_instance_guard_test.dart
+00:56 +158 ~1: <workspace>/portlink/test/platform/single_instance_guard_test.dart: same isolate refuses duplicate, release is idempotent and stale file is safe
+00:56 +159 ~1: <workspace>/portlink/test/platform/single_instance_guard_test.dart: separate process cannot take an owned OS lock
+00:57 +160 ~1: <workspace>/portlink/test/platform/single_instance_guard_test.dart: process termination releases lock without deleting its file
+00:57 +161 ~1: loading <workspace>/portlink/test/app_controller_test.dart
+00:57 +161 ~1: <workspace>/portlink/test/app_controller_test.dart: initialize loads immutable profiles and auto-connects only default once
+00:57 +162 ~1: <workspace>/portlink/test/app_controller_test.dart: concurrent initialize calls share a single load and autoconnect
+00:57 +163 ~1: <workspace>/portlink/test/app_controller_test.dart: initialization error forbids every mutation and connection without leaking errors
+00:57 +164 ~1: <workspace>/portlink/test/app_controller_test.dart: new profile requires password before metadata or secret writes
+00:57 +165 ~1: <workspace>/portlink/test/app_controller_test.dart: invalid profile is rejected before touching secure storage
+00:57 +166 ~1: <workspace>/portlink/test/app_controller_test.dart: first saved profile becomes default without automatically connecting
+00:57 +167 ~1: <workspace>/portlink/test/app_controller_test.dart: failed metadata save rolls existing password back and leaves configuration unchanged
+00:57 +168 ~1: <workspace>/portlink/test/app_controller_test.dart: failed new-profile save removes newly written credential
+00:57 +169 ~1: <workspace>/portlink/test/app_controller_test.dart: failed credential rollback surfaces explicit repair warning without exposing secrets
+00:57 +170 ~1: <workspace>/portlink/test/app_controller_test.dart: secure-store write failure never commits metadata or updates UI state
+00:57 +171 ~1: <workspace>/portlink/test/app_controller_test.dart: editing blank password keeps credential and only restarts active profile after save succeeds
+00:57 +172 ~1: <workspace>/portlink/test/app_controller_test.dart: setting default persists choice but never switches a live connection
+00:57 +173 ~1: <workspace>/portlink/test/app_controller_test.dart: failed default save leaves the previous selection intact
+00:57 +174 ~1: <workspace>/portlink/test/app_controller_test.dart: delete active default disconnects before stopping Android session and chooses first remaining
+00:57 +175 ~1: <workspace>/portlink/test/app_controller_test.dart: delete inactive profile does not disconnect the current server
+00:57 +176 ~1: <workspace>/portlink/test/app_controller_test.dart: delete secret failure leaves metadata deleted with honest cleanup warning
+00:57 +177 ~1: <workspace>/portlink/test/app_controller_test.dart: delete metadata failure preserves credential and configuration
+00:57 +178 ~1: <workspace>/portlink/test/app_controller_test.dart: busy metadata transaction gates all other mutations and connect switches
+00:57 +179 ~1: <workspace>/portlink/test/app_controller_test.dart: host-key prompt can be explicitly accepted and is cleared exactly once
+00:57 +180 ~1: <workspace>/portlink/test/app_controller_test.dart: disconnect bypasses busy and rejects a hanging host-key prompt
+00:57 +181 ~1: <workspace>/portlink/test/app_controller_test.dart: fatal engine status dismisses outstanding trust and stops platform session
+00:57 +182 ~1: <workspace>/portlink/test/app_controller_test.dart: Android start failure prevents SSH connect and cleans session without leaking platform text
+00:57 +183 ~1: <workspace>/portlink/test/app_controller_test.dart: cancel during pending Android start cannot later open SSH
+00:57 +184 ~1: <workspace>/portlink/test/app_controller_test.dart: missing password never starts Android or opens SSH
+00:57 +185 ~1: <workspace>/portlink/test/app_controller_test.dart: transient reconnect keeps Android session while fatal status stops it
+00:57 +186 ~1: <workspace>/portlink/test/app_controller_test.dart: stale queued failure cannot stop a newer healthy connection
+00:57 +187 ~1: <workspace>/portlink/test/app_controller_test.dart: secure-store read failure never opens SSH or leaks backend exception
+00:57 +188 ~1: <workspace>/portlink/test/app_controller_test.dart: failed native stop is not acknowledged and delete does not commit metadata
+00:57 +189 ~1: <workspace>/portlink/test/app_controller_test.dart: target unavailable remains an active Android forwarding session
+00:57 +190 ~1: <workspace>/portlink/test/app_controller_test.dart: shutdown while loading cannot resurrect profiles or auto-connect default
+00:57 +191 ~1: <workspace>/portlink/test/app_controller_test.dart: shutdown during default save never updates closed controller state
+00:57 +192 ~1: <workspace>/portlink/test/app_controller_test.dart: shutdown waits for credential rollback before allowing process exit
+00:57 +193 ~1: <workspace>/portlink/test/app_controller_test.dart: shutdown during delete lets committed credential cleanup finish without UI resurrection
+00:57 +194 ~1: <workspace>/portlink/test/app_controller_test.dart: disconnect during secure-store read cancels before Android session starts
+00:57 +195 ~1: <workspace>/portlink/test/app_controller_test.dart: shutdown during delayed engine completion cannot republish ready
+00:57 +196 ~1: <workspace>/portlink/test/app_controller_test.dart: password whitespace is preserved rather than silently trimmed
+00:57 +197 ~1: <workspace>/portlink/test/app_controller_test.dart: saving an unknown edit ID never creates or overwrites credentials
+00:57 +198 ~1: <workspace>/portlink/test/app_controller_test.dart: deleting the final profile clears the default and stored password
+00:57 +199 ~1: <workspace>/portlink/test/app_controller_test.dart: explicit host trust rejection stops platform session without an uncaught error
+00:57 +200 ~1: <workspace>/portlink/test/app_controller_test.dart: failed new-profile rollback warns about remaining orphaned credential
+00:57 +201 ~1: <workspace>/portlink/test/app_controller_test.dart: shutdown is idempotent, rejects pending trust and blocks later mutation/connect
+00:57 +202 ~1: loading <workspace>/portlink/test/data/macos_keychain_options_test.dart
+00:58 +202 ~1: <workspace>/portlink/test/data/macos_keychain_options_test.dart: standalone Mac password operations use login Keychain without sharing entitlement
+00:58 +203 ~1: loading <workspace>/portlink/test/data/secret_store_test.dart
+00:58 +203 ~1: <workspace>/portlink/test/data/secret_store_test.dart: password roundtrip is namespaced per profile and delete is isolated
+00:58 +204 ~1: <workspace>/portlink/test/data/secret_store_test.dart: platform secure-storage failures propagate and never become silent fallback
+00:58 +205 ~1: <workspace>/portlink/test/data/secret_store_test.dart: invalid IDs cannot escape credential namespace
+00:58 +206 ~1: loading <workspace>/portlink/test/data/repositories_test.dart
+00:59 +206 ~1: <workspace>/portlink/test/data/repositories_test.dart: empty first run, immutable snapshot and validated round trip
+00:59 +207 ~1: <workspace>/portlink/test/data/repositories_test.dart: v1 missing rules migrates but v2 missing rules fails closed
+00:59 +208 ~1: <workspace>/portlink/test/data/repositories_test.dart: snapshot rules stay immutable after caller list mutation
+00:59 +209 ~1: <workspace>/portlink/test/data/repositories_test.dart: corrupt v2 rules recover valid backup rather than defaulting to 3080
+00:59 +210 ~1: <workspace>/portlink/test/data/repositories_test.dart: atomic backup recovers corrupt primary and preserves last good backup
+00:59 +211 ~1: <workspace>/portlink/test/data/repositories_test.dart: concurrent repository instances never expose partial documents
+00:59 +212 ~1: <workspace>/portlink/test/data/repositories_test.dart: schema limits duplicate IDs missing default and plaintext fields are rejected
+00:59 +213 ~1: <workspace>/portlink/test/data/repositories_test.dart: host pins normalize host case, isolate ports and block algorithm changes
+00:59 +214 ~1: <workspace>/portlink/test/data/repositories_test.dart: trust read-modify-write serialized across instances without losing pins
+00:59 +215 ~1: <workspace>/portlink/test/data/repositories_test.dart: pin formats and malformed trust documents fail closed
+00:59 +216 ~1: <workspace>/portlink/test/data/repositories_test.dart: trust corruption fails closed even with a valid stale backup
+00:59 +217 ~1: loading <workspace>/portlink/test/tool/windows_packaging_test.dart
+00:59 +217 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: complete x64 bundle verifies without claiming runtime or signing
+00:59 +218 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: complete ARM64 bundle uses matching PE and native manifest architecture
+00:59 +219 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: missing plugin is fatal even with executable and engine present
+00:59 +220 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: all four state icons are required for Windows tray transitions
+00:59 +221 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: native manifest must name packaged cnativeapi DLL
+00:59 +222 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: absolute tester paths and traversal cannot leak into a portable artifact
+00:59 +223 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: regular and delay import dependencies must be app-local or known Windows system DLLs
+00:59 +224 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: only optional dartjni delay-load jvm is warned not silently bundled from developer JDK
+00:59 +225 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: development credentials and debug kernel are rejected
+00:59 +226 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: case-insensitive DLL collisions cannot pass Linux or Mac fixture inspection
+00:59 +227 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: malformed PE and wrong architecture are fatal
+00:59 +228 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: AOT app.so is verified as ELF64 and cannot hide wrong architecture
+00:59 +229 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: Windows-shipped UI Automation and graphics DLLs are system imports
+00:59 +230 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: native manifest is mandatory even when cnativeapi DLL exists
+00:59 +231 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: PE bounds checks reject arbitrary truncated and hostile offsets
+00:59 +232 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: PE reader preserves ordinary and delayed import distinction
+00:59 +233 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: plugin list excludes FFI target name and fails closed on malformed generated source
+00:59 +234 ~1: <workspace>/portlink/test/tool/windows_packaging_test.dart: safe relative paths reject host drives links and Windows normalization escapes
+00:59 +235 ~1: loading <workspace>/portlink/test/tool/preflight_test.dart
+01:00 +235 ~1: <workspace>/portlink/test/tool/preflight_test.dart: missing full Xcode and CocoaPods are explicit separate blockers
+01:00 +236 ~1: <workspace>/portlink/test/tool/preflight_test.dart: 3080 occupied is runtime warning not build failure or network request
+01:00 +237 ~1: <workspace>/portlink/test/tool/preflight_test.dart: SPM-integrated project does not require CocoaPods
+01:00 +238 ~1: <workspace>/portlink/test/tool/preflight_test.dart: adb-only Android directory cannot pass as a complete SDK
+01:00 +239 ~1: <workspace>/portlink/test/tool/preflight_test.dart: Android platform and pinned NDK plus JDK17 satisfy file prerequisites
+01:00 +240 ~1: <workspace>/portlink/test/tool/preflight_test.dart: Java launcher without runtime fails even if command exists
+01:00 +241 ~1: <workspace>/portlink/test/tool/preflight_test.dart: Windows target on macOS fails host check without invoking Windows tools
+01:00 +242 ~1: <workspace>/portlink/test/tool/preflight_test.dart: old SDK and malformed cached versions cannot claim readiness
+01:00 +243 ~1: <workspace>/portlink/test/tool/preflight_test.dart: local pre-release SDK gets source provenance warning
+01:00 +244 ~1: <workspace>/portlink/test/tool/preflight_test.dart: invalid target rejected before any tools run
+01:00 +245 ~1: All tests passed!

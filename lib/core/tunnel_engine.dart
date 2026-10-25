@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:dartssh2/dartssh2.dart';
 
 import '../data/host_trust_store.dart';
+import 'forward_rule.dart';
 import 'host_trust.dart';
 import 'server_profile.dart';
 import 'ssh_transport.dart';
@@ -57,25 +58,9 @@ final class SshTunnelEngine implements TunnelEngine {
     this._connector = const DartSshConnector(),
     this._timing = const TunnelTiming(),
     double Function()? jitter,
-  }) : _listenPort = localPort,
-       _jitter = jitter ?? Random.secure().nextDouble;
+  }) : _jitter = jitter ?? Random.secure().nextDouble;
 
-  /// Test harness only: production construction always binds fixed port 3080.
-  /// This changes only the local listener; the SSH target remains port 3080.
-  SshTunnelEngine.forTesting({
-    required this._trustStore,
-    required int listenPort,
-    this._connector = const DartSshConnector(),
-    this._timing = const TunnelTiming(),
-    double Function()? jitter,
-  }) : assert(listenPort > 0 && listenPort <= 65535),
-       _listenPort = listenPort,
-       _jitter = jitter ?? Random.secure().nextDouble;
-
-  static const localPort = 3080;
-  static const targetHost = '127.0.0.1';
   final HostTrustStore _trustStore;
-  final int _listenPort;
   final SshConnector _connector;
   final TunnelTiming _timing;
   final double Function() _jitter;
@@ -114,6 +99,9 @@ final class SshTunnelEngine implements TunnelEngine {
     required HostTrustPrompt onTrustHost,
   }) async {
     if (_disposed) throw StateError('连接引擎已关闭');
+    // Freeze before validation/auth awaits so callers cannot replace listener
+    // addresses or destinations after the security check.
+    profile = profile.frozen();
     final error = profile.validate();
     if (error != null) throw ArgumentError(error);
     if (password.isEmpty) throw ArgumentError('SSH 密码不能为空');
@@ -305,41 +293,49 @@ final class SshTunnelEngine implements TunnelEngine {
       if (!verification.accepted) throw const HostTrustRejectedException();
       if (run.sessionError != null) throw run.sessionError!;
       // ServerSocket.bind is real and exclusive, not an optimistic status flag.
-      ServerSocket listener;
-      try {
-        listener = await _bounded(
-          run,
-          ServerSocket.bind(
-            InternetAddress.loopbackIPv4,
-            _listenPort,
-            shared: false,
-          ),
-          _timing.connectTimeout,
-          discard: (late) {
-            unawaited(late.close());
+      // Each enabled rule binds independently: one occupied port marks only
+      // that rule failed and never stops the others or kills the occupier.
+      for (final rule in run.profile.enabledRules) {
+        ServerSocket? listener;
+        try {
+          listener = await _bounded<ServerSocket>(
+            run,
+            ServerSocket.bind(
+              InternetAddress(rule.bindHost),
+              rule.localPort,
+              shared: false,
+            ),
+            _timing.connectTimeout,
+            discard: (late) {
+              unawaited(late.close());
+            },
+            attemptToken: attemptToken,
+          );
+        } on SocketException {
+          run.bindFailures.add(rule.id);
+        }
+        if (!_current(run) || run.attemptToken != attemptToken) {
+          await listener?.close();
+          return;
+        }
+        if (listener == null) continue;
+        final bound = _Bound(rule, listener);
+        run.bound.add(bound);
+        bound.subscription = listener.listen(
+          (socket) => _accept(run, session, bound.rule, socket),
+          onError: (Object error) {
+            unawaited(_fail(run, const _BindFailure()));
           },
-          attemptToken: attemptToken,
         );
-      } on SocketException {
-        throw const _BindFailure();
       }
-      if (!_current(run) || run.attemptToken != attemptToken) {
-        await listener.close();
-        return;
-      }
-      run.listener = listener;
-      run.subscription = listener.listen(
-        (socket) => _accept(run, session, socket),
-        onError: (Object error) {
-          unawaited(_fail(run, const _BindFailure()));
-        },
-      );
-      final reachable = await _probe(run, session, attemptToken);
+      // Nothing could listen at all: this is a fatal, non-retried bind failure.
+      if (run.bound.isEmpty) throw const _BindFailure();
+      await _probeAll(run, session, attemptToken);
       if (!_current(run) || !identical(run.session, session)) return;
       if (run.sessionError != null) throw run.sessionError!;
       run.established = true;
       run.attempt = 0;
-      _emitTarget(run, reachable);
+      _emitTarget(run);
       _scheduleHealth(run, session);
     } on Object catch (error) {
       if (!_current(run)) return;
@@ -353,12 +349,17 @@ final class SshTunnelEngine implements TunnelEngine {
     channel.destroy();
   }
 
-  Future<bool> _probe(_Run run, SshSession session, [int? token]) async {
+  Future<bool> _probe(
+    _Run run,
+    SshSession session,
+    ForwardRule rule, [
+    int? token,
+  ]) async {
     final attemptToken = token ?? run.attemptToken;
     try {
       final channel = await _bounded(
         run,
-        session.open(targetHost, localPort),
+        session.open(rule.targetHost, rule.remotePort),
         _timing.probeTimeout,
         discard: _discardChannel,
         attemptToken: attemptToken,
@@ -374,11 +375,75 @@ final class SshTunnelEngine implements TunnelEngine {
     }
   }
 
-  void _emitTarget(_Run run, bool reachable) => _emit(
-    run,
-    reachable ? TunnelPhase.ready : TunnelPhase.targetUnavailable,
-    reachable ? '已连接 · 127.0.0.1:3080' : 'SSH 已连接，远端 127.0.0.1:3080 暂不可用',
-  );
+  /// Probes every listening rule through the one SSH session, in parallel.
+  Future<void> _probeAll(_Run run, SshSession session, int token) async {
+    await Future.wait([
+      for (final bound in run.bound)
+        _probe(
+          run,
+          session,
+          bound.rule,
+          token,
+        ).then((ok) => bound.reachable = ok),
+    ]);
+  }
+
+  List<RuleStatus> _ruleStatuses(_Run run) {
+    final bound = {for (final b in run.bound) b.rule.id: b};
+    return [
+      for (final rule in run.profile.rules)
+        if (rule.enabled)
+          if (bound[rule.id] case final b?)
+            RuleStatus(
+              rule: rule,
+              state: b.reachable
+                  ? RuleState.ready
+                  : RuleState.targetUnavailable,
+              message: b.reachable ? null : '远端 ${rule.remoteAddress} 暂不可用',
+            )
+          else
+            RuleStatus(
+              rule: rule,
+              state: RuleState.bindFailed,
+              message: '本机 ${rule.localAddress} 已被占用或无法监听',
+            ),
+    ];
+  }
+
+  void _emitTarget(_Run run) {
+    final rules = _ruleStatuses(run);
+    final ready = rules.where((r) => r.state == RuleState.ready).length;
+    final unreachable = rules
+        .where((r) => r.state == RuleState.targetUnavailable)
+        .length;
+    final failed = rules.where((r) => r.state == RuleState.bindFailed).length;
+    if (!_current(run)) return;
+    final TunnelPhase phase;
+    final String message;
+    if (ready == 0) {
+      phase = TunnelPhase.targetUnavailable;
+      message = failed > 0
+          ? 'SSH 已连接，$failed 条本地端口无法监听，$unreachable 条远端暂不可用'
+          : rules.length == 1
+          ? 'SSH 已连接，远端 ${rules.first.rule.remoteAddress} 暂不可用'
+          : 'SSH 已连接，所有转发的远端服务暂不可用';
+    } else {
+      phase = TunnelPhase.ready;
+      message = rules.length == 1
+          ? '已连接 · ${rules.first.rule.localAddress}'
+          : '已连接 · $ready/${rules.length} 条转发可用'
+                '${failed > 0 ? '，$failed 条本地端口无法监听' : ''}'
+                '${unreachable > 0 ? '，$unreachable 条远端暂不可用' : ''}';
+    }
+    _status = TunnelStatus(
+      phase: phase,
+      profileId: run.profile.id,
+      message: message,
+      retryAttempt: run.attempt,
+      rules: rules,
+    );
+    _statuses.add(_status);
+  }
 
   void _scheduleHealth(_Run run, SshSession session) {
     if (!_current(run)) return;
@@ -394,9 +459,9 @@ final class SshTunnelEngine implements TunnelEngine {
           attemptToken: attemptToken,
         );
         if (!_current(run) || !identical(run.session, session)) return;
-        final reachable = await _probe(run, session, attemptToken);
+        await _probeAll(run, session, attemptToken);
         if (!_current(run) || !identical(run.session, session)) return;
-        _emitTarget(run, reachable);
+        _emitTarget(run);
         _scheduleHealth(run, session);
       } on Object catch (error) {
         if (_current(run) && identical(run.session, session)) {
@@ -416,7 +481,7 @@ final class SshTunnelEngine implements TunnelEngine {
     if (run.established) await _fail(run, run.sessionError!);
   }
 
-  void _accept(_Run run, SshSession session, Socket socket) {
+  void _accept(_Run run, SshSession session, ForwardRule rule, Socket socket) {
     if (!_current(run) ||
         !identical(run.session, session) ||
         run.sockets.length >= 128) {
@@ -425,16 +490,21 @@ final class SshTunnelEngine implements TunnelEngine {
     }
     run.sockets.add(socket);
     // Each accepted stream opens its own SSH channel; no serial accept loop.
-    unawaited(_relay(run, session, socket));
+    unawaited(_relay(run, session, rule, socket));
   }
 
-  Future<void> _relay(_Run run, SshSession session, Socket socket) async {
+  Future<void> _relay(
+    _Run run,
+    SshSession session,
+    ForwardRule rule,
+    Socket socket,
+  ) async {
     ForwardConnection? channel;
     final attemptToken = run.attemptToken;
     try {
       final remote = await _bounded<ForwardConnection>(
         run,
-        session.open(targetHost, localPort),
+        session.open(rule.targetHost, rule.remotePort),
         _timing.probeTimeout,
         discard: _discardChannel,
         attemptToken: attemptToken,
@@ -541,7 +611,7 @@ final class SshTunnelEngine implements TunnelEngine {
         HostKeyChangedException() => const HostKeyChangedException().toString(),
         HostTrustRejectedException() =>
           const HostTrustRejectedException().toString(),
-        _BindFailure() => '本机 127.0.0.1:3080 已被占用或无法监听，请关闭占用程序后重试',
+        _BindFailure() => '本机转发端口已被占用或无法监听，请关闭占用程序或修改本地端口后重试',
         SSHAuthFailError() || SSHAuthAbortError() => 'SSH 认证失败，请检查用户名和密码',
         FormatException() || FileSystemException() => '安全配置无法读取或保存，连接已阻止',
         _ => '连接失败或重试次数已达上限，请检查网络和 SSH 配置后重试',
@@ -599,10 +669,9 @@ final class SshTunnelEngine implements TunnelEngine {
     run.timer?.cancel();
     run.timer = null;
     run.established = false;
-    final listener = run.listener;
-    run.listener = null;
-    final subscription = run.subscription;
-    run.subscription = null;
+    final bound = run.bound.toList();
+    run.bound.clear();
+    run.bindFailures.clear();
     final session = run.session;
     run.session = null;
     for (final socket in run.sockets.toList()) {
@@ -622,8 +691,10 @@ final class SshTunnelEngine implements TunnelEngine {
     }
 
     await Future.wait([
-      if (listener != null) cleanup(listener.close()),
-      if (subscription != null) cleanup(subscription.cancel()),
+      for (final b in bound) ...[
+        cleanup(b.listener.close()),
+        if (b.subscription != null) cleanup(b.subscription!.cancel()),
+      ],
       if (session != null) _quietClose(session),
     ]);
   }
@@ -662,8 +733,8 @@ final class _Run {
   final cancellations = StreamController<void>.broadcast(sync: true);
   SshSession? session;
   Future<void>? closing;
-  ServerSocket? listener;
-  StreamSubscription<Socket>? subscription;
+  final bound = <_Bound>[];
+  final bindFailures = <String>{};
   Timer? timer;
   final sockets = <Socket>{};
   final channels = <ForwardConnection>{};
@@ -678,6 +749,15 @@ final class _Run {
       unawaited(cancellations.close());
     }
   }
+}
+
+/// One rule's live listener plus the last probe result of its remote target.
+final class _Bound {
+  _Bound(this.rule, this.listener);
+  final ForwardRule rule;
+  final ServerSocket listener;
+  StreamSubscription<Socket>? subscription;
+  bool reachable = false;
 }
 
 final class _HostVerification {

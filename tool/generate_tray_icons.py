@@ -1,7 +1,8 @@
 """Generate high-visibility, full-colour status artwork (Pillow only).
 
 Run from any directory. Output is restricted to this project's assets/tray.
-Only ready is green; idle, pending and failed are deliberately all red.
+Mac: only fully ready is green; idle, pending and failed stay red.
+Windows: canonical remote green/red/yellow ICOs are preserved, never overwritten.
 macOS loads the explicit 44px @2x files at 22 logical points, without template
 rendering. Base 22px files also serve non-Retina/native Linux loading.
 """
@@ -72,6 +73,12 @@ def check_artwork(image: Image.Image, state: str) -> None:
     assert image.getpixel((0, 0))[3] == 0
 
 
+# Windows ICOs are canonical artwork imported from the remote Windows branch.
+# Its old generator does not describe the current seven-resolution assets.
+# Preserve those binaries exactly: update them only through an explicit Windows
+# artwork/native packaging workflow, never as a side effect of Mac regeneration.
+
+
 def main() -> None:
     ROOT.mkdir(parents=True, exist_ok=True)
     for state in STATES:
@@ -81,12 +88,8 @@ def main() -> None:
             image = source.resize((size, size), Image.Resampling.LANCZOS)
             check_artwork(image, state)
             image.save(ROOT / f"{state}{suffix}.png", optimize=True)
-        source.save(
-            ROOT / f"windows_{state}.ico",
-            sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64)],
-        )
-    print("Generated 22px + 44px full-colour status PNGs and multi-size ICOs.")
-    print("Ready: green. Every other state: red. Native iconSize: 22pt, isTemplate: false.")
+    print("Generated 22px + 44px Mac/Linux PNGs; Windows canonical ICOs unchanged.")
+    print("Mac: ready green, all others red; 22pt non-template Retina.")
 
 
 if __name__ == "__main__":

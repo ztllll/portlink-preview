@@ -107,9 +107,15 @@ final class WindowsBundleInspector {
     }
     var binaries = 0;
     for (final entry in files.entries) {
-      if (!entry.key.endsWith('.dll') &&
-          !entry.key.endsWith('.exe') &&
-          entry.key != 'data/app.so') {
+      if (entry.key == 'data/app.so') {
+        // Flutter's Windows AOT snapshot is an ELF64 object, not a PE image.
+        final problem = aotElfProblem(entry.value, architecture);
+        if (problem != null) {
+          errors.add('Invalid AOT snapshot: ${entry.key}: $problem');
+        }
+        continue;
+      }
+      if (!entry.key.endsWith('.dll') && !entry.key.endsWith('.exe')) {
         continue;
       }
       binaries++;
@@ -153,6 +159,37 @@ final class WindowsBundleInspector {
     'runtimeSmokeTested': false,
     'authenticodeVerified': false,
   };
+
+  /// Returns null when [file] is a little-endian ELF64 object whose machine
+  /// matches [architecture]; otherwise a description of the problem.
+  static String? aotElfProblem(File file, String architecture) {
+    final header = Uint8List(20);
+    final handle = file.openSync();
+    try {
+      if (handle.readIntoSync(header) < header.length) return 'Truncated ELF';
+    } finally {
+      handle.closeSync();
+    }
+    if (header[0] != 0x7f ||
+        header[1] != 0x45 ||
+        header[2] != 0x4c ||
+        header[3] != 0x46) {
+      return 'Missing ELF magic';
+    }
+    if (header[4] != 2 || header[5] != 1) {
+      return 'Expected little-endian ELF64';
+    }
+    final machine = ByteData.sublistView(header).getUint16(18, Endian.little);
+    final actual = switch (machine) {
+      0x3e => 'x64',
+      0xb7 => 'arm64',
+      _ => 'unsupported',
+    };
+    if (actual != architecture) {
+      return 'ELF machine is $actual, expected $architecture';
+    }
+    return null;
+  }
 
   static List<String> pluginNames(String cmake) {
     final match = RegExp(
@@ -287,6 +324,11 @@ final class WindowsBundleInspector {
         'msvcrt.dll',
         'usp10.dll',
         'urlmon.dll',
+        // Imported by flutter_windows.dll; Windows-shipped, never app-local.
+        'uiautomationcore.dll',
+        'oleacc.dll',
+        'd3d9.dll',
+        'dbghelp.dll',
       }.contains(name);
 }
 

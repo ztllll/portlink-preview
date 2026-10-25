@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/host_trust.dart';
 import 'package:portlink/core/server_profile.dart';
 import 'package:portlink/core/ssh_transport.dart';
@@ -11,11 +12,26 @@ import 'package:portlink/core/tunnel_engine.dart';
 import 'package:portlink/core/tunnel_status.dart';
 import 'package:portlink/data/host_trust_store.dart';
 
-const profile = ServerProfile(
-  id: 'one',
-  name: '测试主机',
-  host: 'example.com',
-  username: 'alice',
+ServerProfile profileFor(
+  int localPort, {
+  int remotePort = 3080,
+  String id = 'one',
+  String name = '测试主机',
+  String host = 'example.com',
+  String username = 'alice',
+}) => ServerProfile(
+  id: id,
+  name: name,
+  host: host,
+  username: username,
+  rules: [
+    ForwardRule(
+      id: 'r1',
+      label: '测试',
+      localPort: localPort,
+      remotePort: remotePort,
+    ),
+  ],
 );
 final fingerprint = 'SHA256:${'A' * 43}';
 const timing = TunnelTiming(
@@ -57,9 +73,8 @@ void main() {
     );
     listenPort = reservation.port;
     await reservation.close();
-    engine = SshTunnelEngine.forTesting(
+    engine = SshTunnelEngine(
       trustStore: trust,
-      listenPort: listenPort,
       connector: connector,
       timing: timing,
       jitter: () => 0.5,
@@ -70,11 +85,36 @@ void main() {
   });
 
   Future<void> connect({HostTrustPrompt? prompt}) => engine.connect(
-    profile,
+    profileFor(listenPort),
     'not-in-status',
     onTrustHost: prompt ?? (_) async => true,
   );
 
+  test(
+    'connection freezes caller rules before asynchronous trust confirmation',
+    () async {
+      final rules = <ForwardRule>[
+        ForwardRule(
+          id: 'frozen',
+          label: 'frozen',
+          localPort: listenPort,
+          remotePort: 3080,
+        ),
+      ];
+      final configured = profileFor(listenPort).copyWith(rules: rules);
+      await engine.connect(
+        configured,
+        'fixture-only',
+        onTrustHost: (_) async {
+          rules.clear();
+          return true;
+        },
+      );
+      expect(engine.status.phase, TunnelPhase.ready);
+      expect(engine.status.rules.single.rule.localPort, listenPort);
+      expect(connector.sessions.single.targets.single, ['127.0.0.1', 3080]);
+    },
+  );
   test('ready requires auth, real exclusive loopback listener and SSH target probe', () async {
     await connect();
     expect(engine.status.phase, TunnelPhase.ready);
@@ -164,7 +204,7 @@ void main() {
     try {
       await connect();
       expect(engine.status.phase, TunnelPhase.failed);
-      expect(engine.status.message, contains('3080'));
+      expect(engine.status.message, contains('本机转发端口'));
       await Future<void>.delayed(const Duration(milliseconds: 160));
       expect(connector.calls, 1);
       expect(connector.sessions.single.closed, isTrue);
@@ -173,29 +213,208 @@ void main() {
     }
   });
 
-  test('production constructor keeps fixed 3080 and fails safely if already occupied', () async {
-    await engine.dispose();
-    ServerSocket? owned;
-    try {
-      owned = await ServerSocket.bind(InternetAddress.loopbackIPv4, 3080);
-    } on SocketException {
-      // A pre-existing user process owns 3080. Do not connect to it or close it.
-    }
-    engine = SshTunnelEngine(
-      trustStore: trust,
-      connector: connector,
-      timing: timing,
+  test('legacy default rule still maps local 3080 to remote 3080', () {
+    const legacy = ServerProfile(
+      id: 'one',
+      name: '旧配置',
+      host: 'example.com',
+      username: 'alice',
     );
-    try {
-      await connect();
-      expect(engine.status.phase, TunnelPhase.failed);
-      expect(engine.status.message, contains('3080'));
-      expect(connector.calls, 1);
-    } finally {
-      await owned?.close();
-    }
+    expect(legacy.rules.single.localPort, 3080);
+    expect(legacy.rules.single.remotePort, 3080);
+    expect(legacy.rules.single.bindHost, '127.0.0.1');
+    expect(legacy.rules.single.targetHost, '127.0.0.1');
+    expect(legacy.validate(), isNull);
   });
 
+  Future<int> freePort() async {
+    final s = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    final port = s.port;
+    await s.close();
+    return port;
+  }
+
+  test(
+    'one SSH session forwards several rules to different remote ports',
+    () async {
+      final a = await freePort();
+      final b = await freePort();
+      final multi = ServerProfile(
+        id: 'one',
+        name: '多端口',
+        host: 'example.com',
+        username: 'alice',
+        rules: [
+          ForwardRule(id: 'a', label: 'Web', localPort: a, remotePort: 80),
+          ForwardRule(id: 'b', label: 'DB', localPort: b, remotePort: 5432),
+        ],
+      );
+      await engine.connect(multi, 'x', onTrustHost: (_) async => true);
+      expect(engine.status.phase, TunnelPhase.ready);
+      expect(
+        connector.calls,
+        1,
+        reason: 'a single SSH session serves all rules',
+      );
+      expect(engine.status.rules.map((r) => r.state), [
+        RuleState.ready,
+        RuleState.ready,
+      ]);
+      // Probes target each rule's own remote port.
+      final probed = connector.sessions.single.targets
+          .map((t) => '${t[0]}:${t[1]}')
+          .toSet();
+      expect(probed, containsAll(['127.0.0.1:80', '127.0.0.1:5432']));
+      // Each local port really listens and opens the matching remote port.
+      final sa = await Socket.connect('127.0.0.1', a);
+      final sb = await Socket.connect('127.0.0.1', b);
+      await until(() => connector.sessions.single.targets.length >= 4);
+      sa.destroy();
+      sb.destroy();
+      await engine.disconnect();
+      for (final port in [a, b]) {
+        final rebound = await ServerSocket.bind(
+          InternetAddress.loopbackIPv4,
+          port,
+        );
+        await rebound.close();
+      }
+    },
+  );
+
+  test(
+    'an occupied local port fails only its rule; the others keep forwarding',
+    () async {
+      final good = await freePort();
+      final taken = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      try {
+        final partial = ServerProfile(
+          id: 'one',
+          name: '部分占用',
+          host: 'example.com',
+          username: 'alice',
+          rules: [
+            ForwardRule(id: 'ok', label: '可用', localPort: good, remotePort: 80),
+            ForwardRule(
+              id: 'bad',
+              label: '被占用',
+              localPort: taken.port,
+              remotePort: 81,
+            ),
+          ],
+        );
+        await engine.connect(partial, 'x', onTrustHost: (_) async => true);
+        expect(engine.status.phase, TunnelPhase.ready);
+        expect(engine.status.isPartial, isTrue);
+        final byId = {for (final r in engine.status.rules) r.rule.id: r.state};
+        expect(byId['ok'], RuleState.ready);
+        expect(byId['bad'], RuleState.bindFailed);
+        expect(engine.status.message, contains('1/2'));
+        // The unrelated listener owner is untouched and the good rule works.
+        final socket = await Socket.connect('127.0.0.1', good);
+        socket.destroy();
+        expect(connector.calls, 1, reason: 'a bind conflict is not retried');
+      } finally {
+        await taken.close();
+      }
+    },
+  );
+
+  test(
+    'every rule occupied is a fatal bind failure and never retried',
+    () async {
+      final taken = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      try {
+        await engine.connect(
+          profileFor(taken.port),
+          'x',
+          onTrustHost: (_) async => true,
+        );
+        expect(engine.status.phase, TunnelPhase.failed);
+        await Future<void>.delayed(const Duration(milliseconds: 160));
+        expect(connector.calls, 1);
+      } finally {
+        await taken.close();
+      }
+    },
+  );
+
+  test(
+    'a custom target host is passed to the server, not hard-coded',
+    () async {
+      final port = await freePort();
+      final custom = ServerProfile(
+        id: 'one',
+        name: '内网目标',
+        host: 'example.com',
+        username: 'alice',
+        rules: [
+          ForwardRule(
+            id: 'c',
+            label: '内网库',
+            localPort: port,
+            remotePort: 3306,
+            targetHost: '10.0.0.5',
+          ),
+        ],
+      );
+      await engine.connect(custom, 'x', onTrustHost: (_) async => true);
+      expect(engine.status.phase, TunnelPhase.ready);
+      expect(connector.sessions.single.targets.first, ['10.0.0.5', 3306]);
+    },
+  );
+
+  test(
+    'a rule with an unreachable remote is reported without hiding the others',
+    () async {
+      final a = await freePort();
+      final b = await freePort();
+      connector.configure = (session) {
+        session.failTargets = {5432};
+      };
+      final mixed = ServerProfile(
+        id: 'one',
+        name: '混合',
+        host: 'example.com',
+        username: 'alice',
+        rules: [
+          ForwardRule(id: 'a', label: 'Web', localPort: a, remotePort: 80),
+          ForwardRule(id: 'b', label: 'DB', localPort: b, remotePort: 5432),
+        ],
+      );
+      await engine.connect(mixed, 'x', onTrustHost: (_) async => true);
+      expect(engine.status.phase, TunnelPhase.ready);
+      expect(engine.status.isPartial, isTrue);
+      final byId = {for (final r in engine.status.rules) r.rule.id: r.state};
+      expect(byId['a'], RuleState.ready);
+      expect(byId['b'], RuleState.targetUnavailable);
+    },
+  );
+
+  test('disabled rules never open a listener', () async {
+    final on = await freePort();
+    final off = await freePort();
+    final profile2 = ServerProfile(
+      id: 'one',
+      name: '含停用',
+      host: 'example.com',
+      username: 'alice',
+      rules: [
+        ForwardRule(id: 'on', label: '启用', localPort: on, remotePort: 80),
+        ForwardRule(
+          id: 'off',
+          label: '停用',
+          localPort: off,
+          remotePort: 81,
+          enabled: false,
+        ),
+      ],
+    );
+    await engine.connect(profile2, 'x', onTrustHost: (_) async => true);
+    expect(engine.status.rules.map((r) => r.rule.id), ['on']);
+    final free = await ServerSocket.bind(InternetAddress.loopbackIPv4, off);
+    await free.close();
+  });
   test(
     'target failure keeps listener and periodically reprobes through SSH',
     () async {
@@ -348,7 +567,8 @@ void main() {
       await old;
       connector.pending = null;
       await engine.connect(
-        const ServerProfile(
+        profileFor(
+          listenPort,
           id: 'two',
           name: '新主机',
           host: 'two.example',
@@ -370,7 +590,8 @@ void main() {
     final gate = Completer<void>();
     connector.sessions.single.closeGate = gate;
     final firstSwitch = engine.connect(
-      const ServerProfile(
+      profileFor(
+        listenPort,
         id: 'two',
         name: '二',
         host: 'two.example',
@@ -380,7 +601,8 @@ void main() {
       onTrustHost: (_) async => true,
     );
     final latestSwitch = engine.connect(
-      const ServerProfile(
+      profileFor(
+        listenPort,
         id: 'three',
         name: '三',
         host: 'three.example',
@@ -637,6 +859,9 @@ final class FakeSession implements SshSession {
       closed = false;
   bool authObserved = false;
   Object? authFailure;
+
+  /// Remote ports that refuse a direct-tcpip channel (others stay reachable).
+  Set<int> failTargets = {};
   final targets = <List<Object>>[];
   final channels = <EchoChannel>[];
   Completer<ForwardConnection>? pendingChannel;
@@ -653,7 +878,9 @@ final class FakeSession implements SshSession {
   Future<ForwardConnection> open(String host, int port) async {
     targets.add([host, port]);
     if (pendingChannel != null) return pendingChannel!.future;
-    if (!targetAvailable) throw SSHChannelOpenError(2, 'refused');
+    if (!targetAvailable || failTargets.contains(port)) {
+      throw SSHChannelOpenError(2, 'refused');
+    }
     final channel = EchoChannel(readGate: channelReadGate);
     channels.add(channel);
     return channel;

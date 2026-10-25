@@ -296,7 +296,7 @@ class _ServerCard extends StatelessWidget {
                       ),
                     if (!isDefault && !active)
                       Text(
-                        'SSH · 固定转发 3080',
+                        'SSH · ${_ruleSummary(profile)}',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -321,6 +321,15 @@ class _ServerCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _ruleSummary(ServerProfile profile) {
+  final rules = profile.enabledRules;
+  if (rules.length == 1) {
+    final r = rules.first;
+    return '${r.localPort} → ${r.remotePort}';
+  }
+  return '${rules.length} 条端口转发';
 }
 
 class _Tag extends StatelessWidget {

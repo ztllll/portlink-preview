@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:portlink/app_controller.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/host_trust.dart';
 import 'package:portlink/core/server_profile.dart';
 import 'package:portlink/core/tunnel_status.dart';
@@ -65,6 +66,7 @@ class FakeAppController extends ChangeNotifier implements AppController {
     required String username,
     String? password,
     required bool makeDefault,
+    List<ForwardRule>? rules,
   }) async {
     errorMessage = saveError;
     if (saveError == null) {
@@ -76,6 +78,7 @@ class FakeAppController extends ChangeNotifier implements AppController {
         'username': username,
         'password': password,
         'makeDefault': makeDefault,
+        'rules': rules,
       });
     }
     update();

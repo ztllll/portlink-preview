@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../app_controller.dart';
+import '../core/forward_rule.dart';
 import '../core/tunnel_status.dart';
 
 /// Desktop shell only. SSH ownership remains in AppController.
@@ -74,8 +75,12 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       },
     );
     try {
-      await _setTrayIcon('idle');
-      _lastIcon = 'idle';
+      final initialIcon = trayIconFor(
+        const TunnelStatus(phase: TunnelPhase.idle),
+        macOS: Platform.isMacOS,
+      );
+      await _setTrayIcon(initialIcon);
+      _lastIcon = initialIcon;
       await _window.setPreventClose(true);
       _enabled = true;
       controller.addListener(_changed);
@@ -166,12 +171,7 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       do {
         _dirty = false;
         final status = controller.tunnelStatus;
-        final icon = switch (status.phase) {
-          TunnelPhase.ready => 'ready',
-          TunnelPhase.failed => 'failed',
-          TunnelPhase.idle => 'idle',
-          _ => 'pending',
-        };
+        final icon = trayIconFor(status, macOS: Platform.isMacOS);
         if (_lastIcon != icon) {
           // Only ready is green. Even an authenticated tunnel whose target
           // probe is failing must use a red icon, never a false healthy signal.
@@ -182,8 +182,11 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
           TunnelPhase.idle => '未连接',
           TunnelPhase.connecting => '正在连接',
           TunnelPhase.verifyingHost => '等待确认主机指纹',
-          TunnelPhase.ready => '转发可用',
-          TunnelPhase.targetUnavailable => '远端 3080 暂不可达',
+          TunnelPhase.ready =>
+            status.isPartial
+                ? '部分转发可用（${status.readyRuleCount}/${status.rules.length}）'
+                : '转发可用',
+          TunnelPhase.targetUnavailable => '远端服务暂不可达',
           TunnelPhase.reconnecting => '正在重连',
           TunnelPhase.failed => '连接失败',
         };
@@ -195,14 +198,27 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
             items: [
               tray.MenuItem(key: 'status', label: caption, disabled: true),
               tray.MenuItem(key: 'show', label: '管理服务器…'),
-              tray.MenuItem(key: 'copy', label: '复制本地地址'),
-              tray.MenuItem(
-                key: 'http',
-                label: '打开 HTTP 页面',
-                disabled:
-                    !controller.initialized ||
-                    status.phase != TunnelPhase.ready,
-              ),
+              if (status.rules.isNotEmpty) ...[
+                for (final rule in status.rules)
+                  tray.MenuItem(
+                    key: 'copy:${rule.rule.id}',
+                    label: '复制 ${rule.rule.label} · ${rule.rule.localAddress}',
+                  ),
+                for (final rule in status.rules)
+                  tray.MenuItem(
+                    key: 'http:${rule.rule.id}',
+                    label: '打开 ${rule.rule.label}（HTTP）',
+                    disabled:
+                        !controller.initialized ||
+                        !status.isConnected ||
+                        rule.state != RuleState.ready,
+                  ),
+              ] else
+                tray.MenuItem(
+                  key: 'copy-none',
+                  label: '尚无可用转发',
+                  disabled: true,
+                ),
               tray.MenuItem.separator(),
               if (status.isActive)
                 tray.MenuItem(key: 'stop', label: '停止转发')
@@ -247,6 +263,29 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     }
   }
 
+  RuleStatus? _liveRule(String id) {
+    for (final rule in controller.tunnelStatus.rules) {
+      if (rule.rule.id == id) return rule;
+    }
+    return null;
+  }
+
+  /// Windows: green healthy, yellow connecting/partial, red disconnected.
+  /// Mac uses red pending artwork and keeps its distinct red idle dash.
+  static String trayIconFor(TunnelStatus status, {bool macOS = false}) =>
+      switch (status.phase) {
+        TunnelPhase.ready =>
+          status.rules.any((rule) => rule.state != RuleState.ready)
+              ? 'pending'
+              : 'ready',
+        TunnelPhase.connecting ||
+        TunnelPhase.verifyingHost ||
+        TunnelPhase.reconnecting ||
+        TunnelPhase.targetUnavailable => 'pending',
+        TunnelPhase.idle => macOS ? 'idle' : 'failed',
+        TunnelPhase.failed => 'failed',
+      };
+
   Future<void> _useNativeRightClickMenu() async {
     final configure = configureNativeMenuTrigger;
     if (configure != null) {
@@ -289,15 +328,24 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     try {
       if (key == 'show') {
         await showWindow();
-      } else if (key == 'copy') {
-        await Clipboard.setData(const ClipboardData(text: '127.0.0.1:3080'));
-      } else if (key == 'http') {
+      } else if (key != null && key.startsWith('copy:')) {
+        final rule = _liveRule(key.substring(5));
+        if (rule != null) {
+          await Clipboard.setData(ClipboardData(text: rule.rule.localAddress));
+        }
+      } else if (key != null && key.startsWith('http:')) {
+        final rule = _liveRule(key.substring(5));
         if (!controller.initialized ||
-            controller.tunnelStatus.phase != TunnelPhase.ready) {
+            !controller.tunnelStatus.isConnected ||
+            rule == null ||
+            rule.state != RuleState.ready) {
           return;
         }
+        final host = rule.rule.bindHost == '0.0.0.0'
+            ? '127.0.0.1'
+            : rule.rule.bindHost;
         await launchUrl(
-          Uri.parse('http://127.0.0.1:3080'),
+          Uri(scheme: 'http', host: host, port: rule.rule.localPort),
           mode: LaunchMode.externalApplication,
         );
       } else if (key == 'stop') {

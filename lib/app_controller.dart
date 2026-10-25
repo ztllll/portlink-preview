@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import 'core/forward_rule.dart';
 import 'core/host_trust.dart';
 import 'core/server_profile.dart';
 import 'core/tunnel_engine.dart';
@@ -162,6 +163,7 @@ class AppController extends ChangeNotifier {
     required String username,
     String? password,
     required bool makeDefault,
+    List<ForwardRule>? rules,
   }) => _mutate(() async {
     final existing = id == null ? null : _find(id);
     if (id != null && existing == null) throw const _UserError('服务器配置不存在。');
@@ -174,6 +176,8 @@ class AppController extends ChangeNotifier {
       host: host.trim(),
       sshPort: sshPort,
       username: username.trim(),
+      // Editing without touching rules keeps them; a new server gets 3080->3080.
+      rules: rules ?? existing?.rules ?? const [ForwardRule.legacy()],
     );
     final invalid = profile.validate();
     if (invalid != null) throw _UserError(invalid);

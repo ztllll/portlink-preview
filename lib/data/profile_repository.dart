@@ -10,7 +10,9 @@ final class ProfileSnapshot {
   ProfileSnapshot({
     List<ServerProfile> profiles = const [],
     this.defaultProfileId,
-  }) : profiles = List.unmodifiable(profiles);
+  }) : profiles = List.unmodifiable(
+         profiles.map((profile) => profile.frozen()),
+       );
   final List<ServerProfile> profiles;
   final String? defaultProfileId;
 
@@ -26,15 +28,17 @@ final class ProfileSnapshot {
       throw const FormatException('默认服务器不存在');
     }
     return {
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'profiles': profiles.map((p) => p.toJson()).toList(),
       'defaultProfileId': defaultProfileId,
     };
   }
 
   factory ProfileSnapshot.fromJson(Map<String, dynamic> json) {
+    // v1 profiles have no `rules`; ServerProfile.fromJson upgrades them to the
+    // single 127.0.0.1:3080 rule. v2 is written from now on.
     if (json['schemaVersion'] is! int ||
-        json['schemaVersion'] != 1 ||
+        (json['schemaVersion'] != 1 && json['schemaVersion'] != 2) ||
         json['profiles'] is! List ||
         (json['defaultProfileId'] != null &&
             json['defaultProfileId'] is! String) ||
@@ -48,6 +52,9 @@ final class ProfileSnapshot {
     final profiles = raw.map((value) {
       if (value is! Map<String, dynamic>) {
         throw const FormatException('服务器配置格式无效');
+      }
+      if (json['schemaVersion'] == 2 && !value.containsKey('rules')) {
+        throw const FormatException('v2服务器配置缺少转发规则');
       }
       return ServerProfile.fromJson(value);
     }).toList();

@@ -67,6 +67,13 @@ Uint8List pe({
   return bytes;
 }
 
+Uint8List elf({int machine = 0x3e}) {
+  final bytes = Uint8List(64);
+  bytes.setRange(0, 6, [0x7f, 0x45, 0x4c, 0x46, 2, 1]);
+  ByteData.sublistView(bytes).setUint16(18, machine, Endian.little);
+  return bytes;
+}
+
 void main() {
   late Directory directory;
   setUp(() {
@@ -105,7 +112,6 @@ void main() {
       'portlink.exe',
       'flutter_windows.dll',
       'cnativeapi.dll',
-      'data/app.so',
       for (final plugin in WindowsBundleInspector.pluginNames(plugins))
         '${plugin}_plugin.dll',
     ]) {
@@ -117,6 +123,7 @@ void main() {
         ),
       );
     }
+    put('data/app.so', elf(machine: architecture == 'arm64' ? 0xb7 : 0x3e));
     for (final name in [
       'data/icudtl.dat',
       'data/flutter_assets/AssetManifest.bin',
@@ -141,7 +148,10 @@ void main() {
     valid();
     final report = inspect();
     expect(report['valid'], isTrue, reason: errors(report).join('\n'));
-    expect(report['peBinaryCount'], 8);
+    expect(
+      report['peBinaryCount'],
+      7,
+    ); // AOT app.so is ELF, checked separately.
     expect(report['nativeAssets'], ['cnativeapi.dll']);
     expect(report['runtimeSmokeTested'], isFalse);
     expect(report['authenticodeVerified'], isFalse);
@@ -230,11 +240,40 @@ void main() {
     put('portlink.exe', pe(architecture: 'arm64'));
     expect(inspect()['valid'], isFalse);
   });
-  test('AOT app.so is verified as PE and cannot hide wrong architecture', () {
-    valid();
-    put('data/app.so', pe(architecture: 'arm64'));
-    expect(inspect()['valid'], isFalse);
-  });
+  test(
+    'AOT app.so is verified as ELF64 and cannot hide wrong architecture',
+    () {
+      valid();
+      put('data/app.so', elf());
+      expect(inspect()['valid'], isTrue);
+      put('data/app.so', elf(machine: 0xb7));
+      expect(inspect()['valid'], isFalse);
+      put('data/app.so', elf(machine: 0x28));
+      expect(inspect()['valid'], isFalse);
+      put('data/app.so', pe());
+      expect(inspect()['valid'], isFalse);
+      put('data/app.so', [0x7f, 0x45, 0x4c]);
+      expect(inspect()['valid'], isFalse);
+    },
+  );
+  test(
+    'Windows-shipped UI Automation and graphics DLLs are system imports',
+    () {
+      valid();
+      put(
+        'flutter_windows.dll',
+        pe(
+          imports: [
+            'uiautomationcore.dll',
+            'oleacc.dll',
+            'd3d9.dll',
+            'dbghelp.dll',
+          ],
+        ),
+      );
+      expect(inspect()['valid'], isTrue);
+    },
+  );
   test('native manifest is mandatory even when cnativeapi DLL exists', () {
     valid();
     file('data/flutter_assets/NativeAssetsManifest.json').deleteSync();

@@ -27,13 +27,13 @@ async def echo(reader, writer):
   except ConnectionError: pass
 
 async def main():
- # Client listener is on 127.0.0.1:3080. Bind test target on 127.0.0.2, and
- # map SSH's requested 127.0.0.1:3080 to it inside the fixture only.
+ # Map only the fixed test destination to an ephemeral loopback echo target.
+ # localhost also exercises configurable SSH-side target host resolution.
  target=await asyncio.start_server(echo,'127.0.0.1',0)
  target_port=target.sockets[0].getsockname()[1]
  class MappedServer(Server):
   def connection_requested(self,dest_host,dest_port,orig_host,orig_port):
-   if dest_host!='127.0.0.1' or dest_port!=3080: return False
+   if dest_host not in ('127.0.0.1','localhost') or dest_port!=3080: return False
    return self._conn.forward_connection('127.0.0.1',target_port)
   def connection_made(self,conn): self._conn=conn
  key=asyncssh.generate_private_key('ssh-ed25519')

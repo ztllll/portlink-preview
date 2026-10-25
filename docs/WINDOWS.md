@@ -1,10 +1,36 @@
 # Windows 构建、便携打包与验收
 
+## 合并后状态（2026-10-25）
+
+本次Mac会话已读取并保留远端db9925f/21448d7的Windows构建记录、ELF AOT校验器、系统DLL清单和launcher.cs。下方Windows成功记录来自远端已提交文档及用户确认，不是本机Mac重新执行Windows编译；合并源码0.1.3需在Windows再build/package，旧release不自动含合并改动。Mac多规则编辑/状态/逐规则copy与HTTP菜单现共用同套业务实现，Mac专有无Dock/原生右键保留。
+
 ## 当前状态
 
-截至 2026-10-24，实施主机是 macOS，未发现运行中的 Windows VM；**尚无 Windows 原生编译或桌面验收结果**。现已在Mac上的隔离官方PowerShell7.6.8中实际执行语法解析和纯逻辑helper回归，均退出0；不等于Windows/PowerShell5.1原生验收。本次提供脚本、缓存源码核对与合成 PE 测试，不能写成“Windows EXE 已构建”。不创建或上传远端仓库，不自动安装工具，不更改签名、执行策略、防火墙或系统安全设置。
+**2026-10-25 已在真实 Windows 11 x64 主机完成原生编译与便携打包**（Flutter 3.47.8 stable / Dart 3.13.7，VS 2022 Build Tools 17.14、MSVC 14.44、ATL、Windows SDK 10.0.26100）。`build.ps1 -ResolveDependencies -RunTests` 退出 0：177 项测试通过、1 项真实 SSH 测试因未设置 `PORTLINK_SSH_TEST_PYTHON` 而跳过；`package.ps1` 生成 13.6 MB 便携 ZIP，并在新目录展开后逐文件哈希与依赖核验通过。
+**仍未做 Windows 桌面实机验收**（托盘四状态、隐藏/恢复、系统凭据、真实 SSH 转发 3080、退出释放端口），也**未做 Authenticode 签名**：`runtimeSmokeTested=false`、`authenticodeVerified=false`。
 
-生产固定监听 127.0.0.1:3080，SSH 目标也是服务器 127.0.0.1:3080。端口被占时安全失败，不自动换端口、不连接未知已有服务、不终止占用者。
+### 本次 Windows 构建修复的两个校验器缺陷
+
+1. Flutter Windows 的 `data/app.so` 是 **ELF64** AOT 快照而非 PE；旧检查按 PE 解析会误报 `Missing MZ header`。现改为校验 ELF 魔数、ELF64 小端与 `e_machine`（x64=0x3e，arm64=0xb7）。
+2. `flutter_windows.dll` 导入 Windows 自带的 `uiautomationcore.dll`、`oleacc.dll`、`d3d9.dll`、`dbghelp.dll`，旧白名单漏掉它们导致误报"未打包依赖"；已加入系统 DLL 白名单（VC 运行库仍必须 app-local）。
+
+### 单文件启动器（tool/windows/launcher）
+
+`launcher.cs` 把已验证的便携 ZIP 作为资源嵌入一个小 EXE：双击后解压到 `%LOCALAPPDATA%\PortLink\app-<ZIP哈希前16位>`，核对 `portlink.exe` 的 SHA256 后启动；不写注册表、不自启、不提权。它不是 Flutter 原生单文件，只是自解压外壳。源文件中的 `__PAYLOAD_ID__`、`__EXE_SHA256__` 是占位符，编译时替换。
+
+### 多端口转发与托盘颜色（2026-10-25）
+
+新增每台服务器多条转发规则、自定义本地监听地址与目标地址；托盘图标改为实心圆（16–256px 多尺寸 ICO），绿/红/黄分别表示已连接/未连接或失败/连接中或部分可用。旧配置（schemaVersion 1）读取时自动升级为单条 3080→3080 规则，写出为 schemaVersion 2；回退到旧版本程序将无法读取 v2 配置。
+
+### 已观察到、尚未解决
+
+连续启动两个 EXE 时出现了两个带窗口的 portlink 进程，应用内单实例锁（`instance.lock`）在 Windows 上疑似未生效，原因待查。
+
+（以下为 2026-10-24 在 macOS 上写下的历史状态，保留备查。）
+
+截至 2026-10-24，实施主机是 macOS，未发现运行中的 Windows VM；**当时尚无 Windows 原生编译或桌面验收结果**。现已在Mac上的隔离官方PowerShell7.6.8中实际执行语法解析和纯逻辑helper回归，均退出0；不等于Windows/PowerShell5.1原生验收。本次提供脚本、缓存源码核对与合成 PE 测试，不能写成“Windows EXE 已构建”。不创建或上传远端仓库，不自动安装工具，不更改签名、执行策略、防火墙或系统安全设置。
+
+转发规则可配置：每台服务器可有多条“本地地址:端口 → 目标地址:端口”规则，共用一条 SSH 会话。默认（及旧配置升级后）为 127.0.0.1:3080 → 服务器 127.0.0.1:3080。某条本地端口被占用时仅该条失败，不自动换端口、不连接未知已有服务、不终止占用者。托盘图标：绿=已连接且全部可用，黄=连接中或部分可用，红=未连接或失败。
 
 ## 本次构建顺序
 
@@ -52,7 +78,7 @@ ARM64 要在对应 Windows ARM64 主机及 MSVC/ATL 组件下使用 -Architectur
 - dist/windows/PortLink-windows-架构-时间-ID：便携目录及同名 ZIP，不覆写旧产物；失败 stage 留作诊断。
 - ZIP 内 portable-manifest.json 记录全文件 SHA256/长度；同目录 .sha256 和 .verification.json。验证在新临时目录安全展开，再比对每个文件 hash、长度和文件数，而非仅检查 ZIP 能打开。
 
-必须保留整个目录，不可只复制 portlink.exe。Inspector 检查：EXE、Flutter engine、当前注册插件 DLL、AOT data/app.so、ICU、Flutter manifest、四状态托盘 ICO、NativeAssetsManifest、cnativeapi DLL。EXE/DLL/AOT 均解析 PE32+ 架构与普通/延迟导入；非系统 DLL 必须 app-local。native manifest 不得包含开发主机绝对路径、越界路径或缺失 DLL。符号链接、路径归一化逃逸、敏感配置及 Debug kernel 被拒绝。
+必须保留整个目录，不可只复制 portlink.exe。Inspector 检查：EXE、Flutter engine、当前注册插件 DLL、AOT data/app.so、ICU、Flutter manifest、四状态托盘 ICO、NativeAssetsManifest、cnativeapi DLL。EXE/DLL解析PE32+架构与普通/延迟导入，AOT快照单独校验ELF64小端和机器架构；非系统 DLL 必须 app-local。native manifest 不得包含开发主机绝对路径、越界路径或缺失 DLL。符号链接、路径归一化逃逸、敏感配置及 Debug kernel 被拒绝。
 
 ~~~text
 dart tool/windows/verify_bundle.dart --bundle <stage-directory> --arch x64 --plugins windows/flutter/generated_plugins.cmake

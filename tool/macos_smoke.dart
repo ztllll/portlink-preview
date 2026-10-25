@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/legacy.dart' as tray;
 import 'package:portlink/app_controller.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/tunnel_engine.dart';
 import 'package:portlink/core/tunnel_status.dart';
 import 'package:portlink/data/host_trust_store.dart';
@@ -135,9 +136,14 @@ Future<void> main(List<String> arguments) async {
     );
     final listenPort = reservation.port;
     await reservation.close();
-    final engine = SshTunnelEngine.forTesting(
+    final secondReservation = await ServerSocket.bind(
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    final secondPort = secondReservation.port;
+    await secondReservation.close();
+    final engine = SshTunnelEngine(
       trustStore: trust,
-      listenPort: listenPort,
       timing: const TunnelTiming(
         healthInterval: Duration(seconds: 60),
         maxRetries: 0,
@@ -264,6 +270,22 @@ Future<void> main(List<String> arguments) async {
       username: 'portlink-test',
       password: 'fixture-only-password',
       makeDefault: true,
+      rules: [
+        ForwardRule(
+          id: 'smoke',
+          label: 'smoke',
+          localPort: listenPort,
+          remotePort: 3080,
+        ),
+        ForwardRule(
+          id: 'second',
+          label: 'second',
+          bindHost: '127.0.0.1',
+          localPort: secondPort,
+          targetHost: 'localhost',
+          remotePort: 3080,
+        ),
+      ],
     );
     require(controller.errorMessage == null, 'profile save failed');
     require(
@@ -290,6 +312,59 @@ Future<void> main(List<String> arguments) async {
     );
     await requireTrayColor('green');
     completed.add('ready native tray image: green and non-template');
+    require(
+      engine.status.rules.length == 2 && engine.status.readyRuleCount == 2,
+      'two native forwarding rules did not become ready',
+    );
+    final secondSocket = await Socket.connect('127.0.0.1', secondPort);
+    final secondInput = StreamIterator<List<int>>(secondSocket);
+    final secondPayload = List<int>.generate(32768, (i) => (i + 23) % 251);
+    try {
+      secondSocket.add(secondPayload);
+      await secondSocket.flush();
+      final received = <int>[];
+      while (received.length < secondPayload.length) {
+        require(
+          await secondInput.moveNext().timeout(const Duration(seconds: 10)),
+          'second rule EOF',
+        );
+        received.addAll(secondInput.current);
+      }
+      require(
+        received.length == secondPayload.length &&
+            List.generate(
+              received.length,
+              (i) => received[i] == secondPayload[i],
+            ).every((v) => v),
+        'custom-bind second rule payload mismatch',
+      );
+    } finally {
+      secondSocket.destroy();
+      await secondInput.cancel();
+    }
+    final menuKeys = tray.trayManager.contextMenu!.items!
+        .map((item) => item.key)
+        .toSet();
+    require(
+      menuKeys.containsAll({
+        'copy:smoke',
+        'http:smoke',
+        'copy:second',
+        'http:second',
+      }),
+      'multi-rule tray actions missing',
+    );
+    measurements['multiPort'] = {
+      'rules': 2,
+      'ready': engine.status.readyRuleCount,
+      'secondBind': '127.0.0.1',
+      'secondTarget': 'localhost',
+      'secondBytes': secondPayload.length,
+      'matched': true,
+    };
+    completed.add(
+      'two native forwards share SSH; custom bind/target, per-rule copy/HTTP menus and payloads verified',
+    );
     for (var i = 0; i < 3; i++) {
       final socket = await Socket.connect(
         InternetAddress.loopbackIPv4,
@@ -438,7 +513,9 @@ Future<void> main(List<String> arguments) async {
       listenPort,
     );
     await rebound.close();
-    completed.add('disconnect releases isolated local listener');
+    final secondRebound = await ServerSocket.bind('127.0.0.1', secondPort);
+    await secondRebound.close();
+    completed.add('disconnect releases both isolated local listeners');
     stage = 'autoconnect';
     nativeStep(stage);
     nativeStep('before shell cleanup');
@@ -447,9 +524,8 @@ Future<void> main(List<String> arguments) async {
     controller.dispose();
     desktop = null;
     controller = null;
-    final next = SshTunnelEngine.forTesting(
+    final next = SshTunnelEngine(
       trustStore: trust,
-      listenPort: listenPort,
       timing: const TunnelTiming(
         healthInterval: Duration(seconds: 60),
         maxRetries: 0,

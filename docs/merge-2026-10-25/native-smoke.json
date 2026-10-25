@@ -1,0 +1,119 @@
+{
+  "executableExitCode": 0,
+  "nativeSmoke": {
+    "success": true,
+    "checks": [
+      "sandbox application support + OS file lock",
+      "native macOS login Keychain write/read",
+      "AppKit right-click opens actual menu; management action shows GUI",
+      "AppKit left-click restores GUI without Dock",
+      "native tray creation/menu: red non-template image at least 20pt",
+      "isolated persistent configuration + credential save",
+      "real SSH password authentication + pinned fixture host + target probe",
+      "ready native tray image: green and non-template",
+      "two native forwards share SSH; custom bind/target, per-rule copy/HTTP menus and payloads verified",
+      "real native-process tunneled payload roundtrips",
+      "native close event exactly once; NSWindowWillClose unchanged; tunnel remains ready",
+      "close-to-tray + window restore",
+      "right-click menu works again after SSH status updates; Dock remains absent",
+      "32 MiB native sandbox SSH interactive transfer matched before FIN",
+      "disconnect releases both isolated local listeners",
+      "new controller reloads default and Keychain password + auto-connect without host prompt",
+      "native Keychain fixture key deleted"
+    ],
+    "measurements": {
+      "menuBarStartup": {
+        "windowHidden": true,
+        "lsuiElement": true,
+        "activationPolicy": 1
+      },
+      "exerciseTrayMenu": {
+        "rightClick": true,
+        "buttonFrame": "{{0, 0}, {38, 22}}",
+        "eventObserved": true,
+        "manageActionSelected": true,
+        "buttonVisible": true,
+        "menuTrackingOpened": true,
+        "windowVisible": false,
+        "buttonTarget": "NSStatusBarButtonTarget",
+        "buttonAction": "handleStatusItemEvent:"
+      },
+      "rightClickMenu": {
+        "rightClick": true,
+        "buttonFrame": "{{0, 0}, {38, 22}}",
+        "menuTrackingOpened": true,
+        "manageActionSelected": true,
+        "buttonAction": "handleStatusItemEvent:",
+        "buttonTarget": "NSStatusBarButtonTarget",
+        "buttonVisible": true,
+        "eventObserved": true,
+        "windowVisible": true
+      },
+      "exerciseTrayLeftClick": {
+        "rightClick": false,
+        "buttonFrame": "{{0, 0}, {38, 22}}",
+        "eventObserved": true,
+        "manageActionSelected": false,
+        "buttonVisible": true,
+        "menuTrackingOpened": false,
+        "windowVisible": true,
+        "buttonTarget": "NSStatusBarButtonTarget",
+        "buttonAction": "handleStatusItemEvent:"
+      },
+      "leftClickShow": {
+        "rightClick": false,
+        "buttonFrame": "{{0, 0}, {38, 22}}",
+        "eventObserved": true,
+        "manageActionSelected": false,
+        "buttonVisible": true,
+        "menuTrackingOpened": false,
+        "windowVisible": true,
+        "buttonTarget": "NSStatusBarButtonTarget",
+        "buttonAction": "handleStatusItemEvent:"
+      },
+      "redTray": {
+        "redPixels": 1006,
+        "isTemplate": false,
+        "width": 22.0,
+        "height": 22.0,
+        "greenPixels": 0
+      },
+      "greenTray": {
+        "height": 22.0,
+        "redPixels": 0,
+        "width": 22.0,
+        "isTemplate": false,
+        "greenPixels": 952
+      },
+      "multiPort": {
+        "rules": 2,
+        "ready": 2,
+        "secondBind": "127.0.0.1",
+        "secondTarget": "localhost",
+        "secondBytes": 32768,
+        "matched": true
+      },
+      "rightClickAfterConnect": {
+        "rightClick": true,
+        "buttonFrame": "{{0, 0}, {38, 22}}",
+        "eventObserved": true,
+        "manageActionSelected": true,
+        "buttonVisible": true,
+        "menuTrackingOpened": true,
+        "windowVisible": false,
+        "buttonTarget": "NSStatusBarButtonTarget",
+        "buttonAction": "handleStatusItemEvent:"
+      },
+      "largeTransfer": {
+        "bytes": 33554432,
+        "rounds": 512,
+        "milliseconds": 50953,
+        "matched": true
+      }
+    },
+    "localPort": "isolated ephemeral; production remains 3080",
+    "server": "isolated local SSH fixture; not user server"
+  },
+  "rawStdout": "PORTLINK_NATIVE_SMOKE_STEP keychain\nPORTLINK_NATIVE_SMOKE_STEP desktop\nPORTLINK_NATIVE_SMOKE_STEP ssh\nPORTLINK_NATIVE_SMOKE_STEP window-close\nPORTLINK_NATIVE_SMOKE_STEP native close call returned\nPORTLINK_NATIVE_SMOKE_STEP window hidden\nPORTLINK_NATIVE_SMOKE_STEP show window call returned\nPORTLINK_NATIVE_SMOKE_STEP large transfer\nPORTLINK_NATIVE_SMOKE_STEP before disconnect\nPORTLINK_NATIVE_SMOKE_STEP disconnect complete\nPORTLINK_NATIVE_SMOKE_STEP autoconnect\nPORTLINK_NATIVE_SMOKE_STEP before shell cleanup\nPORTLINK_NATIVE_SMOKE_STEP shell cleanup complete\nPORTLINK_NATIVE_SMOKE {\"success\":true,\"checks\":[\"sandbox application support + OS file lock\",\"native macOS login Keychain write/read\",\"AppKit right-click opens actual menu; management action shows GUI\",\"AppKit left-click restores GUI without Dock\",\"native tray creation/menu: red non-template image at least 20pt\",\"isolated persistent configuration + credential save\",\"real SSH password authentication + pinned fixture host + target probe\",\"ready native tray image: green and non-template\",\"two native forwards share SSH; custom bind/target, per-rule copy/HTTP menus and payloads verified\",\"real native-process tunneled payload roundtrips\",\"native close event exactly once; NSWindowWillClose unchanged; tunnel remains ready\",\"close-to-tray + window restore\",\"right-click menu works again after SSH status updates; Dock remains absent\",\"32 MiB native sandbox SSH interactive transfer matched before FIN\",\"disconnect releases both isolated local listeners\",\"new controller reloads default and Keychain password + auto-connect without host prompt\",\"native Keychain fixture key deleted\"],\"measurements\":{\"menuBarStartup\":{\"windowHidden\":true,\"lsuiElement\":true,\"activationPolicy\":1},\"exerciseTrayMenu\":{\"rightClick\":true,\"buttonFrame\":\"{{0, 0}, {38, 22}}\",\"eventObserved\":true,\"manageActionSelected\":true,\"buttonVisible\":true,\"menuTrackingOpened\":true,\"windowVisible\":false,\"buttonTarget\":\"NSStatusBarButtonTarget\",\"buttonAction\":\"handleStatusItemEvent:\"},\"rightClickMenu\":{\"rightClick\":true,\"buttonFrame\":\"{{0, 0}, {38, 22}}\",\"menuTrackingOpened\":true,\"manageActionSelected\":true,\"buttonAction\":\"handleStatusItemEvent:\",\"buttonTarget\":\"NSStatusBarButtonTarget\",\"buttonVisible\":true,\"eventObserved\":true,\"windowVisible\":true},\"exerciseTrayLeftClick\":{\"rightClick\":false,\"buttonFrame\":\"{{0, 0}, {38, 22}}\",\"eventObserved\":true,\"manageActionSelected\":false,\"buttonVisible\":true,\"menuTrackingOpened\":false,\"windowVisible\":true,\"buttonTarget\":\"NSStatusBarButtonTarget\",\"buttonAction\":\"handleStatusItemEvent:\"},\"leftClickShow\":{\"rightClick\":false,\"buttonFrame\":\"{{0, 0}, {38, 22}}\",\"eventObserved\":true,\"manageActionSelected\":false,\"buttonVisible\":true,\"menuTrackingOpened\":false,\"windowVisible\":true,\"buttonTarget\":\"NSStatusBarButtonTarget\",\"buttonAction\":\"handleStatusItemEvent:\"},\"redTray\":{\"redPixels\":1006,\"isTemplate\":false,\"width\":22.0,\"height\":22.0,\"greenPixels\":0},\"greenTray\":{\"height\":22.0,\"redPixels\":0,\"width\":22.0,\"isTemplate\":false,\"greenPixels\":952},\"multiPort\":{\"rules\":2,\"ready\":2,\"secondBind\":\"127.0.0.1\",\"secondTarget\":\"localhost\",\"secondBytes\":32768,\"matched\":true},\"rightClickAfterConnect\":{\"rightClick\":true,\"buttonFrame\":\"{{0, 0}, {38, 22}}\",\"eventObserved\":true,\"manageActionSelected\":true,\"buttonVisible\":true,\"menuTrackingOpened\":true,\"windowVisible\":false,\"buttonTarget\":\"NSStatusBarButtonTarget\",\"buttonAction\":\"handleStatusItemEvent:\"},\"largeTransfer\":{\"bytes\":33554432,\"rounds\":512,\"milliseconds\":50953,\"matched\":true}},\"localPort\":\"isolated ephemeral; production remains 3080\",\"server\":\"isolated local SSH fixture; not user server\"}\n",
+  "rawStderr": "[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_metal_impeller.mm(53)] Using the Impeller rendering backend (MetalSDF).\nembedder.cc (3079): 'FlutterPlatformMessageCreateResponseHandle' returned 'kInvalidArguments'. Engine handle was invalid.\n2026-10-25 19:20:07.507 PortLink[21376:2999227] Failed to create a FlutterPlatformMessageResponseHandle (2)\n"
+}

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/server_profile.dart';
 import 'package:portlink/core/tunnel_engine.dart';
 import 'package:portlink/core/tunnel_status.dart';
@@ -79,8 +80,7 @@ void main() {
       final reservation = await ServerSocket.bind('127.0.0.1', 0);
       final listenPort = reservation.port;
       await reservation.close();
-      final engine = SshTunnelEngine.forTesting(
-        listenPort: listenPort,
+      final engine = SshTunnelEngine(
         trustStore: trust,
         timing: const TunnelTiming(
           connectTimeout: Duration(seconds: 5),
@@ -103,6 +103,14 @@ void main() {
         host: '127.0.0.1',
         sshPort: info['port'] as int,
         username: 'portlink-test',
+        rules: [
+          ForwardRule(
+            id: 'r1',
+            label: 'fixture',
+            localPort: listenPort,
+            remotePort: 3080,
+          ),
+        ],
       );
       var prompts = 0;
       await engine.connect(
@@ -231,8 +239,7 @@ void main() {
       final reservation = await ServerSocket.bind('127.0.0.1', 0);
       final listenPort = reservation.port;
       await reservation.close();
-      final engine = SshTunnelEngine.forTesting(
-        listenPort: listenPort,
+      final engine = SshTunnelEngine(
         trustStore: JsonHostTrustStore('${directory.path}/hosts.json'),
         timing: const TunnelTiming(
           healthInterval: Duration(milliseconds: 100),
@@ -255,6 +262,14 @@ void main() {
           host: '127.0.0.1',
           sshPort: info['port'] as int,
           username: 'portlink-test',
+          rules: [
+            ForwardRule(
+              id: 'upload',
+              label: 'upload',
+              localPort: listenPort,
+              remotePort: 3080,
+            ),
+          ],
         ),
         'fixture-only-password',
         onTrustHost: (request) async {

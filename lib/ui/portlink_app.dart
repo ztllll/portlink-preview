@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_controller.dart';
+import '../core/forward_rule.dart';
 import '../core/server_profile.dart';
 import '../core/tunnel_status.dart';
 import 'connection_panel.dart';
@@ -114,7 +115,7 @@ class _PortLinkHome extends StatefulWidget {
 
 class _PortLinkHomeState extends State<_PortLinkHome> {
   String? _localError;
-  bool _copied = false;
+  String? _copiedRuleId;
   bool _dialogOpen = false;
 
   AppController get _controller => widget.controller;
@@ -243,32 +244,35 @@ class _PortLinkHomeState extends State<_PortLinkHome> {
     }
   }
 
-  Future<void> _copyAddress() async {
+  Future<void> _copyAddress(ForwardRule rule) async {
     try {
-      await Clipboard.setData(const ClipboardData(text: localAddress));
-      if (mounted) setState(() => _copied = true);
+      await Clipboard.setData(ClipboardData(text: rule.localAddress));
+      if (mounted) setState(() => _copiedRuleId = rule.id);
     } catch (_) {
       if (mounted) setState(() => _localError = '无法复制地址，请手动选择并复制本地地址。');
     }
   }
 
-  Future<void> _openHttp() async {
+  Future<void> _openHttp(ForwardRule rule) async {
     // This method is invoked only by a user click; never on connect/reconnect.
-    if (!_controller.initialized ||
-        _controller.tunnelStatus.phase != TunnelPhase.ready) {
-      return;
-    }
+    // 0.0.0.0 is a listen wildcard, not a browsable address.
+    final host = rule.bindHost == '0.0.0.0' ? '127.0.0.1' : rule.bindHost;
+    final url = 'http://$host:${rule.localPort}';
+    final live = _controller.tunnelStatus.rules.any(
+      (r) => r.rule.id == rule.id && r.state == RuleState.ready,
+    );
+    if (!_controller.initialized || !live) return;
     try {
       final opened = await launchUrl(
-        Uri.parse('http://127.0.0.1:3080'),
+        Uri.parse(url),
         mode: LaunchMode.externalApplication,
       );
       if (!opened && mounted) {
-        setState(() => _localError = '无法打开浏览器，请手动访问 http://127.0.0.1:3080。');
+        setState(() => _localError = '无法打开浏览器，请手动访问 $url。');
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _localError = '无法打开浏览器，请手动访问 http://127.0.0.1:3080。');
+        setState(() => _localError = '无法打开浏览器，请手动访问 $url。');
       }
     }
   }
@@ -295,7 +299,7 @@ class _PortLinkHomeState extends State<_PortLinkHome> {
         busy: _controller.busy,
         initialized: _controller.initialized,
         canConnect: preferred != null,
-        copied: _copied,
+        copiedRuleId: _copiedRuleId,
         onConnect: () {
           if (preferred != null) _connectProfile(preferred.id);
         },
