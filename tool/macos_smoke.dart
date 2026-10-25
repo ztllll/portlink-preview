@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/legacy.dart' as tray;
 import 'package:portlink/app_controller.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/tunnel_engine.dart';
 import 'package:portlink/core/tunnel_status.dart';
 import 'package:portlink/data/host_trust_store.dart';
@@ -134,9 +135,8 @@ Future<void> main(List<String> arguments) async {
     );
     final listenPort = reservation.port;
     await reservation.close();
-    final engine = SshTunnelEngine.forTesting(
+    final engine = SshTunnelEngine(
       trustStore: trust,
-      listenPort: listenPort,
       timing: const TunnelTiming(
         healthInterval: Duration(seconds: 60),
         maxRetries: 0,
@@ -178,6 +178,14 @@ Future<void> main(List<String> arguments) async {
       username: 'portlink-test',
       password: 'fixture-only-password',
       makeDefault: true,
+      rules: [
+        ForwardRule(
+          id: 'smoke',
+          label: 'smoke',
+          localPort: listenPort,
+          remotePort: 3080,
+        ),
+      ],
     );
     require(controller.errorMessage == null, 'profile save failed');
     require(
@@ -296,9 +304,8 @@ Future<void> main(List<String> arguments) async {
     controller.dispose();
     desktop = null;
     controller = null;
-    final next = SshTunnelEngine.forTesting(
+    final next = SshTunnelEngine(
       trustStore: trust,
-      listenPort: listenPort,
       timing: const TunnelTiming(
         healthInterval: Duration(seconds: 60),
         maxRetries: 0,

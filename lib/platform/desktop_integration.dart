@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../app_controller.dart';
+import '../core/forward_rule.dart';
 import '../core/tunnel_status.dart';
 
 /// Desktop shell only. SSH ownership remains in AppController.
@@ -60,8 +61,8 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     try {
       await _tray.setIcon(
         Platform.isWindows
-            ? 'assets/tray/windows_idle.ico'
-            : 'assets/tray/idle.png',
+            ? 'assets/tray/windows_failed.ico'
+            : 'assets/tray/failed.png',
         isTemplate: Platform.isMacOS,
       );
       await _window.setPreventClose(true);
@@ -123,12 +124,7 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
       do {
         _dirty = false;
         final status = controller.tunnelStatus;
-        final icon = switch (status.phase) {
-          TunnelPhase.ready => 'ready',
-          TunnelPhase.failed => 'failed',
-          TunnelPhase.idle => 'idle',
-          _ => 'pending',
-        };
+        final icon = trayIconFor(status);
         if (_lastIcon != icon) {
           await _tray.setIcon(
             Platform.isWindows
@@ -142,8 +138,8 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
           TunnelPhase.idle => '未连接',
           TunnelPhase.connecting => '正在连接',
           TunnelPhase.verifyingHost => '等待确认主机指纹',
-          TunnelPhase.ready => '转发可用',
-          TunnelPhase.targetUnavailable => '远端 3080 暂不可达',
+          TunnelPhase.ready => status.isPartial ? '部分转发可用' : '转发可用',
+          TunnelPhase.targetUnavailable => '远端服务暂不可达',
           TunnelPhase.reconnecting => '正在重连',
           TunnelPhase.failed => '连接失败',
         };
@@ -155,14 +151,21 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
             items: [
               tray.MenuItem(key: 'status', label: caption, disabled: true),
               tray.MenuItem(key: 'show', label: '管理服务器…'),
-              tray.MenuItem(key: 'copy', label: '复制本地地址'),
-              tray.MenuItem(
-                key: 'http',
-                label: '打开 HTTP 页面',
-                disabled:
-                    !controller.initialized ||
-                    status.phase != TunnelPhase.ready,
-              ),
+              if (status.rules.isNotEmpty) ...[
+                for (final r in status.rules)
+                  tray.MenuItem(
+                    key: 'copy:${r.rule.id}',
+                    label: '复制 ${r.rule.label} · ${r.rule.localAddress}',
+                  ),
+                for (final r in status.rules)
+                  tray.MenuItem(
+                    key: 'http:${r.rule.id}',
+                    label: '打开 ${r.rule.label}（HTTP）',
+                    disabled:
+                        !controller.initialized || r.state != RuleState.ready,
+                  ),
+              ] else
+                tray.MenuItem(key: 'copy-none', label: '尚无可用转发', disabled: true),
               tray.MenuItem.separator(),
               if (status.isActive)
                 tray.MenuItem(key: 'stop', label: '停止转发')
@@ -206,6 +209,24 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     }
   }
 
+  RuleStatus? _liveRule(String id) {
+    for (final r in controller.tunnelStatus.rules) {
+      if (r.rule.id == id) return r;
+    }
+    return null;
+  }
+
+  /// Tray colour: green = connected and every rule usable, yellow = connecting
+  /// or partially usable, red = not connected or failed.
+  static String trayIconFor(TunnelStatus status) => switch (status.phase) {
+    TunnelPhase.ready => status.isPartial ? 'pending' : 'ready',
+    TunnelPhase.connecting ||
+    TunnelPhase.verifyingHost ||
+    TunnelPhase.reconnecting ||
+    TunnelPhase.targetUnavailable => 'pending',
+    TunnelPhase.idle || TunnelPhase.failed => 'failed',
+  };
+
   Future<void> showWindow() async {
     if (_quitting || !isDesktop) return;
     await _window.show();
@@ -223,15 +244,23 @@ class DesktopIntegration with WindowListener, tray.TrayListener {
     try {
       if (key == 'show') {
         await showWindow();
-      } else if (key == 'copy') {
-        await Clipboard.setData(const ClipboardData(text: '127.0.0.1:3080'));
-      } else if (key == 'http') {
+      } else if (key != null && key.startsWith('copy:')) {
+        final rule = _liveRule(key.substring(5));
+        if (rule != null) {
+          await Clipboard.setData(ClipboardData(text: rule.rule.localAddress));
+        }
+      } else if (key != null && key.startsWith('http:')) {
+        final rule = _liveRule(key.substring(5));
         if (!controller.initialized ||
-            controller.tunnelStatus.phase != TunnelPhase.ready) {
+            rule == null ||
+            rule.state != RuleState.ready) {
           return;
         }
+        final host = rule.rule.bindHost == '0.0.0.0'
+            ? '127.0.0.1'
+            : rule.rule.bindHost;
         await launchUrl(
-          Uri.parse('http://127.0.0.1:3080'),
+          Uri.parse('http://$host:${rule.rule.localPort}'),
           mode: LaunchMode.externalApplication,
         );
       } else if (key == 'stop') {

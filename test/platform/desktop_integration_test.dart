@@ -5,6 +5,7 @@ import 'dart:ui' show AppExitResponse;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/tunnel_status.dart';
 import 'package:portlink/platform/desktop_integration.dart';
 import 'package:tray_manager/legacy.dart' as tray;
@@ -227,17 +228,25 @@ void main() {
         ),
       );
       await desktop.initialize();
+      const rule = ForwardRule.legacy();
       controller.tunnelStatus = const TunnelStatus(
         phase: TunnelPhase.targetUnavailable,
+        rules: [RuleStatus(rule: rule, state: RuleState.targetUnavailable)],
       );
       controller.update();
       await settleAsync();
       expect(
-        trayManager.menu!.items!.firstWhere((i) => i.key == 'http').disabled,
+        trayManager.menu!.items!
+            .firstWhere((i) => i.key == 'http:default')
+            .disabled,
         isTrue,
       );
       desktop.onTrayMenuItemClick(
-        tray.MenuItem(key: 'http', label: 'old HTTP'),
+        tray.MenuItem(key: 'http:default', label: 'old HTTP'),
+      );
+      // A key for a rule that no longer exists must also be inert.
+      desktop.onTrayMenuItemClick(
+        tray.MenuItem(key: 'http:gone', label: 'stale'),
       );
       await settleAsync();
       expect(launches, 0);

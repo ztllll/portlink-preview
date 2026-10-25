@@ -46,7 +46,7 @@ void main() {
       expect(loaded.profiles.single.toJson(), profile('one').toJson());
       expect(loaded.defaultProfileId, 'one');
       final json = await File(path).readAsString();
-      expect(jsonDecode(json)['schemaVersion'], 1);
+      expect(jsonDecode(json)['schemaVersion'], 2);
       expect(json, isNot(contains('password')));
     },
   );
@@ -120,9 +120,9 @@ void main() {
       throwsFormatException,
     );
     for (final data in [
-      {'schemaVersion': 2, 'profiles': []},
+      {'schemaVersion': 3, 'profiles': []},
       {
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'profiles': [
           {...profile('x').toJson(), 'password': 'never-store'},
         ],

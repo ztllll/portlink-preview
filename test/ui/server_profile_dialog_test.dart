@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:portlink/core/forward_rule.dart';
 import 'package:portlink/core/server_profile.dart';
 import 'package:portlink/ui/portlink_app.dart';
 import 'package:portlink/ui/server_profile_dialog.dart';
@@ -175,4 +176,153 @@ void main() {
     expect(controller.savedProfiles, isEmpty);
     expect(find.textContaining('不含协议和路径'), findsOneWidget);
   });
-}
+
+  Future<void> fillBasics(WidgetTester tester) async {
+    await tester.enterText(field('显示名称'), '多端口服务器');
+    await tester.enterText(field('主机地址'), 'example.com');
+    await tester.enterText(field('SSH 用户名'), 'alice');
+    await tester.enterText(field('SSH 密码'), 'password');
+  }
+
+  Future<void> save(WidgetTester tester) async {
+    await tester.ensureVisible(find.text('保存服务器'));
+    await tester.tap(find.text('保存服务器'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('a new server starts with one editable default rule', (
+    tester,
+  ) async {
+    await desktop(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    expect(find.byKey(const ValueKey('rule-local-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('rule-local-1')), findsNothing);
+    // The last remaining rule cannot be removed.
+    final remove = tester.widget<IconButton>(
+      find.byKey(const ValueKey('rule-remove-0')),
+    );
+    expect(remove.onPressed, isNull);
+  });
+
+  testWidgets('several forwards, custom ports and custom hosts are saved', (
+    tester,
+  ) async {
+    await desktop(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    await fillBasics(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rule-local-0')),
+      '8080',
+    );
+    await tester.enterText(find.byKey(const ValueKey('rule-remote-0')), '80');
+    await tester.ensureVisible(find.byKey(const ValueKey('rule-add')));
+    await tester.tap(find.byKey(const ValueKey('rule-add')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('rule-local-1')),
+      '15432',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('rule-target-1')),
+      '10.0.0.5',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('rule-remote-1')),
+      '5432',
+    );
+    await save(tester);
+    final rules =
+        controller.savedProfiles.single['rules']! as List<ForwardRule>;
+    expect(rules.length, 2);
+    expect([rules[0].localPort, rules[0].remotePort], [8080, 80]);
+    expect(rules[0].bindHost, '127.0.0.1');
+    expect([rules[1].localPort, rules[1].remotePort], [15432, 5432]);
+    expect(rules[1].targetHost, '10.0.0.5');
+    expect(ForwardRule.validateAll(rules), isNull);
+  });
+
+  testWidgets('a clashing local port is rejected before the controller is called', (
+    tester,
+  ) async {
+    await desktop(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    await fillBasics(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('rule-add')));
+    await tester.tap(find.byKey(const ValueKey('rule-add')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('rule-local-0')), '9000');
+    await tester.enterText(find.byKey(const ValueKey('rule-local-1')), '9000');
+    await save(tester);
+    expect(controller.savedProfiles, isEmpty);
+    expect(find.textContaining('重复使用'), findsOneWidget);
+  });
+
+  testWidgets('a privileged local port is rejected', (tester) async {
+    await desktop(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    await fillBasics(tester);
+    await tester.enterText(find.byKey(const ValueKey('rule-local-0')), '80');
+    await save(tester);
+    expect(controller.savedProfiles, isEmpty);
+  });
+
+  testWidgets('listening on 0.0.0.0 shows a network-exposure warning', (
+    tester,
+  ) async {
+    await desktop(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    expect(find.textContaining('同一网络中的其他设备'), findsNothing);
+    await tester.enterText(find.byKey(const ValueKey('rule-bind-0')), '0.0.0.0');
+    await tester.pump();
+    expect(find.textContaining('同一网络中的其他设备'), findsOneWidget);
+  });
+
+  testWidgets('disabling every rule is rejected; removing a rule works', (
+    tester,
+  ) async {
+    await desktop(tester);
+    final controller = FakeAppController();
+    await addDialog(tester, controller);
+    await fillBasics(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('rule-add')));
+    await tester.tap(find.byKey(const ValueKey('rule-add')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('rule-local-1')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('rule-remove-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('rule-local-1')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('rule-enabled-0')));
+    await tester.pump();
+    await save(tester);
+    expect(controller.savedProfiles, isEmpty);
+    expect(find.textContaining('至少需要启用一条'), findsOneWidget);
+  });
+
+  testWidgets('editing keeps the rules the server already has', (tester) async {
+    await desktop(tester);
+    final existing = profile.copyWith(
+      rules: const [
+        ForwardRule(id: 'a', label: 'Web', localPort: 8080, remotePort: 80),
+        ForwardRule(id: 'b', label: 'DB', localPort: 9000, remotePort: 5432),
+      ],
+    );
+    final controller = FakeAppController()
+      ..profiles = [existing]
+      ..defaultProfileId = 'one';
+    await tester.pumpWidget(PortLinkApp(controller: controller));
+    await tester.tap(find.byTooltip('工作服务器的更多操作'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('编辑服务器'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('rule-local-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('rule-local-1')), findsOneWidget);
+    await save(tester);
+    final rules =
+        controller.savedProfiles.single['rules']! as List<ForwardRule>;
+    expect(rules.map((r) => r.id), ['a', 'b']);
+  });}

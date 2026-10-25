@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../core/forward_rule.dart';
 import '../core/server_profile.dart';
 import '../core/tunnel_status.dart';
-
-const localAddress = '127.0.0.1:3080';
 
 class ConnectionPanel extends StatelessWidget {
   const ConnectionPanel({
@@ -17,7 +16,7 @@ class ConnectionPanel extends StatelessWidget {
     required this.onDisconnect,
     required this.onCopy,
     required this.onOpenHttp,
-    required this.copied,
+    required this.copiedRuleId,
   });
 
   final TunnelStatus status;
@@ -27,9 +26,9 @@ class ConnectionPanel extends StatelessWidget {
   final bool canConnect;
   final VoidCallback onConnect;
   final VoidCallback onDisconnect;
-  final VoidCallback onCopy;
-  final VoidCallback onOpenHttp;
-  final bool copied;
+  final ValueChanged<ForwardRule> onCopy;
+  final ValueChanged<ForwardRule> onOpenHttp;
+  final String? copiedRuleId;
 
   String get _title => switch (status.phase) {
     TunnelPhase.idle => '连接你的远端服务',
@@ -42,12 +41,12 @@ class ConnectionPanel extends StatelessWidget {
   };
 
   String get _description => switch (status.phase) {
-    TunnelPhase.idle => '选择一台服务器，将远端的 3080 端口带到本机。',
+    TunnelPhase.idle => '选择一台服务器，将它的端口通过 SSH 带到本机。',
     TunnelPhase.connecting => '正在连接 SSH 服务器，随时可以取消。',
     TunnelPhase.verifyingHost => '请在弹窗中通过可信渠道核对指纹，未确认前不会继续。',
-    TunnelPhase.ready => '仅监听本机回环地址，不向局域网公开本地端口。',
+    TunnelPhase.ready => '默认只监听本机回环地址；监听其他地址的规则会有单独提示。',
     TunnelPhase.reconnecting => '正在尝试恢复连接，你仍然可以停止。',
-    TunnelPhase.targetUnavailable => '请检查服务器上的 127.0.0.1:3080 服务；通道保留并定期检查。',
+    TunnelPhase.targetUnavailable => '请检查服务器上对应的目标服务；通道保留并定期检查。',
     TunnelPhase.failed => '请查看下方提示，检查配置后手动重试。',
   };
 
@@ -60,6 +59,27 @@ class ConnectionPanel extends StatelessWidget {
     TunnelPhase.targetUnavailable => '服务未就绪',
     TunnelPhase.failed => '连接失败',
   };
+
+  /// Live per-rule status when connected to [profile]; otherwise the profile's
+  /// enabled rules shown as idle so the user can see what will be forwarded.
+  List<_RuleRowData> _ruleRows() {
+    final live = status.isActive && status.profileId == profile?.id;
+    if (live && status.rules.isNotEmpty) {
+      return [
+        for (final r in status.rules)
+          _RuleRowData(r.rule, r.state, r.message, active: true),
+      ];
+    }
+    return [
+      for (final rule in profile?.enabledRules ?? const <ForwardRule>[])
+        _RuleRowData(
+          rule,
+          RuleState.starting,
+          null,
+          active: live,
+        ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +100,7 @@ class ConnectionPanel extends StatelessWidget {
         status.phase == TunnelPhase.connecting ||
         status.phase == TunnelPhase.reconnecting ||
         status.phase == TunnelPhase.verifyingHost;
+    final ruleRows = _ruleRows();
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
@@ -172,7 +193,7 @@ class ConnectionPanel extends StatelessWidget {
           const SizedBox(height: 24),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
               color: colors.primary.withAlpha(10),
               borderRadius: BorderRadius.circular(14),
@@ -182,42 +203,31 @@ class ConnectionPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '本地地址',
+                  '端口转发',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const SelectableText(
-                  localAddress,
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -.4,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.arrow_forward,
-                      size: 16,
-                      color: colors.onSurfaceVariant,
+                const SizedBox(height: 8),
+                if (ruleRows.isEmpty)
+                  Text(
+                    '这台服务器还没有启用的转发规则。',
+                    style: theme.textTheme.bodySmall,
+                  )
+                else
+                  for (final row in ruleRows) ...[
+                    _RuleTile(
+                      key: ValueKey('rule-tile-${row.rule.id}'),
+                      row: row,
+                      copied: copiedRuleId == row.rule.id,
+                      canOpen: initialized && row.state == RuleState.ready,
+                      onCopy: () => onCopy(row.rule),
+                      onOpenHttp: () => onOpenHttp(row.rule),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '远端 127.0.0.1:3080',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 8),
                   ],
-                ),
                 if (profile != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   Text(
                     '通过 ${profile!.name}',
                     maxLines: 2,
@@ -255,33 +265,147 @@ class ConnectionPanel extends StatelessWidget {
                     label: Text(profile == null ? '连接默认服务器' : '连接服务器'),
                   ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: [
-              TextButton.icon(
-                onPressed: onCopy,
-                icon: Icon(
-                  copied ? Icons.check : Icons.content_copy_outlined,
-                  size: 17,
-                ),
-                label: Text(copied ? '地址已复制' : '复制地址'),
-              ),
-              TextButton.icon(
-                onPressed: initialized && isReady ? onOpenHttp : null,
-                icon: const Icon(Icons.open_in_new, size: 17),
-                label: const Text('打开 HTTP 页面'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Text(
-            '仅当远端服务使用 HTTP 时打开，其他 TCP 服务请使用对应客户端。',
+            '仅当目标服务使用 HTTP 时才用“打开”，其他 TCP 服务请使用对应客户端。',
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.onSurfaceVariant,
               height: 1.5,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RuleRowData {
+  const _RuleRowData(this.rule, this.state, this.message, {required this.active});
+  final ForwardRule rule;
+  final RuleState state;
+  final String? message;
+
+  /// False when not connected to this server: show the plan, not a live state.
+  final bool active;
+}
+
+class _RuleTile extends StatelessWidget {
+  const _RuleTile({
+    super.key,
+    required this.row,
+    required this.copied,
+    required this.canOpen,
+    required this.onCopy,
+    required this.onOpenHttp,
+  });
+  final _RuleRowData row;
+  final bool copied;
+  final bool canOpen;
+  final VoidCallback onCopy;
+  final VoidCallback onOpenHttp;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final green = dark ? const Color(0xFF79D8B1) : const Color(0xFF147A5A);
+    final amber = dark ? const Color(0xFFFFC857) : const Color(0xFF9A6700);
+    final (Color color, String label) = !row.active
+        ? (colors.onSurfaceVariant, '未连接')
+        : switch (row.state) {
+            RuleState.ready => (green, '可用'),
+            RuleState.starting => (amber, '准备中'),
+            RuleState.targetUnavailable => (amber, '远端暂不可用'),
+            RuleState.bindFailed => (colors.error, '本地端口无法监听'),
+          };
+    final rule = row.rule;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withAlpha(row.active ? 90 : 40)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Icon(Icons.circle, size: 10, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        rule.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelLarge,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      label,
+                      style: theme.textTheme.labelSmall?.copyWith(color: color),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                SelectableText(
+                  rule.localAddress,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '→ ${rule.remoteAddress}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                if (rule.exposesToNetwork)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      '同网络的其他设备也可访问',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.error,
+                      ),
+                    ),
+                  ),
+                if (row.active && row.message != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      row.message!,
+                      style: theme.textTheme.bodySmall?.copyWith(color: color),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: copied ? '地址已复制' : '复制 ${rule.localAddress}',
+            visualDensity: VisualDensity.compact,
+            onPressed: onCopy,
+            icon: Icon(
+              copied ? Icons.check : Icons.content_copy_outlined,
+              size: 18,
+            ),
+          ),
+          IconButton(
+            tooltip: '用浏览器打开 http://${rule.localAddress}（仅限 HTTP 服务）',
+            visualDensity: VisualDensity.compact,
+            onPressed: canOpen ? onOpenHttp : null,
+            icon: const Icon(Icons.open_in_new, size: 18),
           ),
         ],
       ),

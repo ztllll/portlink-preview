@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
+import '../core/forward_rule.dart';
 import '../core/server_profile.dart';
+import 'forward_rules_editor.dart';
 
 class ServerProfileDialog extends StatefulWidget {
   const ServerProfileDialog({
@@ -25,6 +27,7 @@ class _ServerProfileDialogState extends State<ServerProfileDialog> {
   late final TextEditingController _port;
   late final TextEditingController _username;
   final _password = TextEditingController();
+  final _rulesKey = GlobalKey<ForwardRulesEditorState>();
   late bool _makeDefault;
   bool _obscurePassword = true;
   bool _saving = false;
@@ -60,12 +63,18 @@ class _ServerProfileDialogState extends State<ServerProfileDialog> {
       return;
     }
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final rules = _rulesKey.currentState?.collect();
+    if (rules == null) {
+      setState(() => _error = '请检查转发端口是否填写完整');
+      return;
+    }
     final draft = ServerProfile(
       id: widget.profile?.id ?? 'draft',
       name: _name.text.trim(),
       host: _host.text.trim(),
       sshPort: int.parse(_port.text.trim()),
       username: _username.text.trim(),
+      rules: rules,
     );
     final validation = draft.validate();
     if (validation != null) {
@@ -86,6 +95,7 @@ class _ServerProfileDialogState extends State<ServerProfileDialog> {
         username: draft.username,
         password: _password.text.isEmpty ? null : _password.text,
         makeDefault: _makeDefault,
+        rules: draft.rules,
       );
       if (!mounted) return;
       if (widget.controller.errorMessage != null) {
@@ -128,7 +138,7 @@ class _ServerProfileDialogState extends State<ServerProfileDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '通过 SSH 安全连接远端服务，端口固定为 3080。',
+                        '通过 SSH 安全连接，并把本机端口转发到服务器可访问的端口。',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 22),
@@ -252,7 +262,15 @@ class _ServerProfileDialogState extends State<ServerProfileDialog> {
                             ? '请输入 SSH 密码'
                             : null,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+                      ForwardRulesEditor(
+                        key: _rulesKey,
+                        initial:
+                            widget.profile?.rules ??
+                            const [ForwardRule.legacy()],
+                        enabled: !disabled,
+                      ),
+                      const SizedBox(height: 8),
                       CheckboxListTile(
                         value: _makeDefault,
                         onChanged: disabled

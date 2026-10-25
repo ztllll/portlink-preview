@@ -319,10 +319,10 @@ void main() {
       ),
     );
     await tester.pumpWidget(PortLinkApp(controller: configuredController()));
-    await tester.tap(find.text('复制地址'));
+    await tester.tap(find.byTooltip('复制 127.0.0.1:3080'));
     await tester.pumpAndSettle();
     expect(clipboard, '127.0.0.1:3080');
-    expect(find.text('地址已复制'), findsOneWidget);
+    expect(find.byTooltip('地址已复制'), findsOneWidget);
   });
 
   testWidgets('appearance can follow system or change explicitly', (

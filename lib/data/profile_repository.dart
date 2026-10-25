@@ -26,15 +26,17 @@ final class ProfileSnapshot {
       throw const FormatException('默认服务器不存在');
     }
     return {
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'profiles': profiles.map((p) => p.toJson()).toList(),
       'defaultProfileId': defaultProfileId,
     };
   }
 
   factory ProfileSnapshot.fromJson(Map<String, dynamic> json) {
+    // v1 profiles have no `rules`; ServerProfile.fromJson upgrades them to the
+    // single 127.0.0.1:3080 rule. v2 is written from now on.
     if (json['schemaVersion'] is! int ||
-        json['schemaVersion'] != 1 ||
+        (json['schemaVersion'] != 1 && json['schemaVersion'] != 2) ||
         json['profiles'] is! List ||
         (json['defaultProfileId'] != null &&
             json['defaultProfileId'] is! String) ||
